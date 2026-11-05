@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles } from "lucide-react";
 
-type Product = { id: number; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string };
+type Product = { id: string | number; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string };
 
 const categories = ["All", "Men's Fashion", "Women's Fashion", "Beauty", "Shoes", "Watches", "Bags", "Home & Lifestyle"];
-const products: Product[] = [
+const fallbackProducts: Product[] = [
   { id: 1, name: "Everyday Linen Shirt", category: "Men's Fashion", price: 1290, oldPrice: 1590, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=85", tag: "Bestseller" },
   { id: 2, name: "Classic Women's Handbag", category: "Bags", price: 1850, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85", tag: "New" },
   { id: 3, name: "Minimal Gold Watch", category: "Watches", price: 2250, oldPrice: 2690, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&q=85" },
@@ -20,10 +21,46 @@ const products: Product[] = [
 const money = (amount: number) => `৳${amount.toLocaleString("en-BD")}`;
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [category, setCategory] = useState("All");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadProducts() {
+      if (!supabase) return;
+      const { data, error } = await supabase
+        .from("products")
+        .select("id,name,price,compare_at_price,image_url,is_featured,category:categories(slug)")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      if (cancelled || error || !data?.length) return;
+      const labels: Record<string, string> = {
+        "mens-fashion": "Men's Fashion",
+        "womens-fashion": "Women's Fashion",
+        "beauty-cosmetics": "Beauty",
+        "shoes-footwear": "Shoes",
+        "watches-accessories": "Watches",
+        "bags-wallets": "Bags",
+        "home-lifestyle": "Home & Lifestyle",
+        "electronics": "Electronics"
+      };
+      const mapped: Product[] = data.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        category: labels[row.category?.slug] || "All",
+        price: Number(row.price),
+        oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
+        image: row.image_url || fallbackProducts[0].image,
+        tag: row.is_featured ? "Featured" : undefined
+      }));
+      setProducts(mapped);
+    }
+    loadProducts();
+    return () => { cancelled = true; };
+  }, []);
   const [query, setQuery] = useState("");
-  const [cart, setCart] = useState<Record<number, number>>({});
-  const [wishlist, setWishlist] = useState<number[]>([]);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [wishlist, setWishlist] = useState<(string | number)[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [email, setEmail] = useState("");
