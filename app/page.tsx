@@ -120,24 +120,27 @@ export default function Home() {
 
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase.rpc("create_guest_order", {
-        p_customer_name: customerName.trim(),
-        p_customer_phone: customerPhone.trim(),
-        p_customer_email: customerEmail.trim() || null,
-        p_shipping_address: {
-          district: district.trim(),
-          area: area.trim(),
-          address_line: addressLine.trim(),
+      const { data, error } = await supabase.functions.invoke("create-guest-order", {
+        body: {
+          customer_name: customerName.trim(),
+          customer_phone: customerPhone.trim(),
+          customer_email: customerEmail.trim() || null,
+          shipping_address: {
+            district: district.trim(),
+            area: area.trim(),
+            address_line: addressLine.trim(),
+          },
+          items: cartItems.map(item => ({
+            product_id: String(item.id),
+            quantity: cart[item.id],
+          })),
+          accept_unboxing_policy: true,
+          website: "",
         },
-        p_items: cartItems.map(item => ({
-          product_id: String(item.id),
-          quantity: cart[item.id],
-        })),
-        p_accept_unboxing_policy: true,
       });
 
       if (error) throw error;
-      const confirmation = data as OrderConfirmation;
+      const confirmation = data?.order as OrderConfirmation;
       if (!confirmation?.order_number) {
         throw new Error("The order response could not be verified. Please contact the store before trying again.");
       }
