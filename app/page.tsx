@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
+import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
 import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles } from "lucide-react";
 
 type Product = { id: string | number; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string };
+type OrderConfirmation = {
+  order_number: string;
+  subtotal: number;
+  total: number;
+  order_status: string;
+  payment_method: string;
+};
 
 const categories = ["All", "Men's Fashion", "Women's Fashion", "Beauty", "Shoes", "Watches", "Bags", "Home & Lifestyle"];
 const fallbackProducts: Product[] = [
@@ -65,6 +74,18 @@ export default function Home() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState("");
+  const [policyAccepted, setPolicyAccepted] = useState(false);
+  const [orderResult, setOrderResult] = useState<OrderConfirmation | null>(null);
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [district, setDistrict] = useState("");
+  const [area, setArea] = useState("");
+  const [addressLine, setAddressLine] = useState("");
 
   const visibleProducts = useMemo(() => products.filter(p =>
     (category === "All" || p.category === category) &&
@@ -79,6 +100,63 @@ export default function Home() {
     if (!next[id]) delete next[id];
     return next;
   });
+
+  const handlePlaceOrder = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setOrderError("");
+
+    if (!supabase) {
+      setOrderError("Secure checkout is not available right now. Please try again later.");
+      return;
+    }
+    if (!policyAccepted) {
+      setOrderError("Please read and accept the unboxing video notice.");
+      return;
+    }
+    if (cartItems.length === 0 || cartItems.some(item => typeof item.id !== "string" || !/^[0-9a-f-]{36}$/i.test(item.id))) {
+      setOrderError("Your cart needs to refresh before checkout. Please close checkout and try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc("create_guest_order", {
+        p_customer_name: customerName.trim(),
+        p_customer_phone: customerPhone.trim(),
+        p_customer_email: customerEmail.trim() || null,
+        p_shipping_address: {
+          district: district.trim(),
+          area: area.trim(),
+          address_line: addressLine.trim(),
+        },
+        p_items: cartItems.map(item => ({
+          product_id: String(item.id),
+          quantity: cart[item.id],
+        })),
+        p_accept_unboxing_policy: true,
+      });
+
+      if (error) throw error;
+      const confirmation = data as OrderConfirmation;
+      if (!confirmation?.order_number) {
+        throw new Error("The order response could not be verified. Please contact the store before trying again.");
+      }
+      setOrderResult({
+        ...confirmation,
+        subtotal: Number(confirmation.subtotal),
+        total: Number(confirmation.total),
+      });
+      setCart({});
+      setCheckoutOpen(false);
+      setCartOpen(false);
+      setOrderSuccessOpen(true);
+      setPolicyAccepted(false);
+    } catch (error) {
+      setOrderError(error instanceof Error ? error.message : "We could not place your order. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main>
@@ -158,9 +236,68 @@ export default function Home() {
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
         {cartItems.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
           <div className="cart-list">{cartItems.map(p => <div className="cart-item" key={p.id}><img src={p.image} alt={p.name} /><div className="cart-item-info"><b>{p.name}</b><span>{money(p.price)}</span><div className="qty"><button onClick={() => changeQty(p.id, -1)}><Minus size={13} /></button>{cart[p.id]}<button onClick={() => changeQty(p.id, 1)}><Plus size={13} /></button></div></div></div>)}</div>
-          <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div><small>Delivery charge calculated at checkout.</small><button className="primary-btn checkout" onClick={() => alert("Checkout is a preview only. Order processing will be added in a later step.")}>Continue to checkout <ArrowRight size={16} /></button></div>
+          <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div><small>Delivery charge calculated at checkout.</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
+
+      {checkoutOpen && <div className="overlay checkout-overlay" onClick={() => setCheckoutOpen(false)}>
+        <section className="checkout-panel" role="dialog" aria-modal="true" aria-labelledby="checkout-title" onClick={e => e.stopPropagation()}>
+          <div className="checkout-header">
+            <div><p className="eyebrow">ALMOST THERE</p><h2 id="checkout-title">Delivery details</h2></div>
+            <button className="icon-btn" type="button" aria-label="Close checkout" onClick={() => setCheckoutOpen(false)}><X /></button>
+          </div>
+          <form onSubmit={handlePlaceOrder}>
+            <div className="checkout-fields">
+              <label>Full name <input required minLength={2} maxLength={100} value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Name of the recipient" /></label>
+              <label>Mobile number <input required type="tel" inputMode="tel" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="01XXXXXXXXX" /></label>
+              <label>Email address <span className="optional-label">Optional</span><input type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="name@example.com" /></label>
+              <label>District <input required minLength={2} value={district} onChange={e => setDistrict(e.target.value)} placeholder="e.g. Dhaka" /></label>
+              <label>Area / Thana <span className="optional-label">Optional</span><input value={area} onChange={e => setArea(e.target.value)} placeholder="Area, thana or upazila" /></label>
+              <label className="address-field">Full delivery address <textarea required minLength={5} value={addressLine} onChange={e => setAddressLine(e.target.value)} placeholder="House, road, area and nearby landmark" rows={3} /></label>
+            </div>
+
+            <div className="payment-choice">
+              <span className="payment-choice-title">Payment method</span>
+              <div className="cod-option"><span className="cod-radio">✓</span><span><b>Cash on Delivery</b><small>Pay when your parcel arrives</small></span></div>
+              <small className="payment-note">bKash and Nagad online payments will be enabled after merchant gateway setup.</small>
+            </div>
+
+            <div className="checkout-total">
+              <div><span>Product subtotal</span><b>{money(subtotal)}</b></div>
+              <div><span>Delivery charge</span><b>To be confirmed</b></div>
+              <small>The delivery charge will be shared by our team before dispatch. The amount above is for products only.</small>
+            </div>
+
+            <UnboxingNotice checked={policyAccepted} onCheckedChange={setPolicyAccepted} />
+            {orderError && <p className="checkout-error" role="alert">{orderError}</p>}
+            <div className="checkout-actions">
+              <button type="button" className="back-to-bag" onClick={() => setCheckoutOpen(false)}>Back to bag</button>
+              <button type="submit" className="primary-btn place-order-btn" disabled={isSubmitting || cartItems.length === 0}>
+                {isSubmitting ? "PLACING ORDER..." : "PLACE COD ORDER"} <ArrowRight size={16} />
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>}
+
+      {orderSuccessOpen && orderResult && <div className="overlay order-success-overlay">
+        <section className="order-success-panel" role="dialog" aria-modal="true" aria-labelledby="order-success-title">
+          <div className="success-mark">✓</div>
+          <p className="eyebrow">HIS & HER MART</p>
+          <h2 id="order-success-title">Congratulations!<br /><em>Your order has been received.</em></h2>
+          <p className="success-intro">Thank you for shopping with us. Our team will contact you to confirm the delivery charge and dispatch details.</p>
+          <div className="order-reference">
+            <span>YOUR ORDER NUMBER</span>
+            <strong>{orderResult.order_number}</strong>
+            <div><span>Order status</span><b>Awaiting store confirmation</b></div>
+            <div><span>Payment</span><b>Cash on Delivery</b></div>
+            <div><span>Product subtotal</span><b>{money(orderResult.subtotal)}</b></div>
+            <small>Delivery charge is not included yet and will be confirmed before dispatch.</small>
+          </div>
+          <UnboxingNotice showConsent={false} />
+          <button className="primary-btn success-close" onClick={() => setOrderSuccessOpen(false)}>Continue shopping <ArrowRight size={16} /></button>
+        </section>
+      </div>}
     </main>
   );
 }
