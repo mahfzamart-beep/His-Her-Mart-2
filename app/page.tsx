@@ -74,7 +74,7 @@ export default function Home() {
   const cartItems = products.filter(p => cart[p.id]);
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const subtotal = cartItems.reduce((sum, p) => sum + p.price * cart[p.id], 0);
-  const changeQty = (id: number, delta: number) => setCart(old => {
+  const changeQty = (id: string | number, delta: number) => setCart(old => {
     const next = { ...old, [id]: Math.max(0, (old[id] || 0) + delta) };
     if (!next[id]) delete next[id];
     return next;
