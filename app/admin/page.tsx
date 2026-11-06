@@ -12,7 +12,9 @@ type Order = {
   subtotal: number; delivery_charge: number; total: number; payment_method: string;
   payment_status: string; order_status: string; customer_note: string | null;
   admin_note: string | null; created_at: string; order_items: OrderItem[];
+  free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
+type StoreProduct = { id: string; name: string; sku: string | null; price: number; stock_quantity: number; is_active: boolean; free_shipping_eligible: boolean; category: { name: string } | null };
 const statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];
 const money = (value: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(value || 0));
 const date = (value: string) => new Intl.DateTimeFormat("en-BD", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -26,6 +28,8 @@ export default function AdminPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<StoreProduct[]>([]);
+  const [productBusy, setProductBusy] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Order | null>(null);
@@ -45,6 +49,9 @@ export default function AdminPage() {
     const { data, error: orderError } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200);
     if (orderError) setError(orderError.message);
     else setOrders((data || []) as Order[]);
+    const { data: productData, error: productError } = await supabase.from("products").select("id,name,sku,price,stock_quantity,is_active,free_shipping_eligible,category:categories(name)").order("name", { ascending: true });
+    if (productError) setError(productError.message);
+    else setProducts((productData || []) as StoreProduct[]);
     setChecking(false);
   }, []);
 
@@ -79,18 +86,41 @@ export default function AdminPage() {
   };
   const signOut = async () => { await supabase?.auth.signOut(); setSession(null); setAuthorized(false); setOrders([]); };
 
+  const toggleFreeShipping = async (product: StoreProduct, eligible: boolean) => {
+    if (!supabase || !authorized) return;
+    setProductBusy(product.id); setError("");
+    const { error } = await supabase.from("products").update({ free_shipping_eligible: eligible, updated_at: new Date().toISOString() }).eq("id", product.id);
+    if (error) setError(error.message);
+    else setProducts(current => current.map(item => item.id === product.id ? { ...item, free_shipping_eligible: eligible } : item));
+    setProductBusy(null);
+  };
+
+  const saveAdminNote = async (order: Order) => {
+    if (!supabase || !authorized) return;
+    setBusy(true); setError("");
+    const note = adminNote.trim() || null;
+    const { error } = await supabase.from("orders").update({ admin_note: note, updated_at: new Date().toISOString() }).eq("id", order.id);
+    if (error) setError(error.message);
+    else {
+      setOrders(current => current.map(item => item.id === order.id ? { ...item, admin_note: note } : item));
+      setSelected(current => current?.id === order.id ? { ...current, admin_note: note } : current);
+    }
+    setBusy(false);
+  };
+
   const updateOrder = async (order: Order, nextStatus: string) => {
     if (!supabase || !authorized) return;
     setBusy(true); setError("");
+    const note = adminNote.trim() || null;
     const { error } = await supabase.from("orders").update({
       order_status: nextStatus,
-      admin_note: adminNote.trim() || order.admin_note,
+      admin_note: note,
       updated_at: new Date().toISOString(),
     }).eq("id", order.id);
     if (error) setError(error.message);
     else {
-      setOrders(current => current.map(item => item.id === order.id ? { ...item, order_status: nextStatus, admin_note: adminNote.trim() || item.admin_note } : item));
-      setSelected(current => current?.id === order.id ? { ...current, order_status: nextStatus, admin_note: adminNote.trim() || current.admin_note } : current);
+      setOrders(current => current.map(item => item.id === order.id ? { ...item, order_status: nextStatus, admin_note: note } : item));
+      setSelected(current => current?.id === order.id ? { ...current, order_status: nextStatus, admin_note: note } : current);
     }
     setBusy(false);
   };
@@ -152,6 +182,11 @@ export default function AdminPage() {
             {visibleOrders.map(order=><tr key={order.id}><td><b>{order.order_number}</b><small>{order.payment_method?.toUpperCase()}</small></td><td>{order.customer_name}<small>{order.customer_phone}</small></td><td>{date(order.created_at)}</td><td>{money(order.total)}</td><td><span className={"order-status status-"+order.order_status}>{order.order_status}</span></td><td><button className="view-order-btn" onClick={()=>{setSelected(order);setAdminNote(order.admin_note||"");}}>View</button></td></tr>)}
           </tbody></table></div>}
       </section>
+      <section className="admin-orders-card admin-products-card">
+        <div className="admin-orders-toolbar"><div><h2>Free shipping selection</h2><p>Choose exactly which products are included in the 3-item free delivery offer.</p></div></div>
+        <div className="admin-free-shipping-info"><b>Offer rule: 3 or more eligible item units = FREE SHIPPING</b><span>Products are OFF by default. Turn on only the products you want to include in this offer. Different eligible products can be combined in one order.</span></div>
+        {products.length === 0 ? <div className="admin-empty"><Boxes size={28}/><b>No products found</b><span>Products connected to the store will appear here.</span></div> : <div className="admin-free-shipping-grid">{products.map(product => <article key={product.id} className="admin-free-shipping-product"><div className="admin-free-shipping-product-copy"><b>{product.name}</b><small>{product.category?.name || "Uncategorised"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}</span></div><label className="admin-toggle"><input type="checkbox" checked={product.free_shipping_eligible} disabled={productBusy === product.id || !product.is_active} onChange={event => void toggleFreeShipping(product, event.target.checked)}/><span>{productBusy === product.id ? "Saving…" : product.free_shipping_eligible ? "Included" : "Not included"}</span></label></article>)}</div>}
+      </section>
     </div>
     {selected && <div className="admin-modal-backdrop" onClick={()=>setSelected(null)}><section className="admin-order-modal" onClick={e=>e.stopPropagation()}>
       <div className="admin-modal-head"><div><p className="eyebrow">ORDER DETAILS</p><h2>{selected.order_number}</h2><small>{date(selected.created_at)}</small></div><button onClick={()=>setSelected(null)}>×</button></div>
@@ -159,8 +194,9 @@ export default function AdminPage() {
       <h3>Items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}</span><b>{money(item.line_total)}</b></div>)}</div>
       <div className="admin-modal-total"><span>Product subtotal</span><b>{money(selected.subtotal)}</b></div>
       <div className="admin-modal-total"><span>Delivery charge</span><b>{selected.delivery_charge?money(selected.delivery_charge):"Not set"}</b></div>
+      <div className="admin-modal-total"><span>Free shipping</span><b>{selected.free_shipping_applied ? `Applied (${selected.free_shipping_eligible_quantity} eligible items)` : "Not applied"}</b></div>
       <div className="admin-modal-total grand"><span>Total</span><b>{money(selected.total)}</b></div>
-      <label className="admin-note-field">Internal admin note<textarea rows={2} value={adminNote} onChange={e=>setAdminNote(e.target.value)} placeholder="Private note for store staff"/></label>
+      <label className="admin-note-field">Internal admin note<textarea rows={2} value={adminNote} onChange={e=>setAdminNote(e.target.value)} placeholder="Private note for store staff"/></label><button className="admin-save-note" onClick={()=>void saveAdminNote(selected)} disabled={busy}>Save internal note</button>
       <label className="admin-note-field">Update order status<select value={selected.order_status} onChange={e=>void updateOrder(selected,e.target.value)} disabled={busy}>{statuses.map(status=><option key={status} value={status}>{status.toUpperCase()}</option>)}</select></label>
       <p className="admin-private-hint">Status changes are saved to the protected order record. The customer-facing store confirmation is not sent automatically yet.</p>
     </section></div>}
