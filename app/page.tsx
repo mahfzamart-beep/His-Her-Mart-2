@@ -153,6 +153,7 @@ export default function Home() {
   const checkoutSubtotal = checkoutItems.reduce((sum, p) => sum + p.price * checkoutQuantities[p.id], 0);
   const checkoutFreeShippingEligibleCount = checkoutItems.reduce((sum, p) => sum + (p.freeShippingEligible ? checkoutQuantities[p.id] : 0), 0);
   const checkoutFreeShippingUnlocked = checkoutFreeShippingEligibleCount >= 3;
+  const hasFreeShippingProducts = products.some(product => product.freeShippingEligible === true);
   const deliveryChargePreview = checkoutFreeShippingUnlocked ? 0 : deliveryZone === "inside_dhaka" ? 80 : deliveryZone === "outside_dhaka" ? 150 : null;
   useEffect(() => {
     if (!storageReady || !catalogReady) return;
@@ -345,7 +346,7 @@ export default function Home() {
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
         {cartItems.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
           <div className="cart-list">{cartItems.map(p => <div className="cart-item" key={p.id}><img src={p.image} alt={p.name} /><div className="cart-item-info"><b>{p.name}</b><span>{money(p.price)}</span><div className="qty"><button onClick={() => changeQty(p.id, -1)}><Minus size={13} /></button>{cart[p.id]}<button onClick={() => changeQty(p.id, 1)}><Plus size={13} /></button></div></div></div>)}</div>
-          <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div><div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div><small>Free shipping applies only to selected products marked in the store offer. Otherwise delivery is ৳80 inside Dhaka or ৳150 outside Dhaka.</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setBuyNow(null); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
+          <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div>{hasFreeShippingProducts && <div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div>}<small>Delivery is ৳80 inside Dhaka or ৳150 outside Dhaka{hasFreeShippingProducts ? ". Selected eligible products may qualify for free shipping." : "."}</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setBuyNow(null); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
 
@@ -354,6 +355,11 @@ export default function Home() {
           <div className="checkout-header">
             <div><p className="eyebrow">ALMOST THERE</p><h2 id="checkout-title">{buyNow ? "Order this product" : "Delivery details"}</h2></div>
             <button className="icon-btn" type="button" aria-label="Close checkout" onClick={() => { setCheckoutOpen(false); setBuyNow(null); }}><X /></button>
+          </div>
+          <p className="checkout-helper">{buyNow ? "Order Now starts checkout for the selected product. Complete your delivery details and confirm the COD order below." : "Complete your delivery details and confirm your Cash on Delivery order below."}</p>
+          <div className="checkout-order-summary">
+            <b>Order summary</b>
+            {checkoutItems.map(item => <div key={item.id}><span>{item.name} × {checkoutQuantities[item.id]}</span><strong>{money(item.price * checkoutQuantities[item.id])}</strong></div>)}
           </div>
           <form onSubmit={handlePlaceOrder}>
             <div className="checkout-fields">
@@ -376,7 +382,7 @@ export default function Home() {
               <div><span>{buyNow ? "Selected product subtotal" : "Product subtotal"}</span><b>{money(checkoutSubtotal)}</b></div>
               <div><span>Delivery charge</span><b>{checkoutFreeShippingUnlocked ? "FREE" : deliveryChargePreview === null ? "Select delivery area" : money(deliveryChargePreview)}</b></div>
               <div><span>Estimated total</span><b>{deliveryChargePreview === null ? "—" : money(checkoutSubtotal + deliveryChargePreview)}</b></div>
-              <small>{checkoutFreeShippingUnlocked ? "Free shipping unlocked: your selected order contains at least 3 quantity units from eligible products." : "Inside Dhaka: ৳80 · Outside Dhaka: ৳150. Choose the correct delivery area above. Selected-product free shipping remains available for qualifying orders."}</small>
+              <small>{checkoutFreeShippingUnlocked ? "Free shipping unlocked: your selected order contains at least 3 quantity units from eligible products." : `Inside Dhaka: ৳80 · Outside Dhaka: ৳150. Choose the correct delivery area above.${hasFreeShippingProducts ? " Selected eligible products may qualify for free shipping." : ""}`}</small>
             </div>
 
             <UnboxingNotice checked={policyAccepted} onCheckedChange={setPolicyAccepted} />
