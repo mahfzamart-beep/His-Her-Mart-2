@@ -240,3 +240,23 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
 
 .admin-note-field input{width:100%;margin-top:6px;padding:10px 12px;border:1px solid #dfd4c8;border-radius:8px;background:#fff;color:#2c2824;font:inherit;font-size:13px}
 .admin-note-field input:disabled{background:#f3f0eb;color:#55734b;cursor:not-allowed}
+
+.admin-product-add,.admin-product-edit{display:inline-flex;align-items:center;justify-content:center;padding:10px 13px;border:1px solid #d9651e;background:#d9651e;color:#fff;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.admin-product-add:disabled,.admin-product-edit:disabled{opacity:.55;cursor:not-allowed}
+.admin-product-edit{background:#fff9f2;color:#8b4b21;border-color:#e2cdb8}
+.admin-product-list{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 18px}
+.admin-product-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #e9e2d9;border-radius:10px;background:#fff}
+.admin-product-row-copy{display:flex;flex-direction:column;gap:5px;min-width:0}
+.admin-product-row-copy>b{font-size:13px;color:#302920}
+.admin-product-row-copy>small{font-size:10px;color:#81766c;line-height:1.45}
+.admin-product-form{display:grid;gap:14px;padding-bottom:12px}
+.admin-product-form>label,.admin-product-form-grid>label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#514a40}
+.admin-product-form input:not([type=checkbox]),.admin-product-form select,.admin-product-form textarea{width:100%;padding:11px 12px;border:1px solid #ddd3c5;background:#fffefa;border-radius:0;font:12px Arial;color:#29251f;min-width:0}
+.admin-product-form input:focus,.admin-product-form select:focus,.admin-product-form textarea:focus{outline:1px solid #d9651e;border-color:#d9651e}
+.admin-product-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.admin-product-flags{display:flex;flex-wrap:wrap;gap:18px;padding:10px 0}
+.admin-product-flags label{display:flex;align-items:center;gap:7px;font-size:11px;color:#514a40}
+.admin-product-flags input{accent-color:#d9651e;width:16px;height:16px}
+.admin-product-form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:5px}
+@media(max-width:700px){.admin-product-list{grid-template-columns:1fr;padding:0 14px 16px}.admin-product-form-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){.admin-product-form-grid{grid-template-columns:1fr}.admin-product-form-actions{flex-direction:column-reverse}.admin-product-form-actions button{width:100%}}
