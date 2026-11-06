@@ -210,3 +210,28 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
   .admin-top-actions button{font-size:0}
   .admin-top-actions button svg{width:18px;height:18px}
 }
+
+
+/* Selected-product free-shipping offer */
+.free-shipping-progress{display:flex;flex-direction:column;gap:5px;padding:12px 14px;margin:12px 0;background:#fff8ef;border:1px solid #ead8c4;border-radius:12px;color:#5b3b23;font-size:13px}
+.free-shipping-progress b{font-size:13px;letter-spacing:.01em}
+.free-shipping-progress span{color:#7a6554;line-height:1.45}
+.free-shipping-progress.unlocked{background:#f1f7ee;border-color:#cbdcc3;color:#315b2a}
+.free-shipping-progress.unlocked span{color:#496b42}
+.admin-products-card{margin-top:24px}
+.admin-free-shipping-info{display:flex;flex-direction:column;gap:5px;padding:14px 16px;margin:0 0 16px;background:#fff7ed;border:1px solid #ead8c4;border-radius:12px;color:#684528}
+.admin-free-shipping-info b{font-size:14px}
+.admin-free-shipping-info span{font-size:12px;line-height:1.5;color:#826d5c}
+.admin-free-shipping-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.admin-free-shipping-product{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid #e9e2d9;border-radius:12px;background:#fff}
+.admin-free-shipping-product-copy{display:flex;flex-direction:column;gap:5px;min-width:0}
+.admin-free-shipping-product-copy>b{font-size:14px;color:#27231f}
+.admin-free-shipping-product-copy>small{font-size:11px;color:#81766c}
+.admin-product-live,.admin-product-inactive{font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:#56734a}
+.admin-product-inactive{color:#9b6a54}
+.admin-toggle{display:flex;align-items:center;gap:7px;flex-shrink:0;font-size:11px;color:#6b5747;cursor:pointer}
+.admin-toggle input{width:17px;height:17px;accent-color:#c66d27;cursor:pointer}
+.admin-toggle input:disabled{cursor:not-allowed;opacity:.5}
+.admin-save-note{margin-top:8px;padding:9px 13px;border:1px solid #d9c7b4;border-radius:8px;background:#fff9f2;color:#72441f;font-size:12px;font-weight:700;cursor:pointer}
+.admin-save-note:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:700px){.admin-free-shipping-grid{grid-template-columns:1fr}.admin-free-shipping-product{padding:12px}.free-shipping-progress{margin:10px 0}}
