@@ -97,13 +97,13 @@ export default function AdminPage() {
 
   const openNewProduct = () => {
     setError("");
-    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", category_id: categories[0]?.id || "", is_active: true, is_featured: false });
+    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", category_id: categories[0]?.id || "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
     setProductEditorOpen(true);
   };
 
   const openEditProduct = (product: StoreProduct) => {
     setError("");
-    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured });
+    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
     setProductEditorOpen(true);
   };
 
@@ -120,7 +120,7 @@ export default function AdminPage() {
     }
     const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const slug = `${slugBase || "product"}-${(productForm.id || crypto.randomUUID()).slice(0, 6)}`;
-    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: productForm.image_url.trim() || null, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, updated_at: new Date().toISOString() };
+    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: productForm.image_url.trim() || null, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: productForm.fulfillment_source, supplier_product_code: productForm.supplier_product_code.trim() || null, supplier_product_url: productForm.supplier_product_url.trim() || null, updated_at: new Date().toISOString() };
     setProductBusy(productForm.id || "new");
     setError("");
     const result = productForm.id
