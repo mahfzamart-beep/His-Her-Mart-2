@@ -34,6 +34,7 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Order | null>(null);
   const [adminNote, setAdminNote] = useState("");
+  const [deliveryCharge, setDeliveryCharge] = useState("0");
 
   const verifyAndLoad = useCallback(async (userId: string) => {
     if (!supabase) { setError("Supabase is not configured."); setChecking(false); return; }
@@ -93,6 +94,21 @@ export default function AdminPage() {
     if (error) setError(error.message);
     else setProducts(current => current.map(item => item.id === product.id ? { ...item, free_shipping_eligible: eligible } : item));
     setProductBusy(null);
+  };
+
+  const saveDeliveryCharge = async (order: Order) => {
+    if (!supabase || !authorized || order.free_shipping_applied) return;
+    const amount = Number(deliveryCharge);
+    if (!Number.isFinite(amount) || amount < 0 || amount > 100000) { setError("Enter a valid delivery charge between ৳0 and ৳100,000."); return; }
+    setBusy(true); setError("");
+    const total = Number(order.subtotal) + amount;
+    const { error } = await supabase.from("orders").update({ delivery_charge: amount, total, updated_at: new Date().toISOString() }).eq("id", order.id);
+    if (error) setError(error.message);
+    else {
+      setOrders(current => current.map(item => item.id === order.id ? { ...item, delivery_charge: amount, total } : item));
+      setSelected(current => current?.id === order.id ? { ...current, delivery_charge: amount, total } : current);
+    }
+    setBusy(false);
   };
 
   const saveAdminNote = async (order: Order) => {
@@ -179,7 +195,7 @@ export default function AdminPage() {
         <div className="admin-filters">{["all",...statuses].map(status => <button key={status} className={filter===status?"active":""} onClick={()=>setFilter(status)}>{status==="all"?"All":status}</button>)}</div>
         {visibleOrders.length===0 ? <div className="admin-empty"><ClipboardList size={28}/><b>No orders found</b><span>New customer orders will appear here.</span></div> :
           <div className="admin-table-wrap"><table className="admin-orders-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
-            {visibleOrders.map(order=><tr key={order.id}><td><b>{order.order_number}</b><small>{order.payment_method?.toUpperCase()}</small></td><td>{order.customer_name}<small>{order.customer_phone}</small></td><td>{date(order.created_at)}</td><td>{money(order.total)}</td><td><span className={"order-status status-"+order.order_status}>{order.order_status}</span></td><td><button className="view-order-btn" onClick={()=>{setSelected(order);setAdminNote(order.admin_note||"");}}>View</button></td></tr>)}
+            {visibleOrders.map(order=><tr key={order.id}><td><b>{order.order_number}</b><small>{order.payment_method?.toUpperCase()}</small></td><td>{order.customer_name}<small>{order.customer_phone}</small></td><td>{date(order.created_at)}</td><td>{money(order.total)}</td><td><span className={"order-status status-"+order.order_status}>{order.order_status}</span></td><td><button className="view-order-btn" onClick={()=>{setSelected(order);setAdminNote(order.admin_note||"");setDeliveryCharge(String(order.delivery_charge||0));}}>View</button></td></tr>)}
           </tbody></table></div>}
       </section>
       <section className="admin-orders-card admin-products-card">
@@ -193,9 +209,11 @@ export default function AdminPage() {
       <div className="admin-customer-info"><b>{selected.customer_name}</b><span>{selected.customer_phone}</span>{selected.customer_email&&<span>{selected.customer_email}</span>}<p>{selected.shipping_address?.address_line}, {selected.shipping_address?.area}, {selected.shipping_address?.district}</p></div>
       <h3>Items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}</span><b>{money(item.line_total)}</b></div>)}</div>
       <div className="admin-modal-total"><span>Product subtotal</span><b>{money(selected.subtotal)}</b></div>
-      <div className="admin-modal-total"><span>Delivery charge</span><b>{selected.delivery_charge?money(selected.delivery_charge):"Not set"}</b></div>
+      <div className="admin-modal-total"><span>Delivery charge</span><b>{selected.free_shipping_applied ? "FREE" : selected.delivery_charge ? money(selected.delivery_charge) : "Awaiting confirmation"}</b></div>
       <div className="admin-modal-total"><span>Free shipping</span><b>{selected.free_shipping_applied ? `Applied (${selected.free_shipping_eligible_quantity} eligible items)` : "Not applied"}</b></div>
       <div className="admin-modal-total grand"><span>Total</span><b>{money(selected.total)}</b></div>
+      <label className="admin-note-field">Delivery charge (BDT)<input type="number" min="0" max="100000" step="1" value={deliveryCharge} onChange={e=>setDeliveryCharge(e.target.value)} disabled={selected.free_shipping_applied}/></label>
+      <button className="admin-save-note" onClick={()=>void saveDeliveryCharge(selected)} disabled={busy || selected.free_shipping_applied}>{selected.free_shipping_applied ? "Free shipping — no delivery fee" : "Save delivery charge and update total"}</button>
       <label className="admin-note-field">Internal admin note<textarea rows={2} value={adminNote} onChange={e=>setAdminNote(e.target.value)} placeholder="Private note for store staff"/></label><button className="admin-save-note" onClick={()=>void saveAdminNote(selected)} disabled={busy}>Save internal note</button>
       <label className="admin-note-field">Update order status<select value={selected.order_status} onChange={e=>void updateOrder(selected,e.target.value)} disabled={busy}>{statuses.map(status=><option key={status} value={status}>{status.toUpperCase()}</option>)}</select></label>
       <p className="admin-private-hint">Status changes are saved to the protected order record. The customer-facing store confirmation is not sent automatically yet.</p>
