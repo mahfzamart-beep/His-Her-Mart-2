@@ -118,8 +118,8 @@ export default function AdminPage() {
       setError("Check the product name, price, stock quantity and compare-at price.");
       return;
     }
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    if (!slug) { setError("Use a product name with English letters or numbers so a product URL can be created."); return; }
+    const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const slug = `${slugBase || "product"}-${(productForm.id || crypto.randomUUID()).slice(0, 6)}`;
     const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: productForm.image_url.trim() || null, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, updated_at: new Date().toISOString() };
     setProductBusy(productForm.id || "new");
     setError("");
