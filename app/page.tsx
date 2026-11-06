@@ -221,6 +221,7 @@ export default function Home() {
           <a href="#shop" onClick={() => { setCategory("Women's Fashion"); setMobileMenu(false); }}>For Her</a>
           <a href="#story" onClick={() => setMobileMenu(false)}>Our Story</a>
           <a href="/track-order" onClick={() => setMobileMenu(false)}>Track Order</a>
+          <Link href="/faq" onClick={() => setMobileMenu(false)}>Help & FAQs</Link>
           <Link href="/wishlist" onClick={() => setMobileMenu(false)}>Wishlist ({wishlist.length})</Link>
         </nav>
         <div className="header-actions">
@@ -284,7 +285,7 @@ export default function Home() {
         <small>{subscribed ? "Thanks for joining us. This preview form does not yet save subscriptions." : "By subscribing, you agree to receive occasional updates from us."}</small>
       </section>
 
-      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div className="footer-links"><a href="/track-order">Track order</a><a href="/wishlist">Wishlist</a></div><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
+      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div className="footer-links"><a href="/track-order">Track order</a><a href="/wishlist">Wishlist</a><a href="/faq">Help & FAQs</a></div><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
 
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>

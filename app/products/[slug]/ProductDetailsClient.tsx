@@ -51,7 +51,7 @@ export default function ProductDetailsPage({slug}:{slug:string}){
     <div className="detail-quantity"><span>Quantity</span><div><button onClick={()=>setQty(v=>Math.max(1,v-1))} disabled={qty<=1}><Minus size={14}/></button><b>{qty}</b><button onClick={()=>setQty(v=>Math.min(stock,v+1))} disabled={qty>=stock}><Plus size={14}/></button></div></div>
     <div className="detail-actions"><button className="primary-btn" onClick={addToBag} disabled={stock<=0}>Add to bag <ShoppingBag size={16}/></button><button className={saved?"detail-save saved":"detail-save"} onClick={toggleSaved}><Heart size={17} fill={saved?"currentColor":"none"}/>{saved?"Saved":"Save item"}</button></div>
     {added&&<p className="detail-added"><Check size={15}/> Added to your bag. <Link href="/">Continue shopping</Link> or open your bag on the store page.</p>}
-    <div className="detail-assurance"><div><b>Cash on Delivery</b><small>Pay when your parcel arrives</small></div><div><b>Order tracking</b><small>Track your order online</small></div><div><b>Need help?</b><small><Link href="/track-order">Track an existing order</Link></small></div></div>
+    <div className="detail-assurance"><div><b>Cash on Delivery</b><small>Pay when your parcel arrives</small></div><div><b>Order tracking</b><small>Track your order online</small></div><div><b>Need help?</b><small><Link href="/faq">Read our FAQs</Link></small></div></div>
    </section>
   </div>
  </main>;

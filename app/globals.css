@@ -328,3 +328,33 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
 .admin-export-btn:hover:not(:disabled){background:#d9651e;color:white}
 .admin-export-btn:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:640px){.admin-order-tools{width:100%;flex-wrap:wrap;justify-content:stretch}.admin-orders-toolbar{align-items:flex-start;flex-direction:column}.admin-search{width:100%;max-width:none}.admin-export-btn{width:100%}}
+
+
+
+/* Help and FAQ page */
+.faq-shell{min-height:100vh;background:var(--paper);color:var(--ink);padding:0 7% 70px}
+.faq-top{height:82px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.faq-back,.faq-track{display:inline-flex;align-items:center;gap:9px;color:var(--ink);text-decoration:none;font-size:11px}
+.faq-track{color:var(--tan)}
+.faq-intro{max-width:690px;margin:74px auto 54px;text-align:center}
+.faq-mark{width:48px;height:48px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;margin:0 auto 20px;color:var(--tan)}
+.faq-intro .eyebrow{justify-content:center}
+.faq-intro h1{font:normal clamp(42px,6vw,68px)/1.05 Georgia,serif;letter-spacing:-2px;margin:20px 0}
+.faq-intro h1 em,.faq-footer h2 em{color:var(--tan);font-weight:400}
+.faq-intro>p:last-child{font-size:13px;line-height:1.8;color:var(--muted)}
+.faq-list{max-width:850px;margin:0 auto;border-top:1px solid var(--line)}
+.faq-item{border-bottom:1px solid var(--line)}
+.faq-item summary{display:grid;grid-template-columns:38px 1fr 30px;gap:15px;align-items:center;list-style:none;cursor:pointer;padding:22px 8px}
+.faq-item summary::-webkit-details-marker{display:none}
+.faq-number{font:italic 13px Georgia;color:var(--tan)}
+.faq-question{display:flex;flex-direction:column;gap:6px}
+.faq-question small{font-size:8px;text-transform:uppercase;letter-spacing:1.3px;color:var(--muted)}
+.faq-question b{font:19px Georgia;color:var(--ink)}
+.faq-toggle{width:26px;height:26px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;color:var(--tan);font-size:18px;transition:transform .2s}
+.faq-item[open] .faq-toggle{transform:rotate(45deg)}
+.faq-answer{padding:0 58px 22px}
+.faq-answer p{font-size:12px;line-height:1.9;color:var(--muted);margin:0;max-width:680px}
+.faq-answer a{display:inline-flex;align-items:center;gap:7px;margin-top:13px;color:var(--tan);text-decoration:none;font-size:11px}
+.faq-footer{text-align:center;padding:70px 20px 0}
+.faq-footer h2{font:normal clamp(30px,4vw,42px) Georgia;margin:14px 0 22px}
+@media(max-width:640px){.faq-shell{padding:0 6% 50px}.faq-top{height:70px}.faq-intro{margin:54px auto 36px}.faq-item summary{grid-template-columns:27px 1fr 25px;gap:10px;padding:18px 2px}.faq-question b{font-size:16px}.faq-answer{padding:0 37px 20px}}
