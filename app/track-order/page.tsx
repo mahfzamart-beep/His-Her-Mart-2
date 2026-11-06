@@ -55,7 +55,7 @@ export default function TrackOrderPage() {
         <div className="tracking-progress"><Truck size={19} /><div><b>{statusLabel[order.order_status] || order.order_status}</b><small>Payment: {order.payment_method?.replaceAll("_", " ").toUpperCase()} · {order.payment_status}</small></div></div>
         <h2>Items in this order</h2>
         {order.items?.map((item, index) => <div className="tracked-item" key={index}><div><b>{item.product_name}</b><small>Qty {item.quantity} × {money(Number(item.unit_price))}</small></div><strong>{money(Number(item.line_total))}</strong></div>)}
-        <div className="tracked-total"><div><span>Subtotal</span><b>{money(Number(order.subtotal))}</b></div><div><span>Delivery</span><b>{order.free_shipping_applied ? "FREE" : money(Number(order.delivery_charge))}</b></div><div className="tracked-grand"><span>Total</span><b>{money(Number(order.total))}</b></div></div>
+        <div className="tracked-total"><div><span>Subtotal</span><b>{money(Number(order.subtotal))}</b></div><div><span>Delivery</span><b>{order.free_shipping_applied ? "FREE" : Number(order.delivery_charge) > 0 ? money(Number(order.delivery_charge)) : "To be confirmed"}</b></div><div className="tracked-grand"><span>{!order.free_shipping_applied && Number(order.delivery_charge) === 0 ? "Product subtotal · delivery pending" : "Total"}</span><b>{money(Number(order.total))}</b></div></div>
         <p className="tracking-privacy">For your privacy, this page does not show your delivery address or email address.</p>
       </section>}
     </section>
