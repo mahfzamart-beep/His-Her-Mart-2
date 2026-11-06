@@ -6,7 +6,7 @@ import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
 import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles } from "lucide-react";
 
-type Product = { id: string | number; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean };
+type Product = { id: string | number; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number };
 type OrderConfirmation = {
   order_number: string;
   subtotal: number;
@@ -18,7 +18,7 @@ type OrderConfirmation = {
   free_shipping_eligible_quantity: number;
 };
 
-const categories = ["All", "Men's Fashion", "Women's Fashion", "Beauty", "Shoes", "Watches", "Bags", "Home & Lifestyle"];
+const defaultCategories = ["All", "Men's Fashion", "Women's Fashion", "Beauty", "Shoes", "Watches", "Bags", "Home & Lifestyle"];
 const fallbackProducts: Product[] = [
   { id: 1, name: "Everyday Linen Shirt", category: "Men's Fashion", price: 1290, oldPrice: 1590, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=85", tag: "Bestseller" },
   { id: 2, name: "Classic Women's Handbag", category: "Bags", price: 1850, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85", tag: "New" },
@@ -34,15 +34,18 @@ const money = (amount: number) => `৳${amount.toLocaleString("en-BD")}`;
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [categories, setCategories] = useState<string[]>(defaultCategories);
   const [category, setCategory] = useState("All");
 
   useEffect(() => {
     let cancelled = false;
     async function loadProducts() {
       if (!supabase) return;
+      const { data: categoryData } = await supabase.from("categories").select("name").eq("is_active", true).order("sort_order", { ascending: true });
+      if (!cancelled && categoryData?.length) setCategories(["All", ...categoryData.map((item: any) => item.name)]);
       const { data, error } = await supabase
         .from("products")
-        .select("id,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,category:categories(slug)")
+        .select("id,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,category:categories(name,slug)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (cancelled || error || !data?.length) return;
@@ -59,12 +62,13 @@ export default function Home() {
       const mapped: Product[] = data.map((row: any) => ({
         id: row.id,
         name: row.name,
-        category: labels[row.category?.slug] || "All",
+        category: row.category?.name || labels[row.category?.slug] || "All",
         price: Number(row.price),
         oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
         image: row.image_url || fallbackProducts[0].image,
         tag: row.is_featured ? "Featured" : undefined,
-        freeShippingEligible: row.free_shipping_eligible === true
+        freeShippingEligible: row.free_shipping_eligible === true,
+        stockQuantity: Number(row.stock_quantity ?? 0)
       }));
       setProducts(mapped);
     }
@@ -102,7 +106,9 @@ export default function Home() {
   const freeShippingEligibleCount = cartItems.reduce((sum, p) => sum + (p.freeShippingEligible ? cart[p.id] : 0), 0);
   const freeShippingUnlocked = freeShippingEligibleCount >= 3;
   const changeQty = (id: string | number, delta: number) => setCart(old => {
-    const next = { ...old, [id]: Math.max(0, (old[id] || 0) + delta) };
+    const product = products.find(item => item.id === id);
+    const stockLimit = product?.stockQuantity ?? 999;
+    const next = { ...old, [id]: Math.min(stockLimit, Math.max(0, (old[id] || 0) + delta)) };
     if (!next[id]) delete next[id];
     return next;
   });
@@ -178,6 +184,7 @@ export default function Home() {
           <a href="#shop" onClick={() => { setCategory("Men's Fashion"); setMobileMenu(false); }}>For Him</a>
           <a href="#shop" onClick={() => { setCategory("Women's Fashion"); setMobileMenu(false); }}>For Her</a>
           <a href="#story" onClick={() => setMobileMenu(false)}>Our Story</a>
+          <a href="/track-order" onClick={() => setMobileMenu(false)}>Track Order</a>
         </nav>
         <div className="header-actions">
           <label className="search-box"><Search size={17} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" /></label>
@@ -221,9 +228,9 @@ export default function Home() {
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
-              <button className="quick-add" onClick={() => changeQty(p.id, 1)}>ADD TO BAG <Plus size={14} /></button>
+              <button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0 || (cart[p.id] || 0) >= (p.stockQuantity ?? 999)} onClick={() => changeQty(p.id, 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (cart[p.id] || 0) >= (p.stockQuantity ?? 999) ? "MAX STOCK ADDED" : "ADD TO BAG"} <Plus size={14} /></button>
             </div>
-            <div className="product-info"><div><p className="product-category">{p.category}</p><h3>{p.name}</h3></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
+            <div className="product-info"><div><p className="product-category">{p.category}</p><h3>{p.name}</h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
         </div>
         {visibleProducts.length === 0 && <div className="empty">No products found. Try another search or category.</div>}
@@ -240,7 +247,7 @@ export default function Home() {
         <small>{subscribed ? "Thanks for joining us. This preview form does not yet save subscriptions." : "By subscribing, you agree to receive occasional updates from us."}</small>
       </section>
 
-      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
+      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div><a href="/track-order">Track order</a></div><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
 
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
