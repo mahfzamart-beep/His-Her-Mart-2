@@ -249,6 +249,48 @@ export default function AdminPage() {
     return matchesStatus && matchesSearch;
   }), [orders, filter, search]);
 
+  const exportVisibleOrders = () => {
+    if (!authorized || visibleOrders.length === 0) return;
+    const headers = [
+      "Order Number", "Created At", "Customer Name", "Phone", "Email",
+      "District", "Area", "Address", "Items", "Subtotal (BDT)",
+      "Delivery Charge (BDT)", "Total (BDT)", "Payment Method",
+      "Payment Status", "Order Status"
+    ];
+    const rows = visibleOrders.map(order => [
+      order.order_number,
+      order.created_at,
+      order.customer_name,
+      order.customer_phone,
+      order.customer_email || "",
+      order.shipping_address?.district || "",
+      order.shipping_address?.area || "",
+      order.shipping_address?.address_line || "",
+      (order.order_items || []).map(item => `${item.product_name} x${item.quantity}`).join("; "),
+      Number(order.subtotal || 0).toFixed(2),
+      Number(order.delivery_charge || 0).toFixed(2),
+      Number(order.total || 0).toFixed(2),
+      order.payment_method,
+      order.payment_status,
+      order.order_status,
+    ]);
+    const cell = (value: unknown) => {
+      let text = value == null ? "" : String(value).replace(/[\\r\\n]+/g, " ");
+      if (/^\\s*[=+@-]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    };
+    const csv = [headers, ...rows].map(row => row.map(cell).join(",")).join("\\r\\n");
+    const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `his-her-mart-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const counts = useMemo(() => ({
     total: orders.length,
     pending: orders.filter(o => o.order_status === "pending").length,
@@ -293,7 +335,7 @@ export default function AdminPage() {
         <article><Truck/><span>Shipped</span><strong>{counts.shipped}</strong></article>
       </section>
       <section className="admin-orders-card">
-        <div className="admin-orders-toolbar"><div><h2>Customer orders</h2><p>Latest 200 orders</p></div><div className="admin-search"><Search size={15}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search order, name or phone"/></div></div>
+        <div className="admin-orders-toolbar"><div><h2>Customer orders</h2><p>Latest 200 orders · Export respects your current filters</p></div><div className="admin-order-tools"><button type="button" className="admin-export-btn" onClick={exportVisibleOrders} disabled={visibleOrders.length===0}>Export CSV ({visibleOrders.length})</button><div className="admin-search"><Search size={15}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search order, name or phone"/></div></div></div>
         <div className="admin-filters">{["all",...statuses].map(status => <button key={status} className={filter===status?"active":""} onClick={()=>setFilter(status)}>{status==="all"?"All":status}</button>)}</div>
         {visibleOrders.length===0 ? <div className="admin-empty"><ClipboardList size={28}/><b>No orders found</b><span>New customer orders will appear here.</span></div> :
           <div className="admin-table-wrap"><table className="admin-orders-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
