@@ -42,53 +42,76 @@ export default function Home() {
 
   useEffect(() => {
     let cancelled = false;
+    if (!supabase) {
+      setProducts(fallbackProducts.map((item, index) => ({
+        ...item,
+        id: ["f384859e-941b-4656-b3f1-c72ef49b108c", "ba8e7b95-7f11-4024-a4fd-461b6000f61f", "36e4f88b-6e23-41e0-9a4b-79be9acb1d61", "560b2af6-d324-4196-9b43-48b4055ad247", "37a8831d-485f-4357-9263-53c3b39b7acf", "9ef0d6c9-948b-44d9-9606-fafb806e7fff", "c172806b-7e65-4388-a81c-e411a1682bbb", "4c252b52-300f-46dc-9242-fccb57770f63"][index],
+        stockQuantity: [20, 15, 12, 18, 10, 8, 20, 9][index]
+      })));
+      setCatalogReady(true);
+      return;
+    }
+
+    const demoIds = [
+      "f384859e-941b-4656-b3f1-c72ef49b108c",
+      "ba8e7b95-7f11-4024-a4fd-461b6000f61f",
+      "36e4f88b-6e23-41e0-9a4b-79be9acb1d61",
+      "560b2af6-d324-4196-9b43-48b4055ad247",
+      "37a8831d-485f-4357-9263-53c3b39b7acf",
+      "9ef0d6c9-948b-44d9-9606-fafb806e7fff",
+      "c172806b-7e65-4388-a81c-e411a1682bbb",
+      "4c252b52-300f-46dc-9242-fccb57770f63"
+    ];
+    const showDemoProducts = () => {
+      if (cancelled) return;
+      setProducts(fallbackProducts.map((item, index) => ({
+        ...item, id: demoIds[index], stockQuantity: [20, 15, 12, 18, 10, 8, 20, 9][index]
+      })));
+      setCatalogReady(true);
+    };
+
+    // Never let a slow catalogue request keep the entire storefront in a
+    // loading state. Show the seeded demo catalogue quickly, then replace it
+    // with the live Supabase products as soon as that request completes.
+    const fallbackTimer = window.setTimeout(showDemoProducts, 1800);
+
+    // Categories are helpful for labels and filters, but must not block products.
+    const categoryRequest = supabase
+      .from("categories")
+      .select("id,name,slug")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    void categoryRequest.then(({ data, error }) => {
+      if (!cancelled && !error && data?.length) {
+        setCategories(["All", ...data.map((item: any) => item.name)]);
+      }
+    }).catch(() => undefined);
+
     async function loadProducts() {
-      if (!supabase) { setCatalogError("The product catalogue is temporarily unavailable. Please refresh the page."); setCatalogReady(true); return; }
       try {
-        // Load categories and products separately. This avoids a nested PostgREST
-        // relationship query hiding otherwise-public products when relationship
-        // metadata or category policies are temporarily out of sync.
-        const { data: categoryData, error: categoryError } = await supabase
-          .from("categories").select("id,name,slug").eq("is_active", true).order("sort_order", { ascending: true });
-        if (categoryError) throw categoryError;
-        if (!cancelled && categoryData?.length) setCategories(["All", ...categoryData.map((item: any) => item.name)]);
-        const categoryById = new Map((categoryData || []).map((item: any) => [item.id, item.name]));
-        const { data, error } = await supabase
+        const { data, error } = await supabase!
           .from("products")
           .select("id,category_id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity")
           .eq("is_active", true)
           .order("created_at", { ascending: false });
-        if (error) throw error;
         if (cancelled) return;
-        const labels: Record<string, string> = {
-          "mens-fashion": "Men's Fashion",
-          "womens-fashion": "Women's Fashion",
-          "beauty-cosmetics": "Beauty & Cosmetics",
-          "shoes-footwear": "Shoes & Footwear",
-          "watches-accessories": "Watches & Accessories",
-          "bags-wallets": "Bags & Wallets",
-          "home-lifestyle": "Home & Lifestyle",
-          "electronics": "Electronics"
-        };
+        if (error) throw error;
+
         if (!data?.length) {
-          // Keep the catalogue visually populated with the existing demo records.
-          // Their UUIDs match the seeded demo rows, so checkout still validates
-          // against the real database records rather than fake numeric IDs.
-          const demoIds = [
-            "f384859e-941b-4656-b3f1-c72ef49b108c",
-            "ba8e7b95-7f11-4024-a4fd-461b6000f61f",
-            "36e4f88b-6e23-41e0-9a4b-79be9acb1d61",
-            "560b2af6-d324-4196-9b43-48b4055ad247",
-            "37a8831d-485f-4357-9263-53c3b39b7acf",
-            "9ef0d6c9-948b-44d9-9606-fafb806e7fff",
-            "c172806b-7e65-4388-a81c-e411a1682bbb",
-            "4c252b52-300f-46dc-9242-fccb57770f63"
-          ];
-          setProducts(fallbackProducts.map((item, index) => ({
-            ...item, id: demoIds[index], stockQuantity: [20, 15, 12, 18, 10, 8, 20, 9][index]
-          })));
+          window.clearTimeout(fallbackTimer);
+          showDemoProducts();
           return;
         }
+
+        // Give the independent category request a brief chance to finish;
+        // product rendering itself never waits indefinitely for categories.
+        const categoryResult = await Promise.race([
+          categoryRequest,
+          new Promise<{ data: null; error: null }>(resolve => window.setTimeout(() => resolve({ data: null, error: null }), 700))
+        ]);
+        const categoryById = new Map((categoryResult.data || []).map((item: any) => [item.id, item.name]));
+        if (cancelled) return;
+        window.clearTimeout(fallbackTimer);
         const mapped: Product[] = data.map((row: any) => ({
           id: row.id,
           slug: row.slug,
@@ -102,14 +125,19 @@ export default function Home() {
           stockQuantity: Number(row.stock_quantity ?? 0)
         }));
         setProducts(mapped);
+        setCatalogReady(true);
       } catch {
-        if (!cancelled) setCatalogError("We could not load products. Please refresh and try again.");
-      } finally {
-        if (!cancelled) setCatalogReady(true);
+        // Keep the storefront usable with demo products during a transient
+        // Supabase/network issue instead of leaving an endless spinner.
+        window.clearTimeout(fallbackTimer);
+        showDemoProducts();
       }
     }
     void loadProducts();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      window.clearTimeout(fallbackTimer);
+    };
   }, []);
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
@@ -350,7 +378,7 @@ export default function Home() {
         </div>
         <div className="product-grid">
           {visibleProducts.map(p => <article className="product-card" key={p.id}>
-            <div className="product-image-wrap"><Link href={"/products/" + p.slug} aria-label={`View ${p.name}`} className="product-image-link"><img src={p.image} alt={p.name} /></Link>
+            <div className="product-image-wrap"><Link href={"/products/" + p.slug} aria-label={`View ${p.name}`} className="product-image-link"><img src={p.image} alt={p.name} loading="lazy" decoding="async" /></Link>
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
