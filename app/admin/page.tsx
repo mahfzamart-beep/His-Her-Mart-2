@@ -14,7 +14,9 @@ type Order = {
   admin_note: string | null; created_at: string; order_items: OrderItem[];
   free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
-type StoreProduct = { id: string; name: string; sku: string | null; price: number; stock_quantity: number; is_active: boolean; free_shipping_eligible: boolean; category: { name: string }[] };
+type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; category_id: string | null; category: { name: string }[] };
+type StoreCategory = { id: string; name: string };
+type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; category_id: string; is_active: boolean; is_featured: boolean };
 const statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];
 const money = (value: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(value || 0));
 const date = (value: string) => new Intl.DateTimeFormat("en-BD", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -29,6 +31,9 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<StoreProduct[]>([]);
+  const [categories, setCategories] = useState<StoreCategory[]>([]);
+  const [productEditorOpen, setProductEditorOpen] = useState(false);
+  const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", category_id: "", is_active: true, is_featured: false });
   const [productBusy, setProductBusy] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -50,9 +55,12 @@ export default function AdminPage() {
     const { data, error: orderError } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200);
     if (orderError) setError(orderError.message);
     else setOrders((data || []) as Order[]);
-    const { data: productData, error: productError } = await supabase.from("products").select("id,name,sku,price,stock_quantity,is_active,free_shipping_eligible,category:categories(name)").order("name", { ascending: true });
+    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured,free_shipping_eligible,category_id,category:categories(name)").order("name", { ascending: true });
     if (productError) setError(productError.message);
     else setProducts((productData || []) as StoreProduct[]);
+    const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name").eq("is_active", true).order("sort_order", { ascending: true });
+    if (categoryError) setError(categoryError.message);
+    else setCategories(categoryData || []);
     setChecking(false);
   }, []);
 
