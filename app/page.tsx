@@ -179,6 +179,14 @@ export default function Home() {
     }
   }, [storageReady, catalogReady, products]);
 
+  const startBuyNow = (product: Product) => {
+    if (typeof product.id !== "string" || !/^[0-9a-f-]{36}$/i.test(product.id) || (product.stockQuantity ?? 0) <= 0) return;
+    setOrderError("");
+    setBuyNow({ productId: product.id, quantity: 1 });
+    setCartOpen(false);
+    setCheckoutOpen(true);
+  };
+
   const changeQty = (id: string | number, delta: number) => setCart(old => {
     const product = products.find(item => item.id === id);
     const stockLimit = product?.stockQuantity ?? 999;
@@ -308,7 +316,7 @@ export default function Home() {
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
-              <button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => (cart[p.id] || 0) > 0 ? setCartOpen(true) : changeQty(p.id, 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (cart[p.id] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[p.id] || 0) > 0 ? <ShoppingBag size={14} /> : <Plus size={14} />}</button>
+              <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => (cart[p.id] || 0) > 0 ? setCartOpen(true) : changeQty(p.id, 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (cart[p.id] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[p.id] || 0) > 0 ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>ORDER NOW <ArrowRight size={14} /></button></div>
             </div>
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
@@ -340,8 +348,8 @@ export default function Home() {
       {checkoutOpen && <div className="overlay checkout-overlay" onClick={() => { setCheckoutOpen(false); setBuyNow(null); }}>
         <section className="checkout-panel" role="dialog" aria-modal="true" aria-labelledby="checkout-title" onClick={e => e.stopPropagation()}>
           <div className="checkout-header">
-            <div><p className="eyebrow">ALMOST THERE</p><h2 id="checkout-title">Delivery details</h2></div>
-            <button className="icon-btn" type="button" aria-label="Close checkout" onClick={() => setCheckoutOpen(false)}><X /></button>
+            <div><p className="eyebrow">ALMOST THERE</p><h2 id="checkout-title">{buyNow ? "Order this product" : "Delivery details"}</h2></div>
+            <button className="icon-btn" type="button" aria-label="Close checkout" onClick={() => { setCheckoutOpen(false); setBuyNow(null); }}><X /></button>
           </div>
           <form onSubmit={handlePlaceOrder}>
             <div className="checkout-fields">
