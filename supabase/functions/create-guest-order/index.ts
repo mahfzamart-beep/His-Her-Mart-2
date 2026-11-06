@@ -117,6 +117,7 @@ Deno.serve(async (req: Request) => {
     p_customer_email: customerEmail || null,
     p_shipping_address: {
       district: address.district.trim(),
+      delivery_zone: address.delivery_zone,
       area: typeof address.area === "string" ? address.area.trim() : "",
       address_line: address.address_line.trim(),
     },
@@ -141,31 +142,12 @@ Deno.serve(async (req: Request) => {
   }
 
   const freeShippingApplied = created.free_shipping_applied === true;
-  const deliveryCharge = freeShippingApplied ? 0 : address.delivery_zone === "inside_dhaka" ? 80 : 150;
-  const total = subtotal + deliveryCharge;
-  const deliveryNote = freeShippingApplied
-    ? "Free shipping applied."
-    : address.delivery_zone === "inside_dhaka"
-      ? "Inside Dhaka delivery charge: BDT 80."
-      : "Outside Dhaka delivery charge: BDT 150.";
-
-  const { data: updatedOrder, error: deliveryUpdateError } = await admin
-    .from("orders")
-    .update({
-      delivery_charge: deliveryCharge,
-      total,
-      customer_note: freeShippingApplied
-        ? "Free shipping applied: 3 or more units from selected eligible products."
-        : deliveryNote,
-    })
-    .eq("order_number", orderNumber)
-    .select("order_number")
-    .maybeSingle();
-
-  if (deliveryUpdateError || !updatedOrder) {
-    console.error("Could not save the calculated delivery charge for order", orderNumber, deliveryUpdateError);
+  const deliveryCharge = Number(created.delivery_charge);
+  const total = Number(created.total);
+  if (!Number.isFinite(deliveryCharge) || !Number.isFinite(total)) {
+    console.error("Order RPC returned invalid totals", orderNumber);
     return json({
-      error: "Your order " + orderNumber + " was received, but the delivery charge could not be saved automatically. Please WhatsApp +8801969419302 and mention this order number. Do not place the order again.",
+      error: "Your order " + orderNumber + " was received, but its total could not be verified. Please WhatsApp +8801969419302 and do not place the order again.",
       order_received: true,
       order_number: orderNumber,
     }, 200, origin);
@@ -176,7 +158,7 @@ Deno.serve(async (req: Request) => {
       ...created,
       delivery_charge: deliveryCharge,
       total,
-      delivery_charge_note: deliveryNote,
+      free_shipping_applied: freeShippingApplied,
     },
   }, 200, origin);
 });
