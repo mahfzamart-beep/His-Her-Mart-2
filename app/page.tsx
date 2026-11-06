@@ -6,13 +6,16 @@ import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
 import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles } from "lucide-react";
 
-type Product = { id: string | number; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string };
+type Product = { id: string | number; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean };
 type OrderConfirmation = {
   order_number: string;
   subtotal: number;
   total: number;
   order_status: string;
   payment_method: string;
+  delivery_charge: number;
+  free_shipping_applied: boolean;
+  free_shipping_eligible_quantity: number;
 };
 
 const categories = ["All", "Men's Fashion", "Women's Fashion", "Beauty", "Shoes", "Watches", "Bags", "Home & Lifestyle"];
@@ -39,7 +42,7 @@ export default function Home() {
       if (!supabase) return;
       const { data, error } = await supabase
         .from("products")
-        .select("id,name,price,compare_at_price,image_url,is_featured,category:categories(slug)")
+        .select("id,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,category:categories(slug)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (cancelled || error || !data?.length) return;
@@ -60,7 +63,8 @@ export default function Home() {
         price: Number(row.price),
         oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
         image: row.image_url || fallbackProducts[0].image,
-        tag: row.is_featured ? "Featured" : undefined
+        tag: row.is_featured ? "Featured" : undefined,
+        freeShippingEligible: row.free_shipping_eligible === true
       }));
       setProducts(mapped);
     }
@@ -95,6 +99,8 @@ export default function Home() {
   const cartItems = products.filter(p => cart[p.id]);
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const subtotal = cartItems.reduce((sum, p) => sum + p.price * cart[p.id], 0);
+  const freeShippingEligibleCount = cartItems.reduce((sum, p) => sum + (p.freeShippingEligible ? cart[p.id] : 0), 0);
+  const freeShippingUnlocked = freeShippingEligibleCount >= 3;
   const changeQty = (id: string | number, delta: number) => setCart(old => {
     const next = { ...old, [id]: Math.max(0, (old[id] || 0) + delta) };
     if (!next[id]) delete next[id];
@@ -239,7 +245,7 @@ export default function Home() {
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
         {cartItems.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
           <div className="cart-list">{cartItems.map(p => <div className="cart-item" key={p.id}><img src={p.image} alt={p.name} /><div className="cart-item-info"><b>{p.name}</b><span>{money(p.price)}</span><div className="qty"><button onClick={() => changeQty(p.id, -1)}><Minus size={13} /></button>{cart[p.id]}<button onClick={() => changeQty(p.id, 1)}><Plus size={13} /></button></div></div></div>)}</div>
-          <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div><small>Delivery charge calculated at checkout.</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
+          <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div><div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div><small>Free shipping applies only to selected products marked in the store offer. Other orders have delivery charge confirmed before dispatch.</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
 
@@ -267,8 +273,8 @@ export default function Home() {
 
             <div className="checkout-total">
               <div><span>Product subtotal</span><b>{money(subtotal)}</b></div>
-              <div><span>Delivery charge</span><b>To be confirmed</b></div>
-              <small>The delivery charge will be shared by our team before dispatch. The amount above is for products only.</small>
+              <div><span>Delivery charge</span><b>{freeShippingUnlocked ? "FREE" : "To be confirmed"}</b></div>
+              <small>{freeShippingUnlocked ? "Free shipping unlocked: your cart contains at least 3 items from selected eligible products." : "Free shipping is available only when you order 3 or more items from selected eligible products. Otherwise the delivery charge will be confirmed before dispatch."}</small>
             </div>
 
             <UnboxingNotice checked={policyAccepted} onCheckedChange={setPolicyAccepted} />
@@ -295,7 +301,8 @@ export default function Home() {
             <div><span>Order status</span><b>Awaiting store confirmation</b></div>
             <div><span>Payment</span><b>Cash on Delivery</b></div>
             <div><span>Product subtotal</span><b>{money(orderResult.subtotal)}</b></div>
-            <small>Delivery charge is not included yet and will be confirmed before dispatch.</small>
+            <div><span>Delivery charge</span><b>{orderResult.free_shipping_applied ? "FREE" : "To be confirmed"}</b></div>
+            <small>{orderResult.free_shipping_applied ? `Free shipping applied to ${orderResult.free_shipping_eligible_quantity} eligible item(s).` : "Delivery charge will be confirmed before dispatch. This order did not meet the selected-product free shipping condition."}</small>
           </div>
           <UnboxingNotice showConsent={false} />
           <button className="primary-btn success-close" onClick={() => setOrderSuccessOpen(false)}>Continue shopping <ArrowRight size={16} /></button>
