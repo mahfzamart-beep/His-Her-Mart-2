@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { FormEvent } from "react";
 import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
 import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles } from "lucide-react";
 
-type Product = { id: string | number; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number };
+type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number };
 type OrderConfirmation = {
   order_number: string;
   subtotal: number;
@@ -20,14 +21,14 @@ type OrderConfirmation = {
 
 const defaultCategories = ["All", "Men's Fashion", "Women's Fashion", "Beauty", "Shoes", "Watches", "Bags", "Home & Lifestyle"];
 const fallbackProducts: Product[] = [
-  { id: 1, name: "Everyday Linen Shirt", category: "Men's Fashion", price: 1290, oldPrice: 1590, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=85", tag: "Bestseller" },
-  { id: 2, name: "Classic Women's Handbag", category: "Bags", price: 1850, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85", tag: "New" },
-  { id: 3, name: "Minimal Gold Watch", category: "Watches", price: 2250, oldPrice: 2690, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&q=85" },
-  { id: 4, name: "Soft Glow Skincare Set", category: "Beauty", price: 990, image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=900&q=85" },
-  { id: 5, name: "Everyday Sneakers", category: "Shoes", price: 2190, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&q=85", tag: "Popular" },
-  { id: 6, name: "Relaxed Fit Blazer", category: "Women's Fashion", price: 2890, oldPrice: 3290, image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&q=85" },
-  { id: 7, name: "Canvas Weekend Tote", category: "Bags", price: 890, image: "https://images.unsplash.com/photo-1590878400972-3c4a5b9a9d1c?w=900&q=85" },
-  { id: 8, name: "Modern Ceramic Vase", category: "Home & Lifestyle", price: 1150, image: "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=900&q=85" }
+  { id: 1, slug: "everyday-linen-shirt", name: "Everyday Linen Shirt", category: "Men's Fashion", price: 1290, oldPrice: 1590, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=85", tag: "Bestseller" },
+  { id: 2, slug: "classic-womens-handbag", name: "Classic Women's Handbag", category: "Bags", price: 1850, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85", tag: "New" },
+  { id: 3, slug: "minimal-gold-watch", name: "Minimal Gold Watch", category: "Watches", price: 2250, oldPrice: 2690, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&q=85" },
+  { id: 4, slug: "soft-glow-skincare-set", name: "Soft Glow Skincare Set", category: "Beauty", price: 990, image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=900&q=85" },
+  { id: 5, slug: "everyday-sneakers", name: "Everyday Sneakers", category: "Shoes", price: 2190, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&q=85", tag: "Popular" },
+  { id: 6, slug: "relaxed-fit-blazer", name: "Relaxed Fit Blazer", category: "Women's Fashion", price: 2890, oldPrice: 3290, image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&q=85" },
+  { id: 7, slug: "canvas-weekend-tote", name: "Canvas Weekend Tote", category: "Bags", price: 890, image: "https://images.unsplash.com/photo-1590878400972-3c4a5b9a9d1c?w=900&q=85" },
+  { id: 8, slug: "modern-ceramic-vase", name: "Modern Ceramic Vase", category: "Home & Lifestyle", price: 1150, image: "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=900&q=85" }
 ];
 
 const money = (amount: number) => `৳${amount.toLocaleString("en-BD")}`;
@@ -45,7 +46,7 @@ export default function Home() {
       if (!cancelled && categoryData?.length) setCategories(["All", ...categoryData.map((item: any) => item.name)]);
       const { data, error } = await supabase
         .from("products")
-        .select("id,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,category:categories(name,slug)")
+        .select("id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,category:categories(name,slug)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (cancelled || error || !data?.length) return;
@@ -61,6 +62,7 @@ export default function Home() {
       };
       const mapped: Product[] = data.map((row: any) => ({
         id: row.id,
+        slug: row.slug,
         name: row.name,
         category: row.category?.name || labels[row.category?.slug] || "All",
         price: Number(row.price),
@@ -78,6 +80,25 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [wishlist, setWishlist] = useState<(string | number)[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedCart = localStorage.getItem("hhm-cart-v1");
+      const savedWishlist = localStorage.getItem("hhm-wishlist-v1");
+      if (savedCart) setCart(JSON.parse(savedCart));
+      if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
+    } catch {
+      localStorage.removeItem("hhm-cart-v1");
+      localStorage.removeItem("hhm-wishlist-v1");
+    } finally { setStorageReady(true); }
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    localStorage.setItem("hhm-cart-v1", JSON.stringify(cart));
+    localStorage.setItem("hhm-wishlist-v1", JSON.stringify(wishlist));
+  }, [cart, wishlist, storageReady]);
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [email, setEmail] = useState("");
@@ -188,7 +209,7 @@ export default function Home() {
         </nav>
         <div className="header-actions">
           <label className="search-box"><Search size={17} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" /></label>
-          <button className="icon-btn wishlist-head" aria-label="Wishlist"><Heart /></button>
+          <Link className="icon-btn wishlist-head" href="/wishlist" aria-label={`Wishlist, ${wishlist.length} saved items`}><Heart /><span className="wishlist-count">{wishlist.length}</span></Link>
           <button className="icon-btn bag-btn" aria-label="Shopping bag" onClick={() => setCartOpen(true)}><ShoppingBag /><span>{cartCount}</span></button>
         </div>
       </header>
@@ -224,13 +245,13 @@ export default function Home() {
         </div>
         <div className="product-grid">
           {visibleProducts.map(p => <article className="product-card" key={p.id}>
-            <div className="product-image-wrap"><img src={p.image} alt={p.name} />
+            <div className="product-image-wrap"><Link href={"/products/" + p.slug} aria-label={`View ${p.name}`} className="product-image-link"><img src={p.image} alt={p.name} /></Link>
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
               <button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0 || (cart[p.id] || 0) >= (p.stockQuantity ?? 999)} onClick={() => changeQty(p.id, 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (cart[p.id] || 0) >= (p.stockQuantity ?? 999) ? "MAX STOCK ADDED" : "ADD TO BAG"} <Plus size={14} /></button>
             </div>
-            <div className="product-info"><div><p className="product-category">{p.category}</p><h3>{p.name}</h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
+            <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
         </div>
         {visibleProducts.length === 0 && <div className="empty">No products found. Try another search or category.</div>}
@@ -247,7 +268,7 @@ export default function Home() {
         <small>{subscribed ? "Thanks for joining us. This preview form does not yet save subscriptions." : "By subscribing, you agree to receive occasional updates from us."}</small>
       </section>
 
-      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div><a href="/track-order">Track order</a></div><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
+      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div className="footer-links"><a href="/track-order">Track order</a><a href="/wishlist">Wishlist</a><a href="/contact">Contact</a></div><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
 
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
