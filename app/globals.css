@@ -235,3 +235,5 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
 .admin-save-note{margin-top:8px;padding:9px 13px;border:1px solid #d9c7b4;border-radius:8px;background:#fff9f2;color:#72441f;font-size:12px;font-weight:700;cursor:pointer}
 .admin-save-note:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:700px){.admin-free-shipping-grid{grid-template-columns:1fr}.admin-free-shipping-product{padding:12px}.free-shipping-progress{margin:10px 0}}
+
+.free-shipping-product-tag{position:absolute;left:12px;bottom:14px;z-index:2;display:inline-flex;align-items:center;padding:6px 8px;background:#c66d27;color:#fff;font-size:9px;font-weight:800;letter-spacing:.08em;border-radius:3px;box-shadow:0 2px 8px rgba(50,30,12,.16)}
