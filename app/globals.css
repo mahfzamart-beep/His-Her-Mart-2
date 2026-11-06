@@ -725,3 +725,90 @@ footer{text-align:left;padding:55px 8% 22px}
   html{scroll-behavior:auto}
   .category-strip>div,.product-card,.icon-btn{transition:none}
 }
+
+
+/* Hero layout correction: preserve the full editorial model photograph on tablet and mobile */
+main{width:100%;max-width:100%;overflow-x:clip}
+.announcement,.header{width:100%;box-sizing:border-box}
+.hero{width:100%;box-sizing:border-box}
+@media(max-width:900px){
+  .hero{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    width:100%;
+    max-width:100%;
+    min-height:0;
+    padding:54px 7% 58px;
+    gap:34px;
+    overflow:visible;
+  }
+  .hero-copy{width:100%;max-width:100%;padding:0}
+  .hero h1{
+    max-width:850px;
+    font-size:clamp(58px,8.2vw,82px);
+    line-height:.96;
+    letter-spacing:-3.5px;
+  }
+  .hero-text{max-width:600px}
+  .hero-image-wrap{
+    display:block;
+    position:relative;
+    width:100%;
+    max-width:100%;
+    height:clamp(350px,58vw,510px);
+    min-height:350px;
+    margin:0;
+    overflow:visible;
+    box-shadow:0 22px 65px rgba(39,31,19,.10);
+  }
+  .hero-image{
+    display:block;
+    width:100%;
+    height:100%;
+    min-height:350px;
+    background-image:url('https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1600&q=90');
+    background-size:cover;
+    background-position:center 34%;
+    background-repeat:no-repeat;
+    filter:saturate(.84);
+  }
+  .hero-stamp{
+    left:auto;
+    right:-18px;
+    bottom:22px;
+    width:min(245px,64%);
+    min-width:0;
+    padding:19px 21px;
+    background:#f4f0e8;
+    box-shadow:0 16px 42px rgba(31,25,17,.13);
+  }
+}
+@media(max-width:640px){
+  .hero{
+    grid-template-columns:minmax(0,1fr);
+    padding:43px 6% 48px;
+    gap:27px;
+  }
+  .hero h1{
+    font-size:clamp(52px,13.8vw,68px);
+    letter-spacing:-2.8px;
+    line-height:.98;
+    margin:20px 0 22px;
+  }
+  .hero-text{max-width:100%;font-size:13px}
+  .hero-image-wrap{
+    width:100%;
+    height:clamp(310px,92vw,430px);
+    min-height:310px;
+    margin:0;
+  }
+  .hero-image{min-height:310px;background-position:center 32%}
+  .hero-stamp{
+    width:min(220px,68%);
+    right:-9px;
+    bottom:18px;
+    padding:16px 17px;
+  }
+  .hero-stamp b{font-size:17px}
+  .hero-note{margin-top:27px}
+}
