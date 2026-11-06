@@ -370,3 +370,9 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
 .product-card-actions .quick-order:hover{background:#b84f13}
 .product-card-actions button:disabled{opacity:.55;cursor:not-allowed}
 @media(max-width:640px){.product-card-actions .quick-add,.product-card-actions .quick-order{font-size:7px;padding:11px 4px;letter-spacing:.5px}}
+
+.checkout-helper{margin:-8px 0 16px;color:var(--muted);font-size:12px;line-height:1.6}
+.checkout-order-summary{padding:14px 16px;margin:0 0 20px;background:#f5f0e8;border:1px solid var(--line)}
+.checkout-order-summary>b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;color:#8a5a36}
+.checkout-order-summary>div{display:flex;justify-content:space-between;gap:14px;padding:6px 0;font-size:12px}
+.checkout-order-summary>div strong{white-space:nowrap;font-weight:700}
