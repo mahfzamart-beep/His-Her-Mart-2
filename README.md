@@ -33,6 +33,10 @@ A premium minimalist shopping storefront for Bangladesh, built with Next.js and 
 - Supplier assignment is manual because API access has not been provided by the suppliers.
 - SMS/email order notifications, customer registration and account/order-history screens, reviews, coupons, return/refund workflow, and a WhatsApp support integration are not implemented.
 
+## Store operations
+
+See [Manual Supplier & Order Operations](docs/manual-supplier-and-order-operations.md) for the step-by-step workflow to verify ShopBase BD/DropshippingBD stock, confirm delivery charges, process orders and keep inventory accurate without API integrations.
+
 ## Local development
 
 1. Install Node.js 20 or newer.
