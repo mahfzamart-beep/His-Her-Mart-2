@@ -190,10 +190,9 @@ export default function Home() {
         },
       });
 
-      if (error) {
-        const responseMessage = (data as { error?: string } | null)?.error;
-        throw new Error(responseMessage || error.message);
-      }
+      const responseMessage = (data as { error?: string } | null)?.error;
+      if (responseMessage) throw new Error(responseMessage);
+      if (error) throw error;
       const confirmation = data?.order as OrderConfirmation;
       if (!confirmation?.order_number) {
         throw new Error("The order response could not be verified. Please contact the store before trying again.");
