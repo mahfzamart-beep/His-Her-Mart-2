@@ -8,19 +8,23 @@ A premium minimalist Bangladesh shopping-store starter built with Next.js.
 3. Run `npm run dev`.
 4. Open `http://localhost:3000`.
 
-## Current starter features
-- Responsive storefront homepage
-- Product category filters and search
-- Sample product cards
-- Cart quantity controls and subtotal
-- Wishlist toggle
-- Brand story and newsletter preview
+## Implemented features
+- Responsive storefront with product categories, search, cart and wishlist
+- Product catalogue loaded from Supabase
+- Guest Cash on Delivery checkout through a Supabase Edge Function
+- Server-side product price and stock validation, stock reduction and basic phone order throttling
+- Order confirmation with a unique order number and unboxing-video notice
+- Protected admin order dashboard with status updates and private admin notes
+- Admin-controlled product eligibility for the selected-product free-shipping offer
+- Server-side free-shipping calculation: 3 or more quantity units from selected eligible products qualify; all products are excluded by default unless an admin enables them
 
-## Important
-This is a front-end starter only. It does not yet include customer accounts,
-database-backed products, order submission, admin dashboard, stock management,
-or live bKash/Nagad payment processing. Those require secure backend setup
-and, for payment gateways, approved merchant credentials.
+## Not ready for public commercial launch
+- Customer SMS/email order notifications
+- Full product/category create-edit-delete and supplier stock sync
+- Live bKash/Nagad payment processing (requires approved merchant credentials)
+- A fixed delivery-price policy for orders that do not qualify for free shipping; the store must confirm that charge before dispatch for now
+- Real final product photography, verified supplier pricing and stock, and custom domain
+- Commercial hosting plan review and approval
 
 
 ## Admin dashboard setup
