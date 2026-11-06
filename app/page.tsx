@@ -36,45 +36,50 @@ const money = (amount: number) => `৳${amount.toLocaleString("en-BD")}`;
 export default function Home() {
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [categories, setCategories] = useState<string[]>(defaultCategories);
+  const [catalogReady, setCatalogReady] = useState(false);
   const [category, setCategory] = useState("All");
 
   useEffect(() => {
     let cancelled = false;
     async function loadProducts() {
-      if (!supabase) return;
-      const { data: categoryData } = await supabase.from("categories").select("name").eq("is_active", true).order("sort_order", { ascending: true });
-      if (!cancelled && categoryData?.length) setCategories(["All", ...categoryData.map((item: any) => item.name)]);
-      const { data, error } = await supabase
-        .from("products")
-        .select("id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,category:categories(name,slug)")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      if (cancelled || error || !data?.length) return;
-      const labels: Record<string, string> = {
-        "mens-fashion": "Men's Fashion",
-        "womens-fashion": "Women's Fashion",
-        "beauty-cosmetics": "Beauty & Cosmetics",
-        "shoes-footwear": "Shoes & Footwear",
-        "watches-accessories": "Watches & Accessories",
-        "bags-wallets": "Bags & Wallets",
-        "home-lifestyle": "Home & Lifestyle",
-        "electronics": "Electronics"
-      };
-      const mapped: Product[] = data.map((row: any) => ({
-        id: row.id,
-        slug: row.slug,
-        name: row.name,
-        category: row.category?.name || labels[row.category?.slug] || "All",
-        price: Number(row.price),
-        oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
-        image: row.image_url || fallbackProducts[0].image,
-        tag: row.is_featured ? "Featured" : undefined,
-        freeShippingEligible: row.free_shipping_eligible === true,
-        stockQuantity: Number(row.stock_quantity ?? 0)
-      }));
-      setProducts(mapped);
+      if (!supabase) { setCatalogReady(true); return; }
+      try {
+        const { data: categoryData } = await supabase.from("categories").select("name").eq("is_active", true).order("sort_order", { ascending: true });
+        if (!cancelled && categoryData?.length) setCategories(["All", ...categoryData.map((item: any) => item.name)]);
+        const { data, error } = await supabase
+          .from("products")
+          .select("id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,category:categories(name,slug)")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false });
+        if (cancelled || error || !data?.length) return;
+        const labels: Record<string, string> = {
+          "mens-fashion": "Men's Fashion",
+          "womens-fashion": "Women's Fashion",
+          "beauty-cosmetics": "Beauty & Cosmetics",
+          "shoes-footwear": "Shoes & Footwear",
+          "watches-accessories": "Watches & Accessories",
+          "bags-wallets": "Bags & Wallets",
+          "home-lifestyle": "Home & Lifestyle",
+          "electronics": "Electronics"
+        };
+        const mapped: Product[] = data.map((row: any) => ({
+          id: row.id,
+          slug: row.slug,
+          name: row.name,
+          category: row.category?.name || labels[row.category?.slug] || "All",
+          price: Number(row.price),
+          oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
+          image: row.image_url || fallbackProducts[0].image,
+          tag: row.is_featured ? "Featured" : undefined,
+          freeShippingEligible: row.free_shipping_eligible === true,
+          stockQuantity: Number(row.stock_quantity ?? 0)
+        }));
+        setProducts(mapped);
+      } finally {
+        if (!cancelled) setCatalogReady(true);
+      }
     }
-    loadProducts();
+    void loadProducts();
     return () => { cancelled = true; };
   }, []);
   const [query, setQuery] = useState("");
@@ -119,6 +124,7 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [buyNow, setBuyNow] = useState<{ productId: string; quantity: number } | null>(null);
   const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState("");
@@ -142,7 +148,37 @@ export default function Home() {
   const subtotal = cartItems.reduce((sum, p) => sum + p.price * cart[p.id], 0);
   const freeShippingEligibleCount = cartItems.reduce((sum, p) => sum + (p.freeShippingEligible ? cart[p.id] : 0), 0);
   const freeShippingUnlocked = freeShippingEligibleCount >= 3;
-  const deliveryChargePreview = freeShippingUnlocked ? 0 : deliveryZone === "inside_dhaka" ? 80 : deliveryZone === "outside_dhaka" ? 150 : null;
+  const checkoutQuantities: Record<string, number> = buyNow ? { [buyNow.productId]: buyNow.quantity } : cart;
+  const checkoutItems = products.filter(p => checkoutQuantities[p.id]);
+  const checkoutSubtotal = checkoutItems.reduce((sum, p) => sum + p.price * checkoutQuantities[p.id], 0);
+  const checkoutFreeShippingEligibleCount = checkoutItems.reduce((sum, p) => sum + (p.freeShippingEligible ? checkoutQuantities[p.id] : 0), 0);
+  const checkoutFreeShippingUnlocked = checkoutFreeShippingEligibleCount >= 3;
+  const deliveryChargePreview = checkoutFreeShippingUnlocked ? 0 : deliveryZone === "inside_dhaka" ? 80 : deliveryZone === "outside_dhaka" ? 150 : null;
+  useEffect(() => {
+    if (!storageReady || !catalogReady) return;
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get("buyNow");
+    const openBag = params.get("openBag") === "1";
+    if (productId) {
+      const product = products.find(item => String(item.id) === productId);
+      const requested = Math.max(1, Math.min(10, Number(params.get("qty") || 1)));
+      if (product && Number(product.stockQuantity ?? 0) > 0) {
+        setBuyNow({ productId, quantity: Math.min(requested, Number(product.stockQuantity)) });
+        setCheckoutOpen(true);
+      } else {
+        setOrderError("This product is currently unavailable. Please refresh the product page.");
+      }
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (params.get("checkout") === "1") {
+      setBuyNow(null);
+      setCheckoutOpen(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (openBag) {
+      setCartOpen(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, [storageReady, catalogReady, products]);
+
   const changeQty = (id: string | number, delta: number) => setCart(old => {
     const product = products.find(item => item.id === id);
     const stockLimit = product?.stockQuantity ?? 999;
@@ -163,7 +199,7 @@ export default function Home() {
       setOrderError("Please read and accept the unboxing video notice.");
       return;
     }
-    if (cartItems.length === 0 || cartItems.some(item => typeof item.id !== "string" || !/^[0-9a-f-]{36}$/i.test(item.id))) {
+    if (checkoutItems.length === 0 || checkoutItems.some(item => typeof item.id !== "string" || !/^[0-9a-f-]{36}$/i.test(item.id))) {
       setOrderError("Your cart needs to refresh before checkout. Please close checkout and try again.");
       return;
     }
@@ -181,9 +217,9 @@ export default function Home() {
             area: area.trim(),
             address_line: addressLine.trim(),
           },
-          items: cartItems.map(item => ({
+          items: checkoutItems.map(item => ({
             product_id: String(item.id),
-            quantity: cart[item.id],
+            quantity: checkoutQuantities[item.id],
           })),
           accept_unboxing_policy: true,
           website: "",
@@ -202,7 +238,8 @@ export default function Home() {
         subtotal: Number(confirmation.subtotal),
         total: Number(confirmation.total),
       });
-      setCart({});
+      if (!buyNow) setCart({});
+      setBuyNow(null);
       setCheckoutOpen(false);
       setCartOpen(false);
       setOrderSuccessOpen(true);
@@ -271,7 +308,7 @@ export default function Home() {
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
-              <button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0 || (cart[p.id] || 0) >= (p.stockQuantity ?? 999)} onClick={() => changeQty(p.id, 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (cart[p.id] || 0) >= (p.stockQuantity ?? 999) ? "MAX STOCK ADDED" : "ADD TO BAG"} <Plus size={14} /></button>
+              <button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => (cart[p.id] || 0) > 0 ? setCartOpen(true) : changeQty(p.id, 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (cart[p.id] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[p.id] || 0) > 0 ? <ShoppingBag size={14} /> : <Plus size={14} />}</button>
             </div>
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
@@ -296,11 +333,11 @@ export default function Home() {
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
         {cartItems.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
           <div className="cart-list">{cartItems.map(p => <div className="cart-item" key={p.id}><img src={p.image} alt={p.name} /><div className="cart-item-info"><b>{p.name}</b><span>{money(p.price)}</span><div className="qty"><button onClick={() => changeQty(p.id, -1)}><Minus size={13} /></button>{cart[p.id]}<button onClick={() => changeQty(p.id, 1)}><Plus size={13} /></button></div></div></div>)}</div>
-          <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div><div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div><small>Free shipping applies only to selected products marked in the store offer. Other orders have delivery charge confirmed before dispatch.</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
+          <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div><div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div><small>Free shipping applies only to selected products marked in the store offer. Otherwise delivery is ৳80 inside Dhaka or ৳150 outside Dhaka.</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setBuyNow(null); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
 
-      {checkoutOpen && <div className="overlay checkout-overlay" onClick={() => setCheckoutOpen(false)}>
+      {checkoutOpen && <div className="overlay checkout-overlay" onClick={() => { setCheckoutOpen(false); setBuyNow(null); }}>
         <section className="checkout-panel" role="dialog" aria-modal="true" aria-labelledby="checkout-title" onClick={e => e.stopPropagation()}>
           <div className="checkout-header">
             <div><p className="eyebrow">ALMOST THERE</p><h2 id="checkout-title">Delivery details</h2></div>
@@ -324,17 +361,17 @@ export default function Home() {
             </div>
 
             <div className="checkout-total">
-              <div><span>Product subtotal</span><b>{money(subtotal)}</b></div>
-              <div><span>Delivery charge</span><b>{freeShippingUnlocked ? "FREE" : deliveryChargePreview === null ? "Select delivery area" : money(deliveryChargePreview)}</b></div>
-              <div><span>Estimated total</span><b>{deliveryChargePreview === null ? "—" : money(subtotal + deliveryChargePreview)}</b></div>
-              <small>{freeShippingUnlocked ? "Free shipping unlocked: your cart contains at least 3 quantity units from selected eligible products." : "Inside Dhaka: ৳80 · Outside Dhaka: ৳150. Choose the correct delivery area above. Selected-product free shipping remains available for qualifying orders."}</small>
+              <div><span>{buyNow ? "Selected product subtotal" : "Product subtotal"}</span><b>{money(checkoutSubtotal)}</b></div>
+              <div><span>Delivery charge</span><b>{checkoutFreeShippingUnlocked ? "FREE" : deliveryChargePreview === null ? "Select delivery area" : money(deliveryChargePreview)}</b></div>
+              <div><span>Estimated total</span><b>{deliveryChargePreview === null ? "—" : money(checkoutSubtotal + deliveryChargePreview)}</b></div>
+              <small>{checkoutFreeShippingUnlocked ? "Free shipping unlocked: your selected order contains at least 3 quantity units from eligible products." : "Inside Dhaka: ৳80 · Outside Dhaka: ৳150. Choose the correct delivery area above. Selected-product free shipping remains available for qualifying orders."}</small>
             </div>
 
             <UnboxingNotice checked={policyAccepted} onCheckedChange={setPolicyAccepted} />
             {orderError && <p className="checkout-error" role="alert">{orderError}</p>}
             <div className="checkout-actions">
-              <button type="button" className="back-to-bag" onClick={() => setCheckoutOpen(false)}>Back to bag</button>
-              <button type="submit" className="primary-btn place-order-btn" disabled={isSubmitting || cartItems.length === 0}>
+              <button type="button" className="back-to-bag" onClick={() => { setCheckoutOpen(false); setBuyNow(null); }}>Back to bag</button>
+              <button type="submit" className="primary-btn place-order-btn" disabled={isSubmitting || checkoutItems.length === 0}>
                 {isSubmitting ? "PLACING ORDER..." : "PLACE COD ORDER"} <ArrowRight size={16} />
               </button>
             </div>
