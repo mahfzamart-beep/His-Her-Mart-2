@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, Boxes, CheckCircle2, ClipboardList, LogOut, PackageCheck, RefreshCw, Search, ShieldAlert, Truck } from "lucide-react";
+import AdminProductImport from "../../components/AdminProductImport";
 
 type OrderItem = { id: string; product_id: string | null; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null };
 type Order = {
@@ -38,6 +40,7 @@ export default function AdminPage() {
   const [productEditorOpen, setProductEditorOpen] = useState(false);
   const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
   const [productBusy, setProductBusy] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Order | null>(null);
@@ -141,6 +144,21 @@ export default function AdminPage() {
     setError("");
     setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
     setProductEditorOpen(true);
+  };
+
+  const uploadProductImage = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !supabase || !authorized) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setError("Use a JPG, PNG or WebP image."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("Product images must be 5 MB or smaller."); return; }
+    setImageUploading(true); setError("");
+    const ext = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
+    const path = "products/" + crypto.randomUUID() + "." + ext;
+    const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
+    if (uploadError) setError(uploadError.message);
+    else { const { data } = supabase.storage.from("product-images").getPublicUrl(path); setProductForm(current => ({ ...current, image_url: data.publicUrl })); }
+    setImageUploading(false);
   };
 
   const saveProduct = async (event: FormEvent<HTMLFormElement>) => {
@@ -248,6 +266,7 @@ export default function AdminPage() {
       <h1>Admin sign in</h1>
       <p className="admin-muted">Secure access for authorised store administrators only.</p>
       {session && !authorized && <div className="admin-alert"><ShieldAlert size={17} /> {error || "This account is not an administrator."}</div>}
+      {!session && <p className="admin-forgot-link"><Link href="/admin/reset-password">Forgot password?</Link></p>}
       {!session && <form onSubmit={signIn} className="admin-login-form">
         <label>Email address<input type="email" required autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@example.com" /></label>
         <label>Password<input type="password" required autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Your admin password" /></label>
@@ -284,6 +303,7 @@ export default function AdminPage() {
       <section className="admin-orders-card admin-products-card">
         <div className="admin-orders-toolbar"><div><h2>Product management</h2><p>Add products, update prices and stock, or hide products without deleting order history.</p></div><button className="admin-product-add" onClick={openNewProduct}>+ Add product</button></div>
         <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><button className="admin-product-edit" onClick={()=>openEditProduct(product)}>Edit</button></article>)}</div>
+        <AdminProductImport categories={categories} onImported={refresh} />
       </section>
       <section className="admin-orders-card admin-products-card">
         <div className="admin-orders-toolbar"><div><h2>Category management</h2><p>Create categories and control their storefront visibility and display order.</p></div><button className="admin-product-add" onClick={openNewCategory}>+ Add category</button></div>
@@ -306,6 +326,7 @@ export default function AdminPage() {
         <label>SKU (optional)<input maxLength={80} value={productForm.sku} onChange={e=>setProductForm(current=>({...current,sku:e.target.value}))} placeholder="Product code"/></label>
       </div>
       <label>Product image URL<input type="url" value={productForm.image_url} onChange={e=>setProductForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label>
+      <label className="admin-image-upload">Upload image file<input type="file" accept="image/jpeg,image/png,image/webp" disabled={imageUploading} onChange={uploadProductImage}/><small>{imageUploading ? "Uploading image…" : "JPG, PNG or WebP · maximum 5 MB. Upload fills the image URL above."}</small></label>
       <label>Fulfilment source<select value={productForm.fulfillment_source} onChange={e=>setProductForm(current=>({...current,fulfillment_source:e.target.value}))}><option value="own_stock">Own stock</option><option value="shopbase_bd">ShopBase BD</option><option value="dropshippingbd">DropshippingBD</option></select></label>
       <div className="admin-product-form-grid"><label>Supplier product code<input maxLength={100} value={productForm.supplier_product_code} onChange={e=>setProductForm(current=>({...current,supplier_product_code:e.target.value}))} placeholder="Supplier item/SKU code"/></label><label>Supplier product URL<input type="url" value={productForm.supplier_product_url} onChange={e=>setProductForm(current=>({...current,supplier_product_url:e.target.value}))} placeholder="https://supplier-product-page…"/></label></div>
       <label>Description<textarea rows={3} maxLength={5000} value={productForm.description} onChange={e=>setProductForm(current=>({...current,description:e.target.value}))} placeholder="Product details and features"/></label>
