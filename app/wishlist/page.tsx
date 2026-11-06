@@ -12,7 +12,7 @@ export default function WishlistPage(){
  const {data}=await supabase.from("products").select("id,slug,name,price,image_url,category:categories(name)").in("id",ids).eq("is_active",true);
  if(active)setItems((data||[]) as unknown as Product[]);if(active)setLoading(false)}
  void load();return()=>{active=false}},[ids]);
- function remove(id:string){const next=ids.filter(x=>x!==id);setIds(next);localStorage.setItem("hhm-wishlist-v1",JSON.stringify(next))}
+ function remove(id:string){const next=ids.filter(x=>x!==id);setIds(next);localStorage.setItem("hhm-wishlist-v1",JSON.stringify(next));window.dispatchEvent(new Event("hhm-storage-updated"))}
  return <main className="wishlist-shell"><header className="detail-top"><Link href="/" className="detail-back"><ArrowLeft size={16}/> Back to store</Link><Link href="/track-order" className="detail-wishlist">Track order</Link></header>
  <section className="wishlist-heading"><Heart size={23}/><p className="eyebrow">YOUR PERSONAL EDIT</p><h1>Saved <em>favourites.</em></h1><p>Keep the pieces you love in one place while you browse.</p></section>
  {loading?<p className="wishlist-empty">Loading your saved items…</p>:items.length===0?<div className="wishlist-empty"><ShoppingBag size={34}/><h2>Your wishlist is waiting.</h2><p>Tap the heart on any product to save it here.</p><Link className="primary-btn" href="/">Explore the collection</Link></div>:

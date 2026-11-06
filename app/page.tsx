@@ -99,6 +99,21 @@ export default function Home() {
     localStorage.setItem("hhm-cart-v1", JSON.stringify(cart));
     localStorage.setItem("hhm-wishlist-v1", JSON.stringify(wishlist));
   }, [cart, wishlist, storageReady]);
+
+  useEffect(() => {
+    const syncSavedState = () => {
+      try {
+        setCart(JSON.parse(localStorage.getItem("hhm-cart-v1") || "{}"));
+        setWishlist(JSON.parse(localStorage.getItem("hhm-wishlist-v1") || "[]"));
+      } catch { /* Ignore malformed local browser data. */ }
+    };
+    window.addEventListener("storage", syncSavedState);
+    window.addEventListener("hhm-storage-updated", syncSavedState);
+    return () => {
+      window.removeEventListener("storage", syncSavedState);
+      window.removeEventListener("hhm-storage-updated", syncSavedState);
+    };
+  }, []);
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [email, setEmail] = useState("");
@@ -268,7 +283,7 @@ export default function Home() {
         <small>{subscribed ? "Thanks for joining us. This preview form does not yet save subscriptions." : "By subscribing, you agree to receive occasional updates from us."}</small>
       </section>
 
-      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div className="footer-links"><a href="/track-order">Track order</a><a href="/wishlist">Wishlist</a><a href="/contact">Contact</a></div><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
+      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div className="footer-links"><a href="/track-order">Track order</a><a href="/wishlist">Wishlist</a></div><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
 
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>

@@ -30,13 +30,13 @@ export default function ProductDetailsPage(){
   if(!product)return;
   let cart:Record<string,number>={};try{cart=JSON.parse(localStorage.getItem("hhm-cart-v1")||"{}")}catch{}
   cart[product.id]=Math.min(Number(product.stock_quantity),(cart[product.id]||0)+qty);
-  localStorage.setItem("hhm-cart-v1",JSON.stringify(cart));setAdded(true);
+  localStorage.setItem("hhm-cart-v1",JSON.stringify(cart));window.dispatchEvent(new Event("hhm-storage-updated"));setAdded(true);
  }
  function toggleSaved(){
   if(!product)return;
   let list:string[]=[];try{list=JSON.parse(localStorage.getItem("hhm-wishlist-v1")||"[]")}catch{}
   const next=list.includes(product.id)?list.filter(x=>x!==product.id):[...list,product.id];
-  localStorage.setItem("hhm-wishlist-v1",JSON.stringify(next));setSaved(next.includes(product.id));
+  localStorage.setItem("hhm-wishlist-v1",JSON.stringify(next));window.dispatchEvent(new Event("hhm-storage-updated"));setSaved(next.includes(product.id));
  }
  if(busy)return <main className="detail-shell"><p>Loading product…</p></main>;
  if(!product)return <main className="detail-shell"><p className="eyebrow">HIS & HER MART</p><h1>Product not found</h1><p>This item may be unavailable or no longer listed.</p><Link className="primary-btn" href="/">Back to shopping <ArrowLeft size={16}/></Link></main>;
@@ -53,7 +53,7 @@ export default function ProductDetailsPage(){
     <div className="detail-quantity"><span>Quantity</span><div><button onClick={()=>setQty(v=>Math.max(1,v-1))} disabled={qty<=1}><Minus size={14}/></button><b>{qty}</b><button onClick={()=>setQty(v=>Math.min(stock,v+1))} disabled={qty>=stock}><Plus size={14}/></button></div></div>
     <div className="detail-actions"><button className="primary-btn" onClick={addToBag} disabled={stock<=0}>Add to bag <ShoppingBag size={16}/></button><button className={saved?"detail-save saved":"detail-save"} onClick={toggleSaved}><Heart size={17} fill={saved?"currentColor":"none"}/>{saved?"Saved":"Save item"}</button></div>
     {added&&<p className="detail-added"><Check size={15}/> Added to your bag. <Link href="/">Continue shopping</Link> or open your bag on the store page.</p>}
-    <div className="detail-assurance"><div><b>Cash on Delivery</b><small>Pay when your parcel arrives</small></div><div><b>Order tracking</b><small>Track your order online</small></div><div><b>Need help?</b><small><Link href="/contact">Contact our store team</Link></small></div></div>
+    <div className="detail-assurance"><div><b>Cash on Delivery</b><small>Pay when your parcel arrives</small></div><div><b>Order tracking</b><small>Track your order online</small></div><div><b>Need help?</b><small><Link href="/track-order">Track an existing order</Link></small></div></div>
    </section>
   </div>
  </main>;
