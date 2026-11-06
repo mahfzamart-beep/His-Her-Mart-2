@@ -262,3 +262,6 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
 @media(max-width:420px){.admin-product-form-grid{grid-template-columns:1fr}.admin-product-form-actions{flex-direction:column-reverse}.admin-product-form-actions button{width:100%}}
 
 .admin-product-source,.admin-item-supplier{display:block;margin-top:4px;color:#8b5b32;font-size:10px;line-height:1.45}
+
+.admin-category-visible{display:flex!important;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid #ddd3c5;background:#fffefa;font-size:11px;font-weight:700;color:#514a40}
+.admin-category-visible input{accent-color:#d9651e;width:17px;height:17px}
