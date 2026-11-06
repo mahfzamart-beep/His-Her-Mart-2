@@ -14,13 +14,16 @@ A premium minimalist Bangladesh shopping-store starter built with Next.js.
 - Guest Cash on Delivery checkout through a Supabase Edge Function
 - Server-side product price and stock validation, stock reduction and basic phone order throttling
 - Order confirmation with a unique order number and unboxing-video notice
-- Protected admin order dashboard with status updates and private admin notes
+- Protected admin order dashboard with order status updates, private notes and delivery-fee editing
+- Admin product catalogue: create and edit product names, categories, descriptions, prices, compare-at prices, stock, image URLs, and publish/featured status
+- Supplier fulfilment assignment for own stock, ShopBase BD or DropshippingBD, with supplier product codes and links saved as an order-time snapshot
 - Admin-controlled product eligibility for the selected-product free-shipping offer
 - Server-side free-shipping calculation: 3 or more quantity units from selected eligible products qualify; all products are excluded by default unless an admin enables them
 
 ## Not ready for public commercial launch
 - Customer SMS/email order notifications
-- Full product/category create-edit-delete and supplier stock sync
+- Category management screen and product image uploads to store storage
+- Automated supplier order placement and stock sync; supplier API documentation and partner credentials have not yet been confirmed. Current supplier assignment supports manual portal fulfilment
 - Live bKash/Nagad payment processing (requires approved merchant credentials)
 - A fixed delivery-price policy for orders that do not qualify for free shipping; the store must confirm that charge before dispatch for now
 - Real final product photography, verified supplier pricing and stock, and custom domain
@@ -52,4 +55,4 @@ Do not place a Supabase service-role key in browser code, GitHub, or a public en
 
 ### Dashboard scope
 
-The current dashboard lists the latest 200 orders, filters by order status, searches by order number/customer/phone, shows order and item details, and lets an authorised administrator update the order status and internal note. Customer SMS/email notifications, product CRUD, staff roles, returns workflow, and audit history are not yet implemented.
+The current dashboard lists the latest 200 orders, filters by order status, searches by order number/customer/phone, shows order and item details, lets an authorised administrator update order status and internal notes, and set delivery charges for non-free-shipping orders. Product create/edit, stock updates, visibility, featured status, supplier mapping and free-shipping eligibility are available. Customer SMS/email notifications, category management, staff roles, returns workflow, and audit history are not yet implemented.
