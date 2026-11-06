@@ -1,58 +1,92 @@
 # His & Her Mart
 
-A premium minimalist Bangladesh shopping-store starter built with Next.js.
+A premium minimalist shopping storefront for Bangladesh, built with Next.js and Supabase.
 
-## Run locally
+## Current application features
+
+- Responsive storefront with product categories, search, product cards and BDT prices.
+- Product detail pages with inventory availability, descriptions and product-specific SEO metadata.
+- Persistent cart and browser-local wishlist.
+- Guest Cash on Delivery checkout through the `create-guest-order` Supabase Edge Function.
+- Server-side price and stock validation, row locking, inventory reduction and phone-based order throttling.
+- Order confirmation with a unique order number and the unboxing-video notice.
+- Guest order tracking through the `track-guest-order` Edge Function.
+- Protected admin dashboard at `/admin`, using Supabase Auth and the `profiles.role = 'admin'` check.
+- Admin order management: order search, status updates, delivery-charge editing and private order notes.
+- Product management: add/edit products, SKU, price, compare-at price, description, stock, category, image URL, publish/featured status and supplier mapping.
+- Product image uploads to the `product-images` Supabase Storage bucket (JPG, PNG and WebP; up to 5 MB).
+- CSV bulk product import (up to 500 rows).
+- Category management: create, edit, sort and hide categories.
+- Manual fulfilment mapping for own stock, ShopBase BD and DropshippingBD. Supplier orders and stock are not automatically synced.
+- Selected-product free shipping: at least 3 quantity units from products explicitly marked eligible qualify.
+- Sitemap, robots.txt, canonical product URLs, Open Graph metadata and noindex rules for private/customer utility pages.
+
+## Important implementation notes
+
+- Cart and wishlist are saved in the current browser's local storage. They do not sync across devices or signed-in customer accounts.
+- The newsletter form is a visual preview and does not save email subscriptions yet.
+- Guest checkout currently supports Cash on Delivery only.
+- Orders that do not qualify for the selected-product free-shipping offer have a delivery charge confirmed by the store before dispatch. A fixed district/zone delivery-price table has not been configured.
+- The catalogue currently contains 8 sample products and 8 categories. Replace them with real, verified product descriptions, photos, prices and stock before selling.
+- Supplier assignment is manual because API access has not been provided by the suppliers.
+- SMS/email order notifications, customer registration and account/order-history screens, reviews, coupons, return/refund workflow, and a WhatsApp support integration are not implemented.
+
+## Local development
+
 1. Install Node.js 20 or newer.
-2. In this folder run `npm install`.
-3. Run `npm run dev`.
-4. Open `http://localhost:3000`.
+2. Install dependencies with `npm install`.
+3. Configure the public Supabase project URL and anon/publishable key in the local environment:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Run `npm run dev`.
+5. Open `http://localhost:3000`.
 
-## Implemented features
-- Responsive storefront with product categories, search, cart and wishlist
-- Product catalogue loaded from Supabase
-- Guest Cash on Delivery checkout through a Supabase Edge Function
-- Server-side product price and stock validation, stock reduction and basic phone order throttling
-- Order confirmation with a unique order number and unboxing-video notice
-- Protected admin order dashboard with order status updates, private notes and delivery-fee editing
-- Admin product catalogue: create and edit product names, categories, descriptions, prices, compare-at prices, stock, image URLs, and publish/featured status
-- Supplier fulfilment assignment for own stock, ShopBase BD or DropshippingBD, with supplier product codes and links saved as an order-time snapshot
-- Admin-controlled product eligibility for the selected-product free-shipping offer
-- Server-side free-shipping calculation: 3 or more quantity units from selected eligible products qualify; all products are excluded by default unless an admin enables them
+Never place the Supabase service-role or secret key in a `NEXT_PUBLIC_*` variable, browser code, or GitHub.
 
-## Not ready for public commercial launch
-- Customer SMS/email order notifications
-- Product image uploads to store storage (the current editor accepts externally hosted image URLs)
-- Automated supplier order placement and stock sync; supplier API documentation and partner credentials have not yet been confirmed. Current supplier assignment supports manual portal fulfilment
-- Live bKash/Nagad payment processing (requires approved merchant credentials)
-- A fixed delivery-price policy for orders that do not qualify for free shipping; the store must confirm that charge before dispatch for now
-- Real final product photography, verified supplier pricing and stock, and custom domain
-- Commercial hosting plan review and approval
+## Admin setup
 
+The protected dashboard is available at `/admin`. It uses Supabase Auth and checks the signed-in user's `public.profiles.role` value. A normal customer account must not be able to manage orders or products.
 
-## Admin dashboard setup
+To create an administrator on a fresh project:
 
-The protected order dashboard is available at `/admin`. It uses Supabase Auth and checks the signed-in user's `public.profiles.role` value. A normal customer account cannot read or update store orders.
+1. In Supabase Dashboard, create the Auth user with the store owner's email.
+2. In SQL Editor, set that user's profile role to `admin` (replace the email below):
+   
+   ```sql
+   update public.profiles
+   set role = 'admin', updated_at = now()
+   where id = (
+     select id from auth.users
+     where lower(email) = lower('YOUR-ADMIN-EMAIL@example.com')
+   );
+   ```
 
-### Create the first store administrator
+3. Confirm that exactly one profile row was updated.
+4. Open `/admin` and sign in.
 
-1. In the Supabase Dashboard, open **Authentication → Users** and create an account using the store owner's email address. Use a strong, unique password and keep it private.
-2. After the account is created, open **SQL Editor** and run the following query, replacing the email with the exact email used in step 1:
+Do not share administrator passwords in chat. Use the store's password-reset page if the administrator needs to set a new password.
 
-```sql
-update public.profiles
-set role = 'admin', updated_at = now()
-where id = (
-  select id from auth.users
-  where lower(email) = lower('YOUR-ADMIN-EMAIL@example.com')
-);
-```
+## Before commercial launch
 
-3. Confirm that exactly one profile was updated. If zero rows were updated, confirm the Auth user exists and that the profile row was created.
-4. Visit `/admin` on the deployed store and sign in with that account.
+The code and current production build are deployed, but the store is not ready for full commercial operation until these owner/business items are completed:
 
-Do not place a Supabase service-role key in browser code, GitHub, or a public environment variable. Do not share the administrator password in chat.
+- Replace the sample catalogue with real supplier products and verified stock, images and pricing.
+- Decide and publish delivery charges by delivery area.
+- Decide and publish return, exchange, refund, privacy and terms policies.
+- Complete approved bKash/Nagad merchant onboarding and gateway integration if those payment methods are required. Do not display them as active payment options before credentials and testing are complete.
+- Configure transactional email/SMS and a verified store contact channel.
+- Register and connect a store domain.
+- Review the Vercel plan: Vercel's Hobby plan is for personal, non-commercial use; choose an appropriate business plan or hosting provider before commercial sales.
+- Review the remaining npm audit warnings and enable leaked-password protection when the Supabase plan supports it.
+- Run browser-based checkout, tracking, admin, upload and mobile-device tests before accepting real customer orders.
 
-### Dashboard scope
+## Production routes
 
-The current dashboard lists the latest 200 orders, filters by order status, searches by order number/customer/phone, shows order and item details, lets an authorised administrator update order status and internal notes, and set delivery charges for non-free-shipping orders. Product create/edit, stock updates, visibility, featured status, supplier mapping and free-shipping eligibility are available. Customer SMS/email notifications, staff roles, returns workflow, image-file uploads to store storage, and audit history are not yet implemented. Categories can be created, edited, ordered, and hidden from the admin dashboard.
+- Storefront: `/`
+- Admin: `/admin`
+- Admin password reset: `/admin/reset-password`
+- Order tracking: `/track-order`
+- Wishlist: `/wishlist`
+- Product details: `/products/[slug]`
+- Sitemap: `/sitemap.xml`
+- Robots rules: `/robots.txt`
