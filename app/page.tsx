@@ -234,10 +234,14 @@ export default function Home() {
         },
       });
 
-      const responseMessage = (data as { error?: string } | null)?.error;
-      if (responseMessage) throw new Error(responseMessage);
+      const response = data as { error?: string; order_received?: boolean; order_number?: string; order?: OrderConfirmation } | null;
+      if (response?.order_received && response.order_number) {
+        setOrderError(`Your order ${response.order_number} has already been received. Please contact WhatsApp +8801969419302 for confirmation and do not submit again.`);
+        return;
+      }
       if (error) throw error;
-      const confirmation = data?.order as OrderConfirmation;
+      if (response?.error) throw new Error(response.error);
+      const confirmation = response?.order as OrderConfirmation;
       if (!confirmation?.order_number) {
         throw new Error("The order response could not be verified. Please contact the store before trying again.");
       }
