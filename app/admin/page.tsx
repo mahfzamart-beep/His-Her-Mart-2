@@ -95,6 +95,45 @@ export default function AdminPage() {
   };
   const signOut = async () => { await supabase?.auth.signOut(); setSession(null); setAuthorized(false); setOrders([]); };
 
+  const openNewProduct = () => {
+    setError("");
+    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", category_id: categories[0]?.id || "", is_active: true, is_featured: false });
+    setProductEditorOpen(true);
+  };
+
+  const openEditProduct = (product: StoreProduct) => {
+    setError("");
+    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured });
+    setProductEditorOpen(true);
+  };
+
+  const saveProduct = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!supabase || !authorized) return;
+    const name = productForm.name.trim();
+    const price = Number(productForm.price);
+    const stock = Number(productForm.stock_quantity);
+    const compareAt = productForm.compare_at_price.trim() ? Number(productForm.compare_at_price) : null;
+    if (name.length < 2 || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0 || (compareAt !== null && (!Number.isFinite(compareAt) || compareAt < price))) {
+      setError("Check the product name, price, stock quantity and compare-at price.");
+      return;
+    }
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    if (!slug) { setError("Use a product name with English letters or numbers so a product URL can be created."); return; }
+    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: productForm.image_url.trim() || null, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, updated_at: new Date().toISOString() };
+    setProductBusy(productForm.id || "new");
+    setError("");
+    const result = productForm.id
+      ? await supabase.from("products").update(payload).eq("id", productForm.id)
+      : await supabase.from("products").insert(payload);
+    if (result.error) setError(result.error.message);
+    else {
+      setProductEditorOpen(false);
+      await refresh();
+    }
+    setProductBusy(null);
+  };
+
   const toggleFreeShipping = async (product: StoreProduct, eligible: boolean) => {
     if (!supabase || !authorized) return;
     setProductBusy(product.id); setError("");
