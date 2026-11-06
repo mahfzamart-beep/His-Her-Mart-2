@@ -19,7 +19,7 @@ type OrderConfirmation = {
   free_shipping_eligible_quantity: number;
 };
 
-const defaultCategories = ["All", "Men's Fashion", "Women's Fashion", "Beauty", "Shoes", "Watches", "Bags", "Home & Lifestyle"];
+const defaultCategories = ["All", "Men's Fashion", "Women's Fashion", "Beauty & Cosmetics", "Shoes & Footwear", "Watches & Accessories", "Bags & Wallets", "Electronics", "Home & Lifestyle", "Kids & Baby", "Mother & Baby Care", "Health & Wellness", "Grocery & Food", "Kitchen & Dining", "Furniture & Home Decor", "Home Appliances", "Mobiles & Accessories", "Computers & Office", "Sports & Outdoors", "Toys & Games", "Books & Stationery", "Automotive & Motorbikes", "Pet Supplies", "Travel & Luggage", "Jewellery", "Men's Grooming", "Garden & Outdoor Living"];
 const fallbackProducts: Product[] = [
   { id: 1, slug: "everyday-linen-shirt", name: "Everyday Linen Shirt", category: "Men's Fashion", price: 1290, oldPrice: 1590, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=85", tag: "Bestseller" },
   { id: 2, slug: "classic-womens-handbag", name: "Classic Women's Handbag", category: "Bags", price: 1850, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85", tag: "New" },
@@ -128,6 +128,7 @@ export default function Home() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [district, setDistrict] = useState("");
+  const [deliveryZone, setDeliveryZone] = useState("");
   const [area, setArea] = useState("");
   const [addressLine, setAddressLine] = useState("");
 
@@ -141,6 +142,7 @@ export default function Home() {
   const subtotal = cartItems.reduce((sum, p) => sum + p.price * cart[p.id], 0);
   const freeShippingEligibleCount = cartItems.reduce((sum, p) => sum + (p.freeShippingEligible ? cart[p.id] : 0), 0);
   const freeShippingUnlocked = freeShippingEligibleCount >= 3;
+  const deliveryChargePreview = freeShippingUnlocked ? 0 : deliveryZone === "inside_dhaka" ? 80 : deliveryZone === "outside_dhaka" ? 150 : null;
   const changeQty = (id: string | number, delta: number) => setCart(old => {
     const product = products.find(item => item.id === id);
     const stockLimit = product?.stockQuantity ?? 999;
@@ -175,6 +177,7 @@ export default function Home() {
           customer_email: customerEmail.trim() || null,
           shipping_address: {
             district: district.trim(),
+            delivery_zone: deliveryZone,
             area: area.trim(),
             address_line: addressLine.trim(),
           },
@@ -187,7 +190,10 @@ export default function Home() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const responseMessage = (data as { error?: string } | null)?.error;
+        throw new Error(responseMessage || error.message);
+      }
       const confirmation = data?.order as OrderConfirmation;
       if (!confirmation?.order_number) {
         throw new Error("The order response could not be verified. Please contact the store before trying again.");
@@ -285,7 +291,7 @@ export default function Home() {
         <small>{subscribed ? "Thanks for joining us. This preview form does not yet save subscriptions." : "By subscribing, you agree to receive occasional updates from us."}</small>
       </section>
 
-      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div className="footer-links"><a href="/track-order">Track order</a><a href="/wishlist">Wishlist</a><a href="/faq">Help & FAQs</a></div><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
+      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div className="footer-links"><a href="/track-order">Track order</a><a href="/wishlist">Wishlist</a><a href="/faq">Help & FAQs</a></div><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp Support · +8801969419302</a><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
 
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
@@ -306,6 +312,7 @@ export default function Home() {
               <label>Full name <input required minLength={2} maxLength={100} value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Name of the recipient" /></label>
               <label>Mobile number <input required type="tel" inputMode="tel" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="01XXXXXXXXX" /></label>
               <label>Email address <span className="optional-label">Optional</span><input type="email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} placeholder="name@example.com" /></label>
+              <label>Delivery area<select required value={deliveryZone} onChange={e => setDeliveryZone(e.target.value)}><option value="">Choose delivery area</option><option value="inside_dhaka">Inside Dhaka — ৳80</option><option value="outside_dhaka">Outside Dhaka — ৳150</option></select></label>
               <label>District <input required minLength={2} value={district} onChange={e => setDistrict(e.target.value)} placeholder="e.g. Dhaka" /></label>
               <label>Area / Thana <span className="optional-label">Optional</span><input value={area} onChange={e => setArea(e.target.value)} placeholder="Area, thana or upazila" /></label>
               <label className="address-field">Full delivery address <textarea required minLength={5} value={addressLine} onChange={e => setAddressLine(e.target.value)} placeholder="House, road, area and nearby landmark" rows={3} /></label>
@@ -319,8 +326,9 @@ export default function Home() {
 
             <div className="checkout-total">
               <div><span>Product subtotal</span><b>{money(subtotal)}</b></div>
-              <div><span>Delivery charge</span><b>{freeShippingUnlocked ? "FREE" : "To be confirmed"}</b></div>
-              <small>{freeShippingUnlocked ? "Free shipping unlocked: your cart contains at least 3 items from selected eligible products." : "Free shipping is available only when you order 3 or more items from selected eligible products. Otherwise the delivery charge will be confirmed before dispatch."}</small>
+              <div><span>Delivery charge</span><b>{freeShippingUnlocked ? "FREE" : deliveryChargePreview === null ? "Select delivery area" : money(deliveryChargePreview)}</b></div>
+              <div><span>Estimated total</span><b>{deliveryChargePreview === null ? "—" : money(subtotal + deliveryChargePreview)}</b></div>
+              <small>{freeShippingUnlocked ? "Free shipping unlocked: your cart contains at least 3 quantity units from selected eligible products." : "Inside Dhaka: ৳80 · Outside Dhaka: ৳150. Choose the correct delivery area above. Selected-product free shipping remains available for qualifying orders."}</small>
             </div>
 
             <UnboxingNotice checked={policyAccepted} onCheckedChange={setPolicyAccepted} />
@@ -340,15 +348,16 @@ export default function Home() {
           <div className="success-mark">✓</div>
           <p className="eyebrow">HIS & HER MART</p>
           <h2 id="order-success-title">Congratulations!<br /><em>Your order has been received.</em></h2>
-          <p className="success-intro">Thank you for shopping with us. Our team will contact you to confirm the delivery charge and dispatch details.</p>
+          <p className="success-intro">Thank you for shopping with us. Our team will verify product availability and coordinate fulfilment with the supplier.</p>
           <div className="order-reference">
             <span>YOUR ORDER NUMBER</span>
             <strong>{orderResult.order_number}</strong>
             <div><span>Order status</span><b>Awaiting store confirmation</b></div>
             <div><span>Payment</span><b>Cash on Delivery</b></div>
             <div><span>Product subtotal</span><b>{money(orderResult.subtotal)}</b></div>
-            <div><span>Delivery charge</span><b>{orderResult.free_shipping_applied ? "FREE" : "To be confirmed"}</b></div>
-            <small>{orderResult.free_shipping_applied ? `Free shipping applied to ${orderResult.free_shipping_eligible_quantity} eligible item(s).` : "Delivery charge will be confirmed before dispatch. This order did not meet the selected-product free shipping condition."}</small>
+            <div><span>Delivery charge</span><b>{orderResult.free_shipping_applied ? "FREE" : money(orderResult.delivery_charge)}</b></div>
+            <div><span>Total</span><b>{money(orderResult.total)}</b></div>
+            <small>{orderResult.free_shipping_applied ? `Free shipping applied to ${orderResult.free_shipping_eligible_quantity} eligible item(s).` : `Delivery charge applied: ${orderResult.delivery_charge === 80 ? "Inside Dhaka ৳80" : "Outside Dhaka ৳150"}.`}</small>
           </div>
           <UnboxingNotice showConsent={false} />
           <button className="primary-btn success-close" onClick={() => setOrderSuccessOpen(false)}>Continue shopping <ArrowRight size={16} /></button>
