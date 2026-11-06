@@ -5,7 +5,7 @@ import type { FormEvent } from "react";
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, Boxes, CheckCircle2, ClipboardList, LogOut, PackageCheck, RefreshCw, Search, ShieldAlert, Truck } from "lucide-react";
 
-type OrderItem = { id: string; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number };
+type OrderItem = { id: string; product_id: string | null; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number };
 type Order = {
   id: string; order_number: string; customer_name: string; customer_phone: string;
   customer_email: string | null; shipping_address: Record<string, string>;
@@ -14,9 +14,9 @@ type Order = {
   admin_note: string | null; created_at: string; order_items: OrderItem[];
   free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
-type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; category_id: string | null; category: { name: string }[] };
+type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
 type StoreCategory = { id: string; name: string };
-type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; category_id: string; is_active: boolean; is_featured: boolean };
+type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
 const statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];
 const money = (value: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(value || 0));
 const date = (value: string) => new Intl.DateTimeFormat("en-BD", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -55,7 +55,7 @@ export default function AdminPage() {
     const { data, error: orderError } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200);
     if (orderError) setError(orderError.message);
     else setOrders((data || []) as Order[]);
-    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured,free_shipping_eligible,category_id,category:categories(name)").order("name", { ascending: true });
+    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
     if (productError) setError(productError.message);
     else setProducts((productData || []) as StoreProduct[]);
     const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name").eq("is_active", true).order("sort_order", { ascending: true });
