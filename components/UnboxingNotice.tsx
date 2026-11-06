@@ -64,6 +64,10 @@ export default function UnboxingNotice({
           We review every complaint in line with applicable consumer-protection law. This evidence guideline does not remove your statutory rights.
           <span lang="bn"> প্রতিটি অভিযোগ প্রযোজ্য ভোক্তা-অধিকার আইন মেনে বিবেচনা করা হবে; এই নির্দেশনা আপনার আইনগত অধিকার বাতিল করে না।</span>
         </p>
+        <div className="notice-bangla">
+          <strong>এক্সচেঞ্জ নীতি — ডেলিভারি ম্যান চলে যাওয়ার আগেই পণ্য পরীক্ষা করুন।</strong>
+          ডেলিভারি ম্যান সামনে থাকা অবস্থায় পণ্যটি ভালোভাবে দেখে নিন। তখন কোনো ত্রুটি পাওয়া গেলে আমাদের WhatsApp-এ জানান; আমরা নিজেদের খরচে নতুন পণ্য পাঠাব। ডেলিভারি ম্যান চলে যাওয়ার পর এক্সচেঞ্জ চাইলে পুনরায় ডেলিভারি চার্জ দিতে হবে।
+        </div>
 
         {showConsent && (
           <label className="policy-consent">
@@ -73,8 +77,8 @@ export default function UnboxingNotice({
               onChange={(event) => onCheckedChange?.(event.target.checked)}
             />
             <span>
-              I have read and agree to this notice.
-              <span lang="bn"> আমি এই নোটিশটি পড়েছি এবং সম্মত।</span>
+              I have read the unboxing and doorstep-check / exchange policy.
+              <span lang="bn"> আমি আনবক্সিং ও ডেলিভারির সময় পণ্য পরীক্ষা এবং এক্সচেঞ্জ নীতিটি পড়েছি।</span>
             </span>
           </label>
         )}
