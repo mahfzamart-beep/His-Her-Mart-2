@@ -260,3 +260,5 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
 .admin-product-form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:5px}
 @media(max-width:700px){.admin-product-list{grid-template-columns:1fr;padding:0 14px 16px}.admin-product-form-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:420px){.admin-product-form-grid{grid-template-columns:1fr}.admin-product-form-actions{flex-direction:column-reverse}.admin-product-form-actions button{width:100%}}
+
+.admin-product-source,.admin-item-supplier{display:block;margin-top:4px;color:#8b5b32;font-size:10px;line-height:1.45}
