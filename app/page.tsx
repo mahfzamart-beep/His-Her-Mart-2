@@ -22,12 +22,12 @@ type OrderConfirmation = {
 const defaultCategories = ["All", "Men's Fashion", "Women's Fashion", "Beauty & Cosmetics", "Shoes & Footwear", "Watches & Accessories", "Bags & Wallets", "Electronics", "Home & Lifestyle", "Kids & Baby", "Mother & Baby Care", "Health & Wellness", "Grocery & Food", "Kitchen & Dining", "Furniture & Home Decor", "Home Appliances", "Mobiles & Accessories", "Computers & Office", "Sports & Outdoors", "Toys & Games", "Books & Stationery", "Automotive & Motorbikes", "Pet Supplies", "Travel & Luggage", "Jewellery", "Men's Grooming", "Garden & Outdoor Living"];
 const fallbackProducts: Product[] = [
   { id: 1, slug: "everyday-linen-shirt", name: "Everyday Linen Shirt", category: "Men's Fashion", price: 1290, oldPrice: 1590, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=85", tag: "Bestseller" },
-  { id: 2, slug: "classic-womens-handbag", name: "Classic Women's Handbag", category: "Bags", price: 1850, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85", tag: "New" },
-  { id: 3, slug: "minimal-gold-watch", name: "Minimal Gold Watch", category: "Watches", price: 2250, oldPrice: 2690, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&q=85" },
-  { id: 4, slug: "soft-glow-skincare-set", name: "Soft Glow Skincare Set", category: "Beauty", price: 990, image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=900&q=85" },
-  { id: 5, slug: "everyday-sneakers", name: "Everyday Sneakers", category: "Shoes", price: 2190, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&q=85", tag: "Popular" },
+  { id: 2, slug: "classic-womens-handbag", name: "Classic Women's Handbag", category: "Bags & Wallets", price: 1850, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85", tag: "New" },
+  { id: 3, slug: "minimal-gold-watch", name: "Minimal Gold Watch", category: "Watches & Accessories", price: 2250, oldPrice: 2690, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&q=85" },
+  { id: 4, slug: "soft-glow-skincare-set", name: "Soft Glow Skincare Set", category: "Beauty & Cosmetics", price: 990, image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=900&q=85" },
+  { id: 5, slug: "everyday-sneakers", name: "Everyday Sneakers", category: "Shoes & Footwear", price: 2190, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&q=85", tag: "Popular" },
   { id: 6, slug: "relaxed-fit-blazer", name: "Relaxed Fit Blazer", category: "Women's Fashion", price: 2890, oldPrice: 3290, image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&q=85" },
-  { id: 7, slug: "canvas-weekend-tote", name: "Canvas Weekend Tote", category: "Bags", price: 890, image: "https://images.unsplash.com/photo-1590878400972-3c4a5b9a9d1c?w=900&q=85" },
+  { id: 7, slug: "canvas-weekend-tote", name: "Canvas Weekend Tote", category: "Bags & Wallets", price: 890, image: "https://images.unsplash.com/photo-1590878400972-3c4a5b9a9d1c?w=900&q=85" },
   { id: 8, slug: "modern-ceramic-vase", name: "Modern Ceramic Vase", category: "Home & Lifestyle", price: 1150, image: "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=900&q=85" }
 ];
 
@@ -53,10 +53,10 @@ export default function Home() {
       const labels: Record<string, string> = {
         "mens-fashion": "Men's Fashion",
         "womens-fashion": "Women's Fashion",
-        "beauty-cosmetics": "Beauty",
-        "shoes-footwear": "Shoes",
-        "watches-accessories": "Watches",
-        "bags-wallets": "Bags",
+        "beauty-cosmetics": "Beauty & Cosmetics",
+        "shoes-footwear": "Shoes & Footwear",
+        "watches-accessories": "Watches & Accessories",
+        "bags-wallets": "Bags & Wallets",
         "home-lifestyle": "Home & Lifestyle",
         "electronics": "Electronics"
       };
