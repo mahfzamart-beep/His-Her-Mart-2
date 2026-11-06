@@ -221,6 +221,7 @@ export default function Home() {
           <a href="#shop" onClick={() => { setCategory("Women's Fashion"); setMobileMenu(false); }}>For Her</a>
           <a href="#story" onClick={() => setMobileMenu(false)}>Our Story</a>
           <a href="/track-order" onClick={() => setMobileMenu(false)}>Track Order</a>
+          <Link href="/wishlist" onClick={() => setMobileMenu(false)}>Wishlist ({wishlist.length})</Link>
         </nav>
         <div className="header-actions">
           <label className="search-box"><Search size={17} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" /></label>
