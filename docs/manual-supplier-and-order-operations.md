@@ -22,10 +22,10 @@ In Admin → Products, set the fulfilment source to Own stock, ShopBase BD or Dr
 2. Open each new Pending order. Check the customer's name, mobile number, district, area and full address.
 3. Check every line item and its fulfilment source. Open the saved supplier item link where available.
 4. Manually confirm the exact variant, stock, supplier price and dispatch availability with the supplier.
-5. Confirm the delivery charge for the customer's area. If it is not a free-shipping order, enter the agreed amount and use **Save delivery charge and update total**. The customer tracking page will show the delivery charge as pending until a non-zero charge is saved.
+5. The customer selects **Inside Dhaka (৳80)** or **Outside Dhaka (৳150)** at checkout. The checkout server saves the matching delivery charge and updates the order total automatically. Use **Save delivery charge and update total** only if an exceptional correction is required.
 6. Add a private admin note with the supplier confirmation/reference and any fulfilment detail needed by the store. Do not put passwords, payment credentials or unnecessary sensitive customer data in notes.
 7. Only after stock, delivery fee and fulfilment are confirmed, update the order status to **Confirmed**.
-8. Place the supplier order manually. When the parcel has actually been dispatched, update the status to **Shipped**. Update it to **Delivered** only after delivery is confirmed.
+8. Place the supplier order manually. The supplier / dropshipping partner handles parcel dispatch and courier coordination under its fulfilment process. When the supplier confirms dispatch, update the status to **Shipped**. Update it to **Delivered** only after delivery is confirmed.
 9. If an item is unavailable or the supplier price changed, contact the customer and agree on the next step before dispatch. Do not silently substitute products or change the agreed amount.
 
 ## 3. Keep stock accurate
@@ -49,5 +49,7 @@ In Admin → Products, set the fulfilment source to Own stock, ShopBase BD or Dr
 - Supplier orders, prices and inventory are manual; there is no ShopBase BD or DropshippingBD API sync.
 - Checkout currently accepts Cash on Delivery only.
 - SMS/email notifications and courier tracking-code integration are not active.
-- Delivery prices by district/zone and return, exchange and refund terms still need the store owner's real business decisions. Do not promise an unapproved rate or policy.
+- Delivery charges are ৳80 inside Dhaka and ৳150 outside Dhaka. Customers choose the correct zone at checkout; exceptional corrections can be saved by an admin.
+- Exchange policy: customers must inspect the product while the delivery person is present. A defect found before the delivery person leaves is replaced at the store's cost. If an exchange is requested after the delivery person leaves, the customer pays a new delivery charge.
+- Supplier-fulfilled orders use the supplier / dropshipping partner's courier fulfilment process; no separate store courier booking is part of this workflow.
 - Do not accept commercial orders on the current Vercel Hobby hosting until the hosting terms allow commercial use. The current deployment is suitable for demo and preparation only.
