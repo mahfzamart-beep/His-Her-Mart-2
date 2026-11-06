@@ -12,19 +12,21 @@ A premium minimalist shopping storefront for Bangladesh, built with Next.js and 
 - Order confirmation with a unique order number and the unboxing-video notice.
 - Guest order tracking through the `track-guest-order` Edge Function.
 - Protected admin dashboard at `/admin`, using Supabase Auth and the `profiles.role = 'admin'` check.
-- Admin order management: order search, status updates, delivery-charge editing and private order notes.
+- Admin order management: order search, status updates, delivery-charge editing, private order notes and filtered CSV export of the latest 200 orders.
 - Product management: add/edit products, SKU, price, compare-at price, description, stock, category, image URL, publish/featured status and supplier mapping.
 - Product image uploads to the `product-images` Supabase Storage bucket (JPG, PNG and WebP; up to 5 MB).
 - CSV bulk product import (up to 500 rows).
 - Category management: create, edit, sort and hide categories.
 - Manual fulfilment mapping for own stock, ShopBase BD and DropshippingBD. Supplier orders and stock are not automatically synced.
 - Selected-product free shipping: at least 3 quantity units from products explicitly marked eligible qualify.
-- Sitemap, robots.txt, canonical product URLs, Open Graph metadata and noindex rules for private/customer utility pages.
+- Customer Help & FAQs page for ordering, COD, selected-product free shipping, delivery charges, order tracking and browser-saved items.
+- Store icon, sitemap, robots.txt, canonical product URLs, Open Graph metadata and noindex rules for private/customer utility pages.
 
 ## Important implementation notes
 
 - Cart and wishlist are saved in the current browser's local storage. They do not sync across devices or signed-in customer accounts.
 - The newsletter form is a visual preview and does not save email subscriptions yet.
+- The admin CSV export contains the currently loaded latest 200 orders and respects the active status/search filters.
 - Guest checkout currently supports Cash on Delivery only.
 - Orders that do not qualify for the selected-product free-shipping offer have a delivery charge confirmed by the store before dispatch. A fixed district/zone delivery-price table has not been configured.
 - The catalogue currently contains 8 sample products and 8 categories. Replace them with real, verified product descriptions, photos, prices and stock before selling.
@@ -76,8 +78,9 @@ The code and current production build are deployed, but the store is not ready f
 - Complete approved bKash/Nagad merchant onboarding and gateway integration if those payment methods are required. Do not display them as active payment options before credentials and testing are complete.
 - Configure transactional email/SMS and a verified store contact channel.
 - Register and connect a store domain.
-- Review the Vercel plan: Vercel's Hobby plan is for personal, non-commercial use; choose an appropriate business plan or hosting provider before commercial sales.
-- Review the remaining npm audit warnings and enable leaked-password protection when the Supabase plan supports it.
+- Hosting note: the current Vercel Hobby deployment is for development/demo use only because Vercel restricts Hobby to personal, non-commercial use. Before commercial sales, move to a free host whose terms permit commercial use or choose a suitable business plan.
+- The November 6, 2026 Production build uses Next.js 15.5.29 and reported 0 npm audit vulnerabilities. Keep dependencies updated as new security advisories are released.
+- Supabase Free currently reports leaked-password protection as unavailable on this plan; enable it only if/when the project is upgraded to a plan that supports it.
 - Run browser-based checkout, tracking, admin, upload and mobile-device tests before accepting real customer orders.
 
 ## Production routes
@@ -86,6 +89,7 @@ The code and current production build are deployed, but the store is not ready f
 - Admin: `/admin`
 - Admin password reset: `/admin/reset-password`
 - Order tracking: `/track-order`
+- Help & FAQs: `/faq`
 - Wishlist: `/wishlist`
 - Product details: `/products/[slug]`
 - Sitemap: `/sitemap.xml`
