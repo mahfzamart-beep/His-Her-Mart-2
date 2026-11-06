@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { FormEvent } from "react";
 import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
-import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles } from "lucide-react";
+import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck } from "lucide-react";
 
 type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number };
 type OrderConfirmation = {
@@ -150,8 +150,6 @@ export default function Home() {
   }, []);
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [buyNow, setBuyNow] = useState<{ productId: string; quantity: number } | null>(null);
   const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
@@ -295,12 +293,12 @@ export default function Home() {
 
   return (
     <main>
-      <div className="announcement">A little something for every style · Discover the latest arrivals</div>
+      <div className="announcement"><span>THOUGHTFULLY CHOSEN FINDS</span><i>·</i><span>DELIVERED ACROSS BANGLADESH</span></div>
       <header className="header">
         <button className="icon-btn mobile-toggle" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? <X /> : <Menu />}</button>
         <a className="brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a>
         <nav className={mobileMenu ? "nav nav-open" : "nav"}>
-          <a href="#shop" onClick={() => setMobileMenu(false)}>Shop</a>
+          <a href="#shop" onClick={() => setMobileMenu(false)}>Shop All</a>
           <a href="#shop" onClick={() => { setCategory("Men's Fashion"); setMobileMenu(false); }}>For Him</a>
           <a href="#shop" onClick={() => { setCategory("Women's Fashion"); setMobileMenu(false); }}>For Her</a>
           <a href="#story" onClick={() => setMobileMenu(false)}>Our Story</a>
@@ -318,14 +316,14 @@ export default function Home() {
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow"><Sparkles size={14} /> THE EVERYDAY EDIT</p>
-          <h1>Good things.<br /><em>Great style.</em></h1>
-          <p className="hero-text">Thoughtfully picked essentials for every side of you. Find your next favourite, all in one place.</p>
-          <a className="primary-btn" href="#shop">Explore the collection <ArrowRight size={17} /></a>
-          <div className="hero-note"><span /> MODERN SHOPPING · FOR HIM & HER</div>
+          <h1>Everyday pieces.<br /><em>Elevated.</em></h1>
+          <p className="hero-text">A considered mix of style, essentials and little luxuries — chosen to make everyday shopping feel a little more special.</p>
+          <a className="primary-btn" href="#shop">Discover the collection <ArrowRight size={17} /></a>
+          <div className="hero-note"><span /> A MORE CONSIDERED WAY TO SHOP</div>
         </div>
         <div className="hero-image-wrap">
           <div className="hero-image" role="img" aria-label="Neutral-toned fashion editorial" />
-          <div className="hero-stamp">CURATED<br /><b>FOR YOU</b><span>✳</span></div>
+          <div className="hero-stamp"><small>THE HHM EDIT</small><b>Considered<br />for everyday.</b><span>✳</span></div>
         </div>
       </section>
 
@@ -335,10 +333,16 @@ export default function Home() {
         <div><span className="cat-number">03</span><b>Little Luxuries</b><small>Details make the day</small></div>
       </section>
 
+      <section className="service-ribbon" aria-label="Shopping services">
+        <div className="service-item"><span className="service-icon"><ShieldCheck size={19} /></span><span><b>Shop with confidence</b><small>Cash on delivery available</small></span></div>
+        <div className="service-item"><span className="service-icon"><Truck size={19} /></span><span><b>Delivery across Bangladesh</b><small>৳80 in Dhaka · ৳150 outside</small></span></div>
+        <a className="service-item service-help" href="https://wa.me/8801969419302" target="_blank" rel="noreferrer"><span className="service-icon"><MessageCircle size={19} /></span><span><b>Here to help</b><small>Chat with us on WhatsApp</small></span><ArrowRight size={15} /></a>
+      </section>
+
       <section className="shop-section" id="shop">
         <div className="section-heading">
           <div><p className="eyebrow">THE COLLECTION</p><h2>Find your <em>favourites.</em></h2></div>
-          <p>Pieces to wear, use and love —<br />selected with you in mind.</p>
+          <p>Style, essentials and everyday discoveries.<br />A thoughtful edit for him, her and home.</p>
         </div>
         <div className="filters">
           <div className="category-filters">{categories.map(c => <button key={c} className={category === c ? "filter active" : "filter"} onClick={() => setCategory(c)}>{c}</button>)}</div>
@@ -364,12 +368,24 @@ export default function Home() {
       </section>
 
       <section className="newsletter">
-        <p className="eyebrow">NOTES FROM THE MART</p><h2>A little inspiration,<br /><em>straight to your inbox.</em></h2>
-        <form onSubmit={e => { e.preventDefault(); if (email.includes("@")) setSubscribed(true); }}><input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="Your email address" /><button>{subscribed ? "THANK YOU" : "SIGN ME UP"} <ArrowRight size={15} /></button></form>
-        <small>{subscribed ? "Thanks for joining us. This preview form does not yet save subscriptions." : "By subscribing, you agree to receive occasional updates from us."}</small>
+        <p className="eyebrow">PERSONAL SERVICE, ALWAYS</p>
+        <h2>Need a little help?<br /><em>We are one message away.</em></h2>
+        <p className="newsletter-copy">Questions about a product, delivery or your order? Talk to our team directly on WhatsApp.</p>
+        <a className="primary-btn" href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">Chat with our team <ArrowRight size={16} /></a>
       </section>
 
-      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div className="footer-links"><a href="/track-order">Track order</a><a href="/wishlist">Wishlist</a><a href="/faq">Help & FAQs</a></div><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp Support · +8801969419302</a><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
+      <footer>
+        <div className="footer-main">
+          <div className="footer-brand-column">
+            <a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a>
+            <p>Thoughtfully chosen finds for every side of life. A more considered way to shop for him, her and home.</p>
+          </div>
+          <div className="footer-column"><b>EXPLORE</b><a href="#shop">Shop all</a><a href="#shop" onClick={() => setCategory("Men's Fashion")}>For him</a><a href="#shop" onClick={() => setCategory("Women's Fashion")}>For her</a><a href="#story">Our story</a></div>
+          <div className="footer-column"><b>HELP</b><a href="/track-order">Track an order</a><a href="/wishlist">Wishlist</a><a href="/faq">Help & FAQs</a></div>
+          <div className="footer-column footer-contact"><b>GET IN TOUCH</b><span>Customer care</span><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp · +880 1969-419302</a><span>Cash on delivery available</span></div>
+        </div>
+        <div className="footer-bottom"><span>© 2026 His & Her Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
+      </footer>
 
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
