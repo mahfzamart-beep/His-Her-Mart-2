@@ -81,7 +81,7 @@ export default function Home() {
       .select("id,name,slug")
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
-    void categoryRequest.then(({ data, error }) => {
+    void Promise.resolve(categoryRequest).then(({ data, error }) => {
       if (!cancelled && !error && data?.length) {
         setCategories(["All", ...data.map((item: any) => item.name)]);
       }
