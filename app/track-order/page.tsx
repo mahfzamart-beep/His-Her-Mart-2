@@ -59,6 +59,6 @@ export default function TrackOrderPage() {
         <p className="tracking-privacy">For your privacy, this page does not show your delivery address or email address.</p>
       </section>}
     </section>
-    <footer className="tracking-footer">Need help? Contact the store through its official support channel.</footer>
+    <footer className="tracking-footer">Need help? <a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp +8801969419302</a></footer>
   </main>;
 }
