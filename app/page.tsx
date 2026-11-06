@@ -219,6 +219,7 @@ export default function Home() {
           {visibleProducts.map(p => <article className="product-card" key={p.id}>
             <div className="product-image-wrap"><img src={p.image} alt={p.name} />
               {p.tag && <span className="product-tag">{p.tag}</span>}
+              {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
               <button className="quick-add" onClick={() => changeQty(p.id, 1)}>ADD TO BAG <Plus size={14} /></button>
             </div>
