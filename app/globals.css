@@ -359,3 +359,14 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
 .faq-footer{text-align:center;padding:70px 20px 0}
 .faq-footer h2{font:normal clamp(30px,4vw,42px) Georgia;margin:14px 0 22px}
 @media(max-width:640px){.faq-shell{padding:0 6% 50px}.faq-top{height:70px}.faq-intro{margin:54px auto 36px}.faq-item summary{grid-template-columns:27px 1fr 25px;gap:10px;padding:18px 2px}.faq-question b{font-size:16px}.faq-answer{padding:0 37px 20px}}
+
+
+/* Clear product actions: add to bag or buy immediately */
+.product-card-actions{position:absolute;left:0;right:0;bottom:0;display:flex;gap:1px;z-index:3;background:var(--paper)}
+.product-card-actions .quick-add,.product-card-actions .quick-order{position:static;display:flex;align-items:center;justify-content:center;gap:6px;width:50%;min-width:0;transform:none;border:0;padding:13px 7px;font-size:8px;letter-spacing:1px;cursor:pointer}
+.product-card-actions .quick-add{background:#25231f;color:#fff}
+.product-card-actions .quick-order{background:var(--tan);color:#fff}
+.product-card-actions .quick-add:hover{background:#3a3731}
+.product-card-actions .quick-order:hover{background:#b84f13}
+.product-card-actions button:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:640px){.product-card-actions .quick-add,.product-card-actions .quick-order{font-size:7px;padding:11px 4px;letter-spacing:.5px}}
