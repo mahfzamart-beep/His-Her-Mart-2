@@ -28,7 +28,7 @@ A premium minimalist shopping storefront for Bangladesh, built with Next.js and 
 - The newsletter form is a visual preview and does not save email subscriptions yet.
 - The admin CSV export contains the currently loaded latest 200 orders and respects the active status/search filters.
 - Guest checkout currently supports Cash on Delivery only.
-- Orders that do not qualify for the selected-product free-shipping offer have a delivery charge confirmed by the store before dispatch. A fixed district/zone delivery-price table has not been configured.
+- Checkout calculates and stores delivery charges atomically with order creation: ৳80 inside Dhaka and ৳150 outside Dhaka. Selected products can qualify for free shipping when at least 3 quantity units are marked eligible.
 - The catalogue currently contains 8 sample products and 8 categories. Replace them with real, verified product descriptions, photos, prices and stock before selling.
 - Supplier assignment is manual because API access has not been provided by the suppliers.
 - SMS/email order notifications, customer registration and account/order-history screens, reviews, coupons, return/refund workflow, and a WhatsApp support integration are not implemented.
@@ -77,7 +77,7 @@ Do not share administrator passwords in chat. Use the store's password-reset pag
 The code and current production build are deployed, but the store is not ready for full commercial operation until these owner/business items are completed:
 
 - Replace the sample catalogue with real supplier products and verified stock, images and pricing.
-- Decide and publish delivery charges by delivery area.
+- Delivery charges are configured as ৳80 inside Dhaka and ৳150 outside Dhaka; confirm these remain the final business rates.
 - Decide and publish return, exchange, refund, privacy and terms policies.
 - Complete approved bKash/Nagad merchant onboarding and gateway integration if those payment methods are required. Do not display them as active payment options before credentials and testing are complete.
 - Configure transactional email/SMS and a verified store contact channel.
