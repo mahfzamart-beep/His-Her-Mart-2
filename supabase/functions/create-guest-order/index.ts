@@ -72,6 +72,9 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Please provide your delivery address." }, 400, origin);
   }
   const address = shippingAddress as Record<string, unknown>;
+  if (address.delivery_zone !== "inside_dhaka" && address.delivery_zone !== "outside_dhaka") {
+    return json({ error: "Please select Inside Dhaka (৳80) or Outside Dhaka (৳150)." }, 400, origin);
+  }
   if (typeof address.district !== "string" || address.district.trim().length < 2 ||
       typeof address.address_line !== "string" || address.address_line.trim().length < 5 ||
       (typeof address.area !== "string" && address.area !== undefined)) {
@@ -130,5 +133,50 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  return json({ order: data }, 200, origin);
+  const created = data as Record<string, unknown>;
+  const orderNumber = typeof created.order_number === "string" ? created.order_number : "";
+  const subtotal = Number(created.subtotal || 0);
+  if (!orderNumber || !Number.isFinite(subtotal)) {
+    return json({ error: "The order was created but its confirmation could not be verified. Please contact WhatsApp support before placing another order." }, 500, origin);
+  }
+
+  const freeShippingApplied = created.free_shipping_applied === true;
+  const deliveryCharge = freeShippingApplied ? 0 : address.delivery_zone === "inside_dhaka" ? 80 : 150;
+  const total = subtotal + deliveryCharge;
+  const deliveryNote = freeShippingApplied
+    ? "Free shipping applied."
+    : address.delivery_zone === "inside_dhaka"
+      ? "Inside Dhaka delivery charge: BDT 80."
+      : "Outside Dhaka delivery charge: BDT 150.";
+
+  const { data: updatedOrder, error: deliveryUpdateError } = await admin
+    .from("orders")
+    .update({
+      delivery_charge: deliveryCharge,
+      total,
+      customer_note: freeShippingApplied
+        ? "Free shipping applied: 3 or more units from selected eligible products."
+        : deliveryNote,
+    })
+    .eq("order_number", orderNumber)
+    .select("order_number")
+    .maybeSingle();
+
+  if (deliveryUpdateError || !updatedOrder) {
+    console.error("Could not save the calculated delivery charge for order", orderNumber, deliveryUpdateError);
+    return json({
+      error: "Your order " + orderNumber + " was received, but the delivery charge could not be saved automatically. Please WhatsApp +8801969419302 and mention this order number. Do not place the order again.",
+      order_received: true,
+      order_number: orderNumber,
+    }, 200, origin);
+  }
+
+  return json({
+    order: {
+      ...created,
+      delivery_charge: deliveryCharge,
+      total,
+      delivery_charge_note: deliveryNote,
+    },
+  }, 200, origin);
 });
