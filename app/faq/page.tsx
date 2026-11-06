@@ -35,7 +35,19 @@ const faqs = [
   {
     category: "Delivery",
     question: "How much is the delivery charge?",
-    answer: "For orders that do not qualify for the selected-product free-shipping offer, the store confirms the delivery charge before dispatch. The current checkout does not yet publish a fixed district-wise delivery rate.",
+    answer: "Delivery is ৳80 for Inside Dhaka and ৳150 for Outside Dhaka. Select the correct delivery area at checkout. Orders with at least 3 quantity units from selected free-shipping products still qualify for that offer.",
+  },
+  {
+    category: "Exchange policy",
+    question: "What should I do if I find a defect in the product?",
+    answer: "Please check the product while the delivery person is still present, before they leave. If you find a product defect at that time, contact us and we will send a replacement at our expense. If you request an exchange after the delivery person has left, a new delivery charge will apply. Please inspect the parcel and product carefully at your doorstep.",
+  },
+  {
+    category: "Customer support",
+    question: "How can I contact His & Her Mart?",
+    answer: "Message our customer support team on WhatsApp at +8801969419302.",
+    link: "https://wa.me/8801969419302",
+    linkLabel: "Chat on WhatsApp",
   },
   {
     category: "Tracking",
@@ -82,7 +94,7 @@ export default function FaqPage() {
         ))}
       </section>
       <footer className="faq-footer">
-        <p className="eyebrow">READY WHEN YOU ARE</p>
+        <p className="eyebrow">CUSTOMER SUPPORT · WHATSAPP +8801969419302</p>
         <h2>Find something <em>lovely.</em></h2>
         <Link className="primary-btn" href="/">Explore the collection <ArrowRight size={16} /></Link>
       </footer>
