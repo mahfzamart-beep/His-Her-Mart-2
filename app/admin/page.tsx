@@ -15,7 +15,8 @@ type Order = {
   free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
 type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
-type StoreCategory = { id: string; name: string };
+type StoreCategory = { id: string; name: string; slug: string; description: string | null; image_url: string | null; sort_order: number; is_active: boolean };
+type CategoryFormState = { id: string | null; name: string; description: string; image_url: string; sort_order: string; is_active: boolean };
 type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
 const statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];
 const money = (value: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -32,6 +33,8 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [categories, setCategories] = useState<StoreCategory[]>([]);
+  const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
+  const [categoryForm, setCategoryForm] = useState<CategoryFormState>({ id: null, name: "", description: "", image_url: "", sort_order: "0", is_active: true });
   const [productEditorOpen, setProductEditorOpen] = useState(false);
   const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
   const [productBusy, setProductBusy] = useState<string | null>(null);
@@ -58,7 +61,7 @@ export default function AdminPage() {
     const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
     if (productError) setError(productError.message);
     else setProducts((productData || []) as StoreProduct[]);
-    const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name").eq("is_active", true).order("sort_order", { ascending: true });
+    const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name,slug,description,image_url,sort_order,is_active").order("sort_order", { ascending: true });
     if (categoryError) setError(categoryError.message);
     else setCategories(categoryData || []);
     setChecking(false);
@@ -94,6 +97,39 @@ export default function AdminPage() {
     setBusy(false);
   };
   const signOut = async () => { await supabase?.auth.signOut(); setSession(null); setAuthorized(false); setOrders([]); };
+
+  const openNewCategory = () => {
+    setError("");
+    setCategoryForm({ id: null, name: "", description: "", image_url: "", sort_order: String(categories.length), is_active: true });
+    setCategoryEditorOpen(true);
+  };
+
+  const openEditCategory = (category: StoreCategory) => {
+    setError("");
+    setCategoryForm({ id: category.id, name: category.name, description: category.description || "", image_url: category.image_url || "", sort_order: String(category.sort_order), is_active: category.is_active });
+    setCategoryEditorOpen(true);
+  };
+
+  const saveCategory = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!supabase || !authorized) return;
+    const name = categoryForm.name.trim();
+    const sortOrder = Number(categoryForm.sort_order);
+    if (name.length < 2 || name.length > 80 || !Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 10000) {
+      setError("Enter a valid category name and a whole-number sort order.");
+      return;
+    }
+    const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const slug = `${slugBase || "category"}-${(categoryForm.id || crypto.randomUUID()).slice(0, 6)}`;
+    setBusy(true); setError("");
+    const payload = { name, slug, description: categoryForm.description.trim() || null, image_url: categoryForm.image_url.trim() || null, sort_order: sortOrder, is_active: categoryForm.is_active };
+    const result = categoryForm.id
+      ? await supabase.from("categories").update(payload).eq("id", categoryForm.id)
+      : await supabase.from("categories").insert(payload);
+    if (result.error) setError(result.error.message);
+    else { setCategoryEditorOpen(false); await refresh(); }
+    setBusy(false);
+  };
 
   const openNewProduct = () => {
     setError("");
@@ -257,7 +293,7 @@ export default function AdminPage() {
     </div>
     {productEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setProductEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">CATALOGUE MANAGEMENT</p><h2>{productForm.id ? "Edit product" : "Add product"}</h2><small>Changes are saved to the live product catalogue.</small></div><button onClick={()=>setProductEditorOpen(false)}>×</button></div><form onSubmit={saveProduct} className="admin-product-form">
       <label>Product name<input required minLength={2} maxLength={140} value={productForm.name} onChange={e=>setProductForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Classic Linen Shirt"/></label>
-      <label>Category<select value={productForm.category_id} onChange={e=>setProductForm(current=>({...current,category_id:e.target.value}))}><option value="">Choose category</option>{categories.map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+      <label>Category<select value={productForm.category_id} onChange={e=>setProductForm(current=>({...current,category_id:e.target.value}))}><option value="">Choose category</option>{categories.filter(category=>category.is_active).map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
       <div className="admin-product-form-grid">
         <label>Price (BDT)<input required type="number" min="0" step="0.01" value={productForm.price} onChange={e=>setProductForm(current=>({...current,price:e.target.value}))}/></label>
         <label>Compare-at price (BDT)<input type="number" min="0" step="0.01" value={productForm.compare_at_price} onChange={e=>setProductForm(current=>({...current,compare_at_price:e.target.value}))}/></label>
