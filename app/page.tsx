@@ -34,7 +34,8 @@ const fallbackProducts: Product[] = [
 const money = (amount: number) => `৳${amount.toLocaleString("en-BD")}`;
 
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [catalogError, setCatalogError] = useState("");
   const [categories, setCategories] = useState<string[]>(defaultCategories);
   const [catalogReady, setCatalogReady] = useState(false);
   const [category, setCategory] = useState("All");
@@ -42,7 +43,7 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
     async function loadProducts() {
-      if (!supabase) { setCatalogReady(true); return; }
+      if (!supabase) { setCatalogError("The product catalogue is temporarily unavailable. Please refresh the page."); setCatalogReady(true); return; }
       try {
         const { data: categoryData } = await supabase.from("categories").select("name").eq("is_active", true).order("sort_order", { ascending: true });
         if (!cancelled && categoryData?.length) setCategories(["All", ...categoryData.map((item: any) => item.name)]);
@@ -51,7 +52,9 @@ export default function Home() {
           .select("id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,category:categories(name,slug)")
           .eq("is_active", true)
           .order("created_at", { ascending: false });
-        if (cancelled || error || !data?.length) return;
+        if (error) throw error;
+        if (cancelled) return;
+        if (!data?.length) { setProducts([]); return; }
         const labels: Record<string, string> = {
           "mens-fashion": "Men's Fashion",
           "womens-fashion": "Women's Fashion",
@@ -75,6 +78,8 @@ export default function Home() {
           stockQuantity: Number(row.stock_quantity ?? 0)
         }));
         setProducts(mapped);
+      } catch {
+        if (!cancelled) setCatalogError("We could not load products. Please refresh and try again.");
       } finally {
         if (!cancelled) setCatalogReady(true);
       }
@@ -326,7 +331,7 @@ export default function Home() {
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
         </div>
-        {visibleProducts.length === 0 && <div className="empty">No products found. Try another search or category.</div>}
+        {!catalogReady ? <div className="empty">Loading products…</div> : catalogError ? <div className="empty">{catalogError}</div> : visibleProducts.length === 0 ? <div className="empty">No products found. Try another search or category.</div> : null}
       </section>
 
       <section className="story" id="story">
