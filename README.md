@@ -22,7 +22,7 @@ A premium minimalist Bangladesh shopping-store starter built with Next.js.
 
 ## Not ready for public commercial launch
 - Customer SMS/email order notifications
-- Category management screen and product image uploads to store storage
+- Product image uploads to store storage (the current editor accepts externally hosted image URLs)
 - Automated supplier order placement and stock sync; supplier API documentation and partner credentials have not yet been confirmed. Current supplier assignment supports manual portal fulfilment
 - Live bKash/Nagad payment processing (requires approved merchant credentials)
 - A fixed delivery-price policy for orders that do not qualify for free shipping; the store must confirm that charge before dispatch for now
@@ -55,4 +55,4 @@ Do not place a Supabase service-role key in browser code, GitHub, or a public en
 
 ### Dashboard scope
 
-The current dashboard lists the latest 200 orders, filters by order status, searches by order number/customer/phone, shows order and item details, lets an authorised administrator update order status and internal notes, and set delivery charges for non-free-shipping orders. Product create/edit, stock updates, visibility, featured status, supplier mapping and free-shipping eligibility are available. Customer SMS/email notifications, category management, staff roles, returns workflow, and audit history are not yet implemented.
+The current dashboard lists the latest 200 orders, filters by order status, searches by order number/customer/phone, shows order and item details, lets an authorised administrator update order status and internal notes, and set delivery charges for non-free-shipping orders. Product create/edit, stock updates, visibility, featured status, supplier mapping and free-shipping eligibility are available. Customer SMS/email notifications, staff roles, returns workflow, image-file uploads to store storage, and audit history are not yet implemented. Categories can be created, edited, ordered, and hidden from the admin dashboard.
