@@ -265,3 +265,11 @@ footer{background:#25231f;color:#c9c1b5;text-align:center;padding:38px 20px 25px
 
 .admin-category-visible{display:flex!important;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border:1px solid #ddd3c5;background:#fffefa;font-size:11px;font-weight:700;color:#514a40}
 .admin-category-visible input{accent-color:#d9651e;width:17px;height:17px}
+
+.quick-add:disabled{opacity:.55;cursor:not-allowed;transform:translateY(0)}
+.stock-note{display:block;font:9px Arial,sans-serif;color:#82796d;margin-top:6px}
+.admin-forgot-link{margin:12px 0 0;text-align:right;font-size:10px}.admin-forgot-link a{color:#a9531e;text-decoration:none}
+.admin-image-upload{display:grid;gap:6px;font-size:10px;color:#776a59}.admin-image-upload input{font-size:10px}
+.admin-product-import{border-top:1px solid #eee7dd;padding:14px 20px 18px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.admin-product-import input{max-width:100%;font-size:10px}.admin-product-import button{font-size:10px;color:#a9531e;border:0;background:none;text-decoration:underline;cursor:pointer}.admin-product-import label{display:flex;flex-direction:column;gap:7px;font-size:10px;color:#655b4e}.admin-product-import small{width:100%;color:#8d8274;font-size:9px;line-height:1.5}.admin-import-report{width:100%;font-size:10px;white-space:pre-wrap;line-height:1.5;color:#655b4e}
+.admin-success{padding:10px 12px;background:#eef5eb;color:#456844;font-size:11px;line-height:1.5;margin:0}
