@@ -34,10 +34,7 @@ export default function AdminProductImport({ categories, onImported }: Props) {
   const [report, setReport] = useState("");
 
   function downloadTemplate() {
-    const csv = [
-      "name,sku,category_slug,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured,fulfillment_source,supplier_product_code,supplier_product_url,free_shipping_eligible",
-      '"Example Linen Shirt","HHM-NEW-001","mens-fashion","Cotton blend shirt",1290,1590,20,"https://example.com/image.jpg",true,false,"own_stock","","",false'
-    ].join("\n");
+    const csv = "name,sku,category_slug,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured,fulfillment_source,supplier_product_code,supplier_product_url,free_shipping_eligible";
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
     const a = document.createElement("a"); a.href = url; a.download = "his-her-mart-products-template.csv"; a.click(); URL.revokeObjectURL(url);
   }
@@ -103,7 +100,7 @@ export default function AdminProductImport({ categories, onImported }: Props) {
   return <div className="admin-product-import">
     <button type="button" onClick={downloadTemplate}>Download CSV template</button>
     <label>Import products CSV<input type="file" accept=".csv,text/csv" disabled={busy} onChange={e => { const file = e.target.files?.[0]; if (file) void importFile(file); e.currentTarget.value = ""; }} /></label>
-    <small>Up to 500 products per file. Use an existing category name or slug. Duplicate SKUs are rejected by the database.</small>
+    <small>Up to 500 products per file. Add one verified product per row. Use an existing category name or slug; fulfillment_source must be own_stock, shopbase_bd or dropshippingbd. Duplicate SKUs are rejected by the database.</small>
     {busy && <small>Importing products…</small>}
     {report && <div className="admin-import-report" role="status">{report}</div>}
   </div>;
