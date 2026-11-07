@@ -415,7 +415,60 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (profileError || profile?.role !== "admin") return json({ error: "Administrator access is required." }, 403);
 
-    const body = await request.json().catch(() => null) as { url?: unknown } | null;
+    const body = await request.json().catch(() => null) as {
+      mode?: unknown;
+      url?: unknown;
+      name?: unknown;
+      supplierPrice?: unknown;
+      originalDescription?: unknown;
+      images?: unknown;
+    } | null;
+
+    if (body?.mode === "manual") {
+      const name = typeof body.name === "string" ? body.name.trim().slice(0, 140) : "";
+      const originalDescription = typeof body.originalDescription === "string"
+        ? body.originalDescription.trim().slice(0, 5000)
+        : "";
+      const supplierPrice = typeof body.supplierPrice === "number"
+        ? body.supplierPrice
+        : typeof body.supplierPrice === "string" && body.supplierPrice.trim()
+          ? Number(body.supplierPrice)
+          : NaN;
+      const images = Array.isArray(body.images)
+        ? body.images.filter((value): value is string => typeof value === "string" && /^https:\/\//i.test(value)).slice(0, 12)
+        : [];
+
+      if (name.length < 2 || !Number.isFinite(supplierPrice) || supplierPrice < 0 || originalDescription.length < 5 || images.length === 0) {
+        return json({ error: "Enter the product name, supplier price, supplier description and at least one uploaded product image." }, 400);
+      }
+
+      const premiumDescription = await writePremiumEnglishDescription({
+        name,
+        originalDescription,
+        category: "",
+        colors: [],
+        sizes: [],
+      });
+
+      return json({
+        product: {
+          name,
+          originalDescription,
+          premiumDescription,
+          images,
+          supplierPrice,
+          currency: "BDT",
+          sku: "",
+          colors: [],
+          sizes: [],
+          category: "",
+          stockQuantity: null,
+          sourceUrl: "",
+          aiModel: AI_MODEL,
+        },
+      });
+    }
+
     const rawUrl = typeof body?.url === "string" ? body.url.trim() : "";
     const productUrl = isShopBaseUrl(rawUrl);
     if (!productUrl) {
