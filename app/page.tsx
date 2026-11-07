@@ -51,6 +51,8 @@ export default function Home() {
   const [categories, setCategories] = useState<string[]>(defaultCategories);
   const [catalogReady, setCatalogReady] = useState(false);
   const [category, setCategory] = useState("All");
+  const [sortBy, setSortBy] = useState("recommended");
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -207,10 +209,30 @@ export default function Home() {
   const [area, setArea] = useState("");
   const [addressLine, setAddressLine] = useState("");
 
-  const visibleProducts = useMemo(() => products.filter(p =>
-    (category === "All" || p.category === category) &&
-    `${p.name} ${p.category}`.toLowerCase().includes(query.toLowerCase())
-  ), [category, query]);
+  const visibleProducts = useMemo(() => {
+    const filtered = products.filter(p =>
+      (category === "All" || p.category === category) &&
+      (!inStockOnly || Number(p.stockQuantity ?? 0) > 0) &&
+      `${p.name} ${p.category}`.toLowerCase().includes(query.trim().toLowerCase())
+    );
+    if (sortBy === "price-low") filtered.sort((a, b) => a.price - b.price);
+    if (sortBy === "price-high") filtered.sort((a, b) => b.price - a.price);
+    if (sortBy === "name") filtered.sort((a, b) => a.name.localeCompare(b.name));
+    if (sortBy === "recommended") filtered.sort((a, b) => Number(Boolean(b.tag)) - Number(Boolean(a.tag)));
+    return filtered;
+  }, [products, category, query, sortBy, inStockOnly]);
+
+  const browseCategory = (nextCategory: string) => {
+    setCategory(nextCategory);
+    setQuery("");
+    document.getElementById("shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const clearCatalogFilters = () => {
+    setCategory("All");
+    setQuery("");
+    setInStockOnly(false);
+    setSortBy("recommended");
+  };
 
   const cartLines: CartLine[] = Object.entries(cart).flatMap(([key, quantity]) => {
     const parsed = parseCartKey(key);
@@ -386,6 +408,17 @@ export default function Home() {
           <button className="icon-btn bag-btn" aria-label="Shopping bag" onClick={() => setCartOpen(true)}><ShoppingBag /><span>{cartCount}</span></button>
         </div>
       </header>
+      <div className="mobile-search-row">
+        <Search size={17} aria-hidden="true" />
+        <input
+          type="search"
+          aria-label="Search products"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search the collection"
+        />
+        {query && <button type="button" onClick={() => setQuery("")} aria-label="Clear search"><X size={16}/></button>}
+      </div>
 
       <section className="hero">
         <div className="hero-copy">
@@ -401,11 +434,20 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="category-strip">
-        <div><span className="cat-number">01</span><b>For Him</b><small>Everyday essentials</small></div>
-        <div><span className="cat-number">02</span><b>For Her</b><small>Style that feels like you</small></div>
-        <div><span className="cat-number">03</span><b>Little Luxuries</b><small>Details make the day</small></div>
-      </section>
+      <section className="category-strip" aria-label="Shop by collection">
+        <button type="button" onClick={() => browseCategory("Men's Fashion")} aria-label="Shop men's fashion">
+          <span className="cat-number">01</span><b>For Him</b><small>Everyday essentials</small>
+          <span className="category-arrow" aria-hidden="true">↗</span>
+        </button>
+        <button type="button" onClick={() => browseCategory("Women's Fashion")} aria-label="Shop women's fashion">
+          <span className="cat-number">02</span><b>For Her</b><small>Style that feels like you</small>
+          <span className="category-arrow" aria-hidden="true">↗</span>
+        </button>
+        <button type="button" onClick={() => browseCategory("All")} aria-label="Browse all collections">
+          <span className="cat-number">03</span><b>Little Luxuries</b><small>Explore the full edit</small>
+          <span className="category-arrow" aria-hidden="true">↗</span>
+        </button>
+      </section>      </section>
 
       <section className="service-ribbon" aria-label="Shopping services">
         <div className="service-item"><span className="service-icon"><ShieldCheck size={19} /></span><span><b>Shop with confidence</b><small>Cash on delivery available</small></span></div>
@@ -419,21 +461,34 @@ export default function Home() {
           <p>Style, essentials and everyday discoveries.<br />A thoughtful edit for him, her and home.</p>
         </div>
         <div className="filters">
-          <div className="category-filters">{categories.map(c => <button key={c} className={category === c ? "filter active" : "filter"} onClick={() => setCategory(c)}>{c}</button>)}</div>
-          <span className="result-count">{visibleProducts.length} ITEMS</span>
+          <div className="category-filters" aria-label="Filter products by category">
+            {categories.map(c => <button type="button" key={c} aria-pressed={category === c} className={category === c ? "filter active" : "filter"} onClick={() => setCategory(c)}>{c}</button>)}
+          </div>
+          <div className="catalog-controls">
+            <label className="sort-control">Sort by
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)} aria-label="Sort products">
+                <option value="recommended">Recommended</option>
+                <option value="price-low">Price: low to high</option>
+                <option value="price-high">Price: high to low</option>
+                <option value="name">Name: A to Z</option>
+              </select>
+            </label>
+            <label className="stock-filter"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} /> In stock only</label>
+            <span className="result-count">{visibleProducts.length} ITEMS</span>
+          </div>
         </div>
         <div className="product-grid">
           {visibleProducts.map(p => <article className="product-card" key={p.id}>
             <div className="product-image-wrap"><Link href={"/products/" + p.slug} aria-label={`View ${p.name}`} className="product-image-link"><img src={p.image} alt={p.name} loading="lazy" decoding="async" /></Link>
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
-              <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
+              <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label={wishlist.includes(p.id) ? "Remove " + p.name + " from wishlist" : "Add " + p.name + " to wishlist"} onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
               <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => p.sizeOptions?.length ? window.location.assign("/products/" + p.slug) : (cart[makeCartKey(String(p.id))] || 0) > 0 ? setCartOpen(true) : changeQty(makeCartKey(String(p.id)), 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : (cart[makeCartKey(String(p.id))] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[makeCartKey(String(p.id))] || 0) > 0 && !(p.sizeOptions?.length || p.colorOptions?.length) ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>{(p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : "ORDER NOW"} <ArrowRight size={14} /></button></div>
             </div>
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
         </div>
-        {!catalogReady ? <div className="empty">Loading products…</div> : catalogError ? <div className="empty">{catalogError}</div> : visibleProducts.length === 0 ? <div className="empty">No products found. Try another search or category.</div> : null}
+        {!catalogReady ? <div className="empty" role="status">Loading products…</div> : catalogError ? <div className="empty" role="alert">{catalogError}</div> : visibleProducts.length === 0 ? <div className="empty no-results"><b>No products found.</b><span>Try a different search or clear your filters to see the full collection.</span><button type="button" onClick={clearCatalogFilters}>Clear all filters</button></div> : null}
       </section>
 
       <section className="story" id="story">
@@ -455,7 +510,7 @@ export default function Home() {
             <p>Thoughtfully chosen finds for every side of life. A more considered way to shop for him, her and home.</p>
           </div>
           <div className="footer-column"><b>EXPLORE</b><a href="#shop">Shop all</a><a href="#shop" onClick={() => setCategory("Men's Fashion")}>For him</a><a href="#shop" onClick={() => setCategory("Women's Fashion")}>For her</a><a href="#story">Our story</a></div>
-          <div className="footer-column"><b>HELP</b><a href="/track-order">Track an order</a><a href="/wishlist">Wishlist</a><a href="/faq">Help & FAQs</a></div>
+          <div className="footer-column"><b>HELP</b><a href="/track-order">Track an order</a><a href="/wishlist">Wishlist</a><a href="/shipping">Shipping information</a><a href="/returns">Product checks & exchanges</a><a href="/faq">Help & FAQs</a></div>
           <div className="footer-column footer-contact"><b>GET IN TOUCH</b><span>Customer care</span><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp · +880 1969-419302</a><span>Cash on delivery available</span></div>
         </div>
         <div className="footer-bottom"><span>© 2026 His & Her Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
