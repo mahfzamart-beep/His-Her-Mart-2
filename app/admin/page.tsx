@@ -6,8 +6,9 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, Boxes, CheckCircle2, ClipboardList, LogOut, PackageCheck, RefreshCw, Search, ShieldAlert, Truck } from "lucide-react";
 import AdminProductImport from "../../components/AdminProductImport";
+import { COLOR_OPTIONS } from "../../lib/color-options";
 
-type OrderItem = { id: string; product_id: string | null; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number; selected_size: string | null; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null };
+type OrderItem = { id: string; product_id: string | null; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number; selected_size: string | null; selected_color: string | null; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null };
 type Order = {
   id: string; order_number: string; customer_name: string; customer_phone: string;
   customer_email: string | null; shipping_address: Record<string, string>;
@@ -16,12 +17,12 @@ type Order = {
   admin_note: string | null; created_at: string; order_items: OrderItem[];
   free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
-type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; images: string[] | null; size_type: string; size_options: string[] | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
+type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; images: string[] | null; color_options: string[]; size_type: string; size_options: string[] | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
 type SizeProfile = "none" | "apparel" | "footwear";
 type ProductSizeType = "none" | "apparel_alpha" | "apparel_numeric" | "shoe_eu" | "shoe_uk" | "shoe_us" | "numeric" | "letter" | "custom";
 type StoreCategory = { id: string; name: string; slug: string; description: string | null; image_url: string | null; sort_order: number; is_active: boolean; size_profile: SizeProfile };
 type CategoryFormState = { id: string | null; name: string; description: string; image_url: string; sort_order: string; is_active: boolean; size_profile: SizeProfile };
-type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; size_type: ProductSizeType; size_options_text: string; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
+type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; size_type: ProductSizeType; size_options_text: string; color_options: string[]; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
 const sizeTypeOptionsForProfile = (profile: SizeProfile): Array<{ value: ProductSizeType; label: string }> => {
   if (profile === "apparel") return [
     { value: "apparel_alpha", label: "Alphanumeric clothing sizes (XS, S, M, L, XL, 2XL…)" },
@@ -60,7 +61,7 @@ export default function AdminPage() {
   const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
   const [categoryForm, setCategoryForm] = useState<CategoryFormState>({ id: null, name: "", description: "", image_url: "", sort_order: "0", is_active: true, size_profile: "none" });
   const [productEditorOpen, setProductEditorOpen] = useState(false);
-  const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
+  const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
   const [productBusy, setProductBusy] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -83,7 +84,7 @@ export default function AdminPage() {
     const { data, error: orderError } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200);
     if (orderError) setError(orderError.message);
     else setOrders((data || []) as Order[]);
-    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,images,size_type,size_options,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
+    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,images,color_options,size_type,size_options,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
     if (productError) setError(productError.message);
     else setProducts((productData || []) as StoreProduct[]);
     const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name,slug,description,image_url,sort_order,is_active,size_profile").order("sort_order", { ascending: true });
@@ -158,13 +159,13 @@ export default function AdminPage() {
 
   const openNewProduct = () => {
     setError("");
-    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", category_id: categories[0]?.id || "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
+    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: categories[0]?.id || "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
     setProductEditorOpen(true);
   };
 
   const openEditProduct = (product: StoreProduct) => {
     setError("");
-    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), size_type: (["apparel_alpha", "apparel_numeric", "shoe_eu", "shoe_uk", "shoe_us", "numeric", "letter", "custom"].includes(product.size_type) ? product.size_type : "none") as ProductFormState["size_type"], size_options_text: Array.isArray(product.size_options) ? product.size_options.join(", ") : "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
+    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), size_type: (["apparel_alpha", "apparel_numeric", "shoe_eu", "shoe_uk", "shoe_us", "numeric", "letter", "custom"].includes(product.size_type) ? product.size_type : "none") as ProductFormState["size_type"], size_options_text: Array.isArray(product.size_options) ? product.size_options.join(", ") : "", color_options: Array.isArray(product.color_options) ? product.color_options : [], category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
     setProductEditorOpen(true);
   };
 
@@ -228,7 +229,7 @@ export default function AdminPage() {
     }
     const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const slug = `${slugBase || "product"}-${(productForm.id || crypto.randomUUID()).slice(0, 6)}`;
-    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: imageUrls[0] || null, images: imageUrls, size_type: productForm.size_type, size_options: sizeOptions, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: productForm.fulfillment_source, supplier_product_code: productForm.supplier_product_code.trim() || null, supplier_product_url: productForm.supplier_product_url.trim() || null, updated_at: new Date().toISOString() };
+    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: imageUrls[0] || null, images: imageUrls, size_type: productForm.size_type, size_options: sizeOptions, color_options: productForm.color_options, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: productForm.fulfillment_source, supplier_product_code: productForm.supplier_product_code.trim() || null, supplier_product_url: productForm.supplier_product_url.trim() || null, updated_at: new Date().toISOString() };
     setProductBusy(productForm.id || "new");
     setError("");
     const result = productForm.id
@@ -456,6 +457,14 @@ export default function AdminPage() {
           </>}
         </>}
       </div>
+      <section className="admin-product-color-settings">
+        <div className="admin-color-settings-heading"><b>Available colours</b><small>Select every colour this product is available in. Customers will only see the colours selected here.</small></div>
+        <div className="admin-color-option-grid">{COLOR_OPTIONS.map(color => {
+          const active = productForm.color_options.includes(color.name);
+          return <button type="button" key={color.name} className={active ? "admin-color-option selected" : "admin-color-option"} aria-pressed={active} onClick={() => setProductForm(current => ({ ...current, color_options: active ? current.color_options.filter(name => name !== color.name) : [...current.color_options, color.name] }))}><span className="admin-color-swatch" style={{ background: color.hex }} />{color.name}{active && <b>✓</b>}</button>;
+        })}</div>
+        <small className="admin-color-selected-count">{productForm.color_options.length ? productForm.color_options.length + " colour(s) selected" : "No colour selection for this product"}</small>
+      </section>
       <label>Fulfilment source<select value={productForm.fulfillment_source} onChange={e=>setProductForm(current=>({...current,fulfillment_source:e.target.value}))}><option value="own_stock">Own stock</option><option value="shopbase_bd">ShopBase BD</option><option value="dropshippingbd">DropshippingBD</option></select></label>
       <div className="admin-product-form-grid"><label>Supplier product code<input maxLength={100} value={productForm.supplier_product_code} onChange={e=>setProductForm(current=>({...current,supplier_product_code:e.target.value}))} placeholder="Supplier item/SKU code"/></label><label>Supplier product URL<input type="url" value={productForm.supplier_product_url} onChange={e=>setProductForm(current=>({...current,supplier_product_url:e.target.value}))} placeholder="https://supplier-product-page…"/></label></div>
       <label>Description<textarea rows={3} maxLength={5000} value={productForm.description} onChange={e=>setProductForm(current=>({...current,description:e.target.value}))} placeholder="Product details and features"/></label>
@@ -466,7 +475,7 @@ export default function AdminPage() {
     {selected && <div className="admin-modal-backdrop" onClick={()=>setSelected(null)}><section className="admin-order-modal" onClick={e=>e.stopPropagation()}>
       <div className="admin-modal-head"><div><p className="eyebrow">ORDER DETAILS</p><h2>{selected.order_number}</h2><small>{date(selected.created_at)}</small></div><button onClick={()=>setSelected(null)}>×</button></div>
       <div className="admin-customer-info"><b>{selected.customer_name}</b><span>{selected.customer_phone}</span>{selected.customer_email&&<span>{selected.customer_email}</span>}<p>{selected.shipping_address?.address_line}, {selected.shipping_address?.area}, {selected.shipping_address?.district}</p></div>
-      <h3>Items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}{item.selected_size ? <small className="admin-item-supplier">Selected size: {item.selected_size}</small> : null}{item.fulfillment_source === "shopbase_bd" ? <small className="admin-item-supplier">Fulfil via ShopBase BD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : item.fulfillment_source === "dropshippingbd" ? <small className="admin-item-supplier">Fulfil via DropshippingBD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : null}</span><b>{money(item.line_total)}</b></div>)}</div>
+      <h3>Items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}{item.selected_size ? <small className="admin-item-supplier">Selected size: {item.selected_size}</small> : null}{item.selected_color ? <small className="admin-item-supplier">Selected colour: {item.selected_color}</small> : null}{item.fulfillment_source === "shopbase_bd" ? <small className="admin-item-supplier">Fulfil via ShopBase BD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : item.fulfillment_source === "dropshippingbd" ? <small className="admin-item-supplier">Fulfil via DropshippingBD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : null}</span><b>{money(item.line_total)}</b></div>)}</div>
       <div className="admin-modal-total"><span>Product subtotal</span><b>{money(selected.subtotal)}</b></div>
       <div className="admin-modal-total"><span>Delivery charge</span><b>{selected.free_shipping_applied ? "FREE" : selected.delivery_charge ? money(selected.delivery_charge) : "Awaiting confirmation"}</b></div>
       <div className="admin-modal-total"><span>Free shipping</span><b>{selected.free_shipping_applied ? `Applied (${selected.free_shipping_eligible_quantity} eligible items)` : "Not applied"}</b></div>
