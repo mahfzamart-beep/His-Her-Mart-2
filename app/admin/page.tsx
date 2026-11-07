@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { ArrowLeft, Boxes, CheckCircle2, ClipboardList, LogOut, PackageCheck, RefreshCw, Search, ShieldAlert, Truck } from "lucide-react";
 import AdminProductImport from "../../components/AdminProductImport";
 
-type OrderItem = { id: string; product_id: string | null; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null };
+type OrderItem = { id: string; product_id: string | null; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number; selected_size: string | null; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null };
 type Order = {
   id: string; order_number: string; customer_name: string; customer_phone: string;
   customer_email: string | null; shipping_address: Record<string, string>;
@@ -16,10 +16,10 @@ type Order = {
   admin_note: string | null; created_at: string; order_items: OrderItem[];
   free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
-type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
+type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; images: string[] | null; size_type: string; size_options: string[] | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
 type StoreCategory = { id: string; name: string; slug: string; description: string | null; image_url: string | null; sort_order: number; is_active: boolean };
 type CategoryFormState = { id: string | null; name: string; description: string; image_url: string; sort_order: string; is_active: boolean };
-type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
+type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; size_type: "none" | "numeric" | "letter" | "custom"; size_options_text: string; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
 const statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];
 const money = (value: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(value || 0));
 const date = (value: string) => new Intl.DateTimeFormat("en-BD", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -61,7 +61,7 @@ export default function AdminPage() {
     const { data, error: orderError } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200);
     if (orderError) setError(orderError.message);
     else setOrders((data || []) as Order[]);
-    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
+    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,images,size_type,size_options,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
     if (productError) setError(productError.message);
     else setProducts((productData || []) as StoreProduct[]);
     const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name,slug,description,image_url,sort_order,is_active").order("sort_order", { ascending: true });
@@ -136,29 +136,49 @@ export default function AdminPage() {
 
   const openNewProduct = () => {
     setError("");
-    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", category_id: categories[0]?.id || "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
+    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", category_id: categories[0]?.id || "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
     setProductEditorOpen(true);
   };
 
   const openEditProduct = (product: StoreProduct) => {
     setError("");
-    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
+    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), size_type: (["numeric", "letter", "custom"].includes(product.size_type) ? product.size_type : "none") as ProductFormState["size_type"], size_options_text: Array.isArray(product.size_options) ? product.size_options.join(", ") : "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
     setProductEditorOpen(true);
   };
 
-  const uploadProductImage = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const uploadProductImages = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
     event.target.value = "";
-    if (!file || !supabase || !authorized) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setError("Use a JPG, PNG or WebP image."); return; }
-    if (file.size > 5 * 1024 * 1024) { setError("Product images must be 5 MB or smaller."); return; }
+    if (!files.length || !supabase || !authorized) return;
+    const remaining = Math.max(0, 12 - productForm.images.length);
+    if (!remaining) { setError("A product can have up to 12 images."); return; }
+    if (files.some(file => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setError("Use JPG, PNG or WebP images only."); return; }
+    if (files.some(file => file.size > 5 * 1024 * 1024)) { setError("Each product image must be 5 MB or smaller."); return; }
+    if (files.length > remaining) { setError(`You can add only ${remaining} more image(s). The limit is 12 per product.`); return; }
     setImageUploading(true); setError("");
-    const ext = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
-    const path = "products/" + crypto.randomUUID() + "." + ext;
-    const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
-    if (uploadError) setError(uploadError.message);
-    else { const { data } = supabase.storage.from("product-images").getPublicUrl(path); setProductForm(current => ({ ...current, image_url: data.publicUrl })); }
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      const ext = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
+      const path = "products/" + crypto.randomUUID() + "." + ext;
+      const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
+      if (uploadError) { setError(uploadError.message); break; }
+      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      uploadedUrls.push(data.publicUrl);
+    }
+    if (uploadedUrls.length) {
+      setProductForm(current => {
+        const images = Array.from(new Set([...current.images, ...uploadedUrls])).slice(0, 12);
+        return { ...current, images, image_url: current.image_url || images[0] || "" };
+      });
+    }
     setImageUploading(false);
+  };
+
+  const removeProductImage = (url: string) => {
+    setProductForm(current => {
+      const images = current.images.filter(image => image !== url);
+      return { ...current, images, image_url: current.image_url === url ? (images[0] || "") : current.image_url };
+    });
   };
 
   const saveProduct = async (event: FormEvent<HTMLFormElement>) => {
@@ -168,13 +188,19 @@ export default function AdminPage() {
     const price = Number(productForm.price);
     const stock = Number(productForm.stock_quantity);
     const compareAt = productForm.compare_at_price.trim() ? Number(productForm.compare_at_price) : null;
+    const sizeOptions = productForm.size_type === "none" ? [] : Array.from(new Set(productForm.size_options_text.split(/[,;\\n]+/).map(value => value.trim()).filter(Boolean))).slice(0, 50);
+    const imageUrls = Array.from(new Set([productForm.image_url.trim(), ...productForm.images].filter(Boolean))).slice(0, 12);
     if (name.length < 2 || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0 || (compareAt !== null && (!Number.isFinite(compareAt) || compareAt < price))) {
       setError("Check the product name, price, stock quantity and compare-at price.");
       return;
     }
+    if (productForm.size_type !== "none" && sizeOptions.length === 0) {
+      setError("Add at least one available size, separated by commas.");
+      return;
+    }
     const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const slug = `${slugBase || "product"}-${(productForm.id || crypto.randomUUID()).slice(0, 6)}`;
-    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: productForm.image_url.trim() || null, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: productForm.fulfillment_source, supplier_product_code: productForm.supplier_product_code.trim() || null, supplier_product_url: productForm.supplier_product_url.trim() || null, updated_at: new Date().toISOString() };
+    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: imageUrls[0] || null, images: imageUrls, size_type: productForm.size_type, size_options: sizeOptions, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: productForm.fulfillment_source, supplier_product_code: productForm.supplier_product_code.trim() || null, supplier_product_url: productForm.supplier_product_url.trim() || null, updated_at: new Date().toISOString() };
     setProductBusy(productForm.id || "new");
     setError("");
     const result = productForm.id
@@ -367,8 +393,13 @@ export default function AdminPage() {
         <label>Stock quantity<input required type="number" min="0" step="1" value={productForm.stock_quantity} onChange={e=>setProductForm(current=>({...current,stock_quantity:e.target.value}))}/></label>
         <label>SKU (optional)<input maxLength={80} value={productForm.sku} onChange={e=>setProductForm(current=>({...current,sku:e.target.value}))} placeholder="Product code"/></label>
       </div>
-      <label>Product image URL<input type="url" value={productForm.image_url} onChange={e=>setProductForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label>
-      <label className="admin-image-upload">Upload image file<input type="file" accept="image/jpeg,image/png,image/webp" disabled={imageUploading} onChange={uploadProductImage}/><small>{imageUploading ? "Uploading image…" : "JPG, PNG or WebP · maximum 5 MB. Upload fills the image URL above."}</small></label>
+      <label>Primary product image URL<input type="url" value={productForm.image_url} onChange={e=>setProductForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label>
+      <label className="admin-image-upload">Upload product images<input type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={imageUploading || productForm.images.length >= 12} onChange={uploadProductImages}/><small>{imageUploading ? "Uploading images…" : `JPG, PNG or WebP · maximum 5 MB each · up to 12 images total. ${productForm.images.length}/12 added.`}</small></label>
+      {productForm.images.length > 0 && <div className="admin-image-gallery" aria-label="Product image previews">{productForm.images.map((url,index)=><div className="admin-image-preview" key={url}><img src={url} alt={`Product image ${index+1}`}/><span>{index===0 ? "Primary" : `Image ${index+1}`}</span><button type="button" onClick={()=>removeProductImage(url)} aria-label={`Remove image ${index+1}`}>×</button></div>)}</div>}
+      <div className="admin-product-size-settings">
+        <label>Available size type<select value={productForm.size_type} onChange={e=>setProductForm(current=>({...current,size_type:e.target.value as ProductFormState["size_type"],size_options_text:e.target.value==="none"?"":current.size_options_text}))}><option value="none">No size selection</option><option value="numeric">Numeric sizes (e.g. 54, 56, 9, 10)</option><option value="letter">Letter sizes (S, M, L, XL, XXL)</option><option value="custom">Custom sizes / other options</option></select></label>
+        {productForm.size_type !== "none" && <label>Available sizes<input value={productForm.size_options_text} onChange={e=>setProductForm(current=>({...current,size_options_text:e.target.value}))} placeholder={productForm.size_type==="numeric"?"54, 56, 9, 10":productForm.size_type==="letter"?"S, M, L, XL, XXL":"Enter options separated by commas"}/><small>Separate each option with a comma. Customers must choose one before adding to bag or ordering.</small></label>}
+      </div>
       <label>Fulfilment source<select value={productForm.fulfillment_source} onChange={e=>setProductForm(current=>({...current,fulfillment_source:e.target.value}))}><option value="own_stock">Own stock</option><option value="shopbase_bd">ShopBase BD</option><option value="dropshippingbd">DropshippingBD</option></select></label>
       <div className="admin-product-form-grid"><label>Supplier product code<input maxLength={100} value={productForm.supplier_product_code} onChange={e=>setProductForm(current=>({...current,supplier_product_code:e.target.value}))} placeholder="Supplier item/SKU code"/></label><label>Supplier product URL<input type="url" value={productForm.supplier_product_url} onChange={e=>setProductForm(current=>({...current,supplier_product_url:e.target.value}))} placeholder="https://supplier-product-page…"/></label></div>
       <label>Description<textarea rows={3} maxLength={5000} value={productForm.description} onChange={e=>setProductForm(current=>({...current,description:e.target.value}))} placeholder="Product details and features"/></label>
@@ -379,7 +410,7 @@ export default function AdminPage() {
     {selected && <div className="admin-modal-backdrop" onClick={()=>setSelected(null)}><section className="admin-order-modal" onClick={e=>e.stopPropagation()}>
       <div className="admin-modal-head"><div><p className="eyebrow">ORDER DETAILS</p><h2>{selected.order_number}</h2><small>{date(selected.created_at)}</small></div><button onClick={()=>setSelected(null)}>×</button></div>
       <div className="admin-customer-info"><b>{selected.customer_name}</b><span>{selected.customer_phone}</span>{selected.customer_email&&<span>{selected.customer_email}</span>}<p>{selected.shipping_address?.address_line}, {selected.shipping_address?.area}, {selected.shipping_address?.district}</p></div>
-      <h3>Items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}{item.fulfillment_source === "shopbase_bd" ? <small className="admin-item-supplier">Fulfil via ShopBase BD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : item.fulfillment_source === "dropshippingbd" ? <small className="admin-item-supplier">Fulfil via DropshippingBD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : null}</span><b>{money(item.line_total)}</b></div>)}</div>
+      <h3>Items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}{item.selected_size ? <small className="admin-item-supplier">Selected size: {item.selected_size}</small> : null}{item.fulfillment_source === "shopbase_bd" ? <small className="admin-item-supplier">Fulfil via ShopBase BD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : item.fulfillment_source === "dropshippingbd" ? <small className="admin-item-supplier">Fulfil via DropshippingBD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : null}</span><b>{money(item.line_total)}</b></div>)}</div>
       <div className="admin-modal-total"><span>Product subtotal</span><b>{money(selected.subtotal)}</b></div>
       <div className="admin-modal-total"><span>Delivery charge</span><b>{selected.free_shipping_applied ? "FREE" : selected.delivery_charge ? money(selected.delivery_charge) : "Awaiting confirmation"}</b></div>
       <div className="admin-modal-total"><span>Free shipping</span><b>{selected.free_shipping_applied ? `Applied (${selected.free_shipping_eligible_quantity} eligible items)` : "Not applied"}</b></div>
