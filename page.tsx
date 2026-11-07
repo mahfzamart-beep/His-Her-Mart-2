@@ -48,7 +48,7 @@ export default function Home() {
       <div className="announcement">A little something for every style · Discover the latest arrivals</div>
       <header className="header">
         <button className="icon-btn mobile-toggle" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? <X /> : <Menu />}</button>
-        <a className="brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a>
+        <a className="brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HERS MART</small></a>
         <nav className={mobileMenu ? "nav nav-open" : "nav"}>
           <a href="#shop" onClick={() => setMobileMenu(false)}>Shop</a>
           <a href="#shop" onClick={() => { setCategory("Men's Fashion"); setMobileMenu(false); }}>For Him</a>
@@ -106,7 +106,7 @@ export default function Home() {
 
       <section className="story" id="story">
         <div className="story-image" />
-        <div className="story-copy"><p className="eyebrow">A BETTER WAY TO BROWSE</p><h2>Made for <em>every you.</em></h2><p>His & Her Mart brings together considered fashion, useful finds and everyday little luxuries. A simpler, more thoughtful way to shop for the people and moments that matter.</p><a href="#shop" className="text-link">Get to know our collection <ArrowRight size={16} /></a></div>
+        <div className="story-copy"><p className="eyebrow">A BETTER WAY TO BROWSE</p><h2>Made for <em>every you.</em></h2><p>His & Hers Mart brings together considered fashion, useful finds and everyday little luxuries. A simpler, more thoughtful way to shop for the people and moments that matter.</p><a href="#shop" className="text-link">Get to know our collection <ArrowRight size={16} /></a></div>
       </section>
 
       <section className="newsletter">
@@ -115,7 +115,7 @@ export default function Home() {
         <small>{subscribed ? "Thanks for joining us. This preview form does not yet save subscriptions." : "By subscribing, you agree to receive occasional updates from us."}</small>
       </section>
 
-      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a><p>Modern Shopping · For Him & Her</p><div>© 2026 His & Her Mart. All rights reserved.</div></footer>
+      <footer><a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HERS MART</small></a><p>Modern Shopping · For Him & Her</p><div>© 2026 His & Hers Mart. All rights reserved.</div></footer>
 
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
