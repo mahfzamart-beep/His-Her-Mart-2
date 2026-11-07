@@ -397,8 +397,12 @@ export async function POST(request: Request) {
     if (!productUrl) {
       return json({ error: "Paste a valid HTTPS product URL from shopbasebd.com." }, 400);
     }
+    // ShopBase BD publishes product pages in both public and storefront URL shapes:
+    // /store/{store-slug}/product/details/{id}
+    // /public/store/{store-slug}/product/details/{id}
+    // Some shared links may use a different prefix but retain /product/details/{id}.
     if (!/\/product\/details\/\d+\/?$/i.test(productUrl.pathname)) {
-      return json({ error: "This is not a ShopBase BD product detail link. Open the specific product, copy its Product Details URL (the link should contain /product/details/ followed by the product ID), and paste that URL here." }, 400);
+      return json({ error: "This link does not appear to be a ShopBase BD product details page. Copy the Share / Product Details link from the selected product and try again." }, 400);
     }
 
     const { data: duplicate, error: duplicateError } = await supabase
