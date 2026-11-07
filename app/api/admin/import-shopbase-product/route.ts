@@ -247,7 +247,7 @@ async function writePremiumEnglishDescription(input: {
   colors: string[];
   sizes: string[];
 }): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINIAPIKEY;
   if (!apiKey) {
     throw new Error("Gemini AI is not connected to this deployment. Add GEMINI_API_KEY in Vercel Project Environment Variables and redeploy the Preview.");
   }
