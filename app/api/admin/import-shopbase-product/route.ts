@@ -111,31 +111,89 @@ function toImageUrl(value: string, base: URL): string | null {
   }
 }
 
+function isGenericShopBaseHeading(value: string): boolean {
+  const text = value.toLowerCase().replace(/\s+/g, " ").trim();
+  return !text ||
+    /^(shopbase\s*bd|largest drop.?shipping platform in bangladesh|home|products|product|our products|about us|services|contact us|login|registration|sign in|sign up|হোম|আমাদের সম্পর্কে|প্রোডাক্টস|সার্ভিস সমূহ|যোগাযোগ|লগইন|রেজিস্ট্রেশন)$/i.test(text) ||
+    /^(?:bdt|৳|tk\.?)\s*[\d,]+$/i.test(text) ||
+    /(?:wholesale price|হোলসেল প্রাইস|suggested sale price|সাজেস্টেড বিক্রয়মূল্য)/i.test(text);
+}
+
+function extractHeadingText(html: string): string[] {
+  const values: string[] = [];
+  for (const match of html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1\s*>/gi)) {
+    const value = stripMarkup(match[2]).slice(0, 140);
+    if (!isGenericShopBaseHeading(value) && value.length >= 2) values.push(value);
+  }
+  return Array.from(new Set(values));
+}
+
+function extractImageCandidates(html: string, pageUrl: URL, productName: string, meta: Record<string, string>): string[] {
+  const matching: string[] = [];
+  const other: string[] = [];
+  const seen = new Set<string>();
+  for (const match of html.matchAll(/<img\b[^>]*>/gi)) {
+    const attrs = tagAttributes(match[0]);
+    const raw = attrs.src || attrs["data-src"] || attrs["data-lazy-src"] || attrs["data-original"] || attrs["data-image"];
+    const alt = (attrs.alt || attrs.title || "").toLowerCase();
+    if (!raw) continue;
+    const imageUrl = toImageUrl(raw.split(",")[0].trim().split(/\s+/)[0], pageUrl);
+    if (!imageUrl || seen.has(imageUrl)) continue;
+    if (/(?:logo|favicon|icon|avatar|profile|placeholder|banner)/i.test(imageUrl)) continue;
+    seen.add(imageUrl);
+    if (productName && alt.includes(productName.toLowerCase())) matching.push(imageUrl);
+    else other.push(imageUrl);
+  }
+  const primaryMetaImage = meta["og:image"] || meta["twitter:image"] || meta["image"] || "";
+  const resolvedMetaImage = primaryMetaImage ? toImageUrl(primaryMetaImage, pageUrl) : null;
+  const all = [...matching, ...(resolvedMetaImage && !seen.has(resolvedMetaImage) ? [resolvedMetaImage] : []), ...other];
+  return Array.from(new Set(all)).slice(0, 12);
+}
+
+function extractWholesalePrice(pageText: string): number | null {
+  const patterns = [
+    /(?:হোলসেল\s*প্রাইস|wholesale\s*price)\s*[:ঃ]?\s*(?:৳|BDT\s*)?([0-9][0-9,]*(?:\.\d{1,2})?)\s*(?:টাকা|৳|BDT)?/i,
+    /(?:wholesale|হোলসেল)[\s\S]{0,50}?(?:৳|BDT|Tk\.?)\s*([0-9][0-9,]*(?:\.\d{1,2})?)/i
+  ];
+  for (const pattern of patterns) {
+    const match = pageText.match(pattern);
+    if (!match?.[1]) continue;
+    const value = Number(match[1].replace(/,/g, ""));
+    if (Number.isFinite(value) && value >= 0) return value;
+  }
+  return null;
+}
+
 function extractProduct(html: string, pageUrl: URL) {
   const meta = metaValues(html);
   const titleTag = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "";
+  const pageText = stripMarkup(html
+    .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, " "));
+  const headingNames = extractHeadingText(html);
+  const safeMetaTitle = [meta["og:title"], meta["twitter:title"], stripMarkup(titleTag)]
+    .map(value => stripMarkup(value).replace(/\s*[|–-]\s*ShopBase BD.*$/i, "").trim())
+    .find(value => value.length >= 2 && !/shopbase\s*bd|largest drop.?shipping platform/i.test(value) && !isGenericShopBaseHeading(value));
+  const name = headingNames[0] || safeMetaTitle || "";
+
   const jsonLdObjects: JsonRecord[] = [];
   for (const match of html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
     try {
       const parsed = JSON.parse(match[1].trim()) as unknown;
       walkObjects(parsed, obj => { if (isProductObject(obj)) jsonLdObjects.push(obj); });
     } catch {
-      // Ignore malformed structured-data blocks and use page metadata.
+      // Ignore malformed structured-data blocks and use the visible product detail page.
     }
   }
-
   const product = jsonLdObjects[0] || {};
   const offersValue = product.offers;
   const offer = (Array.isArray(offersValue) ? offersValue[0] : offersValue) as JsonRecord | undefined;
   const jsonPrice = offer && (offer.price ?? offer.lowPrice ?? offer.highPrice);
   const currency = String(offer?.priceCurrency ?? meta["product:price:currency"] ?? "BDT").toUpperCase();
-  const metaPrice = meta["product:price:amount"] ?? meta["og:price:amount"] ?? meta["twitter:data1"];
-  const pageText = stripMarkup(html
-    .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, " ")
-    .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, " "));
+  const wholesalePrice = extractWholesalePrice(pageText);
   const visiblePrice = pageText.match(/(?:৳|BDT\s*|Tk\.?\s*)([0-9][0-9,]*(?:\.\d{1,2})?)/i)
     ?? pageText.match(/([0-9][0-9,]*(?:\.\d{1,2})?)\s*(?:৳|BDT|Tk\.?)/i);
-  const rawPrice = jsonPrice ?? metaPrice ?? visiblePrice?.[1];
+  const rawPrice = wholesalePrice ?? jsonPrice ?? meta["product:price:amount"] ?? meta["og:price:amount"] ?? visiblePrice?.[1];
   const numericPrice = typeof rawPrice === "number" || typeof rawPrice === "string"
     ? Number(String(rawPrice).replace(/,/g, ""))
     : NaN;
@@ -143,25 +201,14 @@ function extractProduct(html: string, pageUrl: URL) {
     ? numericPrice
     : null;
 
-  const name = flattenStrings(product.name)[0]
-    || meta["og:title"]
-    || meta["twitter:title"]
-    || stripMarkup(titleTag).replace(/\s*[|–-]\s*ShopBase BD.*$/i, "");
-  const originalDescription = flattenStrings(product.description)[0]
-    || meta["og:description"]
-    || meta["description"]
-    || meta["twitter:description"]
-    || "";
   const imageValues = [
     ...flattenStrings(product.image),
     ...flattenStrings(product.images),
-    meta["og:image"] || "",
-    meta["twitter:image"] || "",
-    meta["image"] || "",
   ];
-  const images = Array.from(new Set(imageValues
-    .map(value => toImageUrl(value, pageUrl))
-    .filter((value): value is string => Boolean(value)))).slice(0, 12);
+  const images = Array.from(new Set([
+    ...imageValues.map(value => toImageUrl(value, pageUrl)).filter((value): value is string => Boolean(value)),
+    ...extractImageCandidates(html, pageUrl, name, meta),
+  ])).slice(0, 12);
 
   const colors = new Set<string>();
   const sizes = new Set<string>();
@@ -181,6 +228,14 @@ function extractProduct(html: string, pageUrl: URL) {
   const stockQuantity = Number.isInteger(stockNumber) && stockNumber >= 0
     ? stockNumber
     : /outofstock|soldout/i.test(availabilityText) ? 0 : null;
+
+  const nameIndex = name ? pageText.toLowerCase().indexOf(name.toLowerCase()) : -1;
+  const descriptionText = nameIndex >= 0
+    ? pageText.slice(nameIndex + name.length).split(/largest drop.?shipping platform in bangladesh|legal\s*&\s*information/i)[0].trim()
+    : "";
+  const originalDescription = flattenStrings(product.description)[0]
+    || meta["og:description"] || meta["description"] || meta["twitter:description"]
+    || descriptionText.slice(0, 5000);
 
   const canonicalTag = html.match(/<link\b[^>]*rel\s*=\s*["']canonical["'][^>]*>/i)?.[0] || "";
   const canonical = canonicalTag ? tagAttributes(canonicalTag).href : "";
@@ -343,6 +398,9 @@ export async function POST(request: Request) {
     if (!productUrl) {
       return json({ error: "Paste a valid HTTPS product URL from shopbasebd.com." }, 400);
     }
+    if (!/\/product\/details\/\d+\/?$/i.test(productUrl.pathname)) {
+      return json({ error: "This is not a ShopBase BD product detail link. Open the specific product, copy its Product Details URL (the link should contain /product/details/ followed by the product ID), and paste that URL here." }, 400);
+    }
 
     const { data: duplicate, error: duplicateError } = await supabase
       .from("products")
@@ -356,9 +414,14 @@ export async function POST(request: Request) {
 
     const { html, finalUrl } = await fetchShopBasePage(productUrl);
     const extracted = extractProduct(html, finalUrl);
-    if (extracted.name.length < 2 || extracted.images.length === 0) {
+    if (
+      extracted.name.length < 2 ||
+      isGenericShopBaseHeading(extracted.name) ||
+      /shopbase\s*bd|largest drop.?shipping platform/i.test(extracted.name) ||
+      extracted.images.length === 0
+    ) {
       return json({
-        error: "The page opened, but the product name or images were not available to import. This link may require a ShopBase BD login or use a page format we cannot read yet.",
+        error: "ShopBase BD opened, but the exact product name or product photos could not be identified. No draft was created. Copy the link from the specific product's Details page, not the ShopBase BD home, category, or seller dashboard.",
       }, 422);
     }
 
