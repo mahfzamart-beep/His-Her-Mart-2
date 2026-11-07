@@ -126,7 +126,7 @@ function isProductDetailsPath(pathname: string): boolean {
 }
 
 function isShopBaseLandingPage(pageText: string): boolean {
-  return /(?:দেশের|বাংলাদেশের) সর্ববৃহৎ.*ড্রপ.?শিপিং.*(?:রিসেলিং|প্ল্যাটফর্ম)|আমাদের প্রোডাক্ট সমূহ|রিসেলার\s*\/\s*ড্রপশিপার|largest drop.?shipping platform in bangladesh/i.test(pageText);
+  return /(?:দেশের|বাংলাদেশের) সর্ববৃহৎ.*ড্রপ.?শিপিং.*(?:রিসেলিং|প্ল্যাটফর্ম)|largest drop.?shipping platform in bangladesh/i.test(pageText);
 }
 
 function extractHeadingText(html: string): string[] {
