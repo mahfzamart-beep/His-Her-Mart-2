@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, Boxes, CheckCircle2, ClipboardList, LogOut, PackageCheck, RefreshCw, Search, ShieldAlert, Truck } from "lucide-react";
 import AdminProductImport from "../../components/AdminProductImport";
+import AdminShopBaseImporter, { type ShopBaseImportedProduct } from "../../components/AdminShopBaseImporter";
 import { COLOR_OPTIONS } from "../../lib/color-options";
 
 type OrderItem = { id: string; product_id: string | null; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number; selected_size: string | null; selected_color: string | null; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null };
@@ -17,23 +18,25 @@ type Order = {
   admin_note: string | null; created_at: string; order_items: OrderItem[];
   free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
-type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; images: string[] | null; color_options: string[]; size_type: string; size_options: string[] | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
+type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; supplier_cost_price: number | null; supplier_original_description: string | null; compare_at_price: number | null; stock_quantity: number; image_url: string | null; images: string[] | null; color_options: string[]; size_type: string; size_options: string[] | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
 type SizeProfile = "none" | "apparel" | "footwear";
 type ProductSizeType = "none" | "apparel_alpha" | "apparel_numeric" | "shoe_eu" | "shoe_uk" | "shoe_us" | "numeric" | "letter" | "custom";
 type StoreCategory = { id: string; name: string; slug: string; description: string | null; image_url: string | null; sort_order: number; is_active: boolean; size_profile: SizeProfile };
 type CategoryFormState = { id: string | null; name: string; description: string; image_url: string; sort_order: string; is_active: boolean; size_profile: SizeProfile };
-type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; size_type: ProductSizeType; size_options_text: string; color_options: string[]; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
+type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; supplier_cost_price: string; supplier_original_description: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; size_type: ProductSizeType; size_options_text: string; color_options: string[]; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
 const sizeTypeOptionsForProfile = (profile: SizeProfile): Array<{ value: ProductSizeType; label: string }> => {
   if (profile === "apparel") return [
     { value: "apparel_alpha", label: "Alphanumeric clothing sizes (XS, S, M, L, XL, 2XL…)" },
     { value: "apparel_numeric", label: "Numeric clothing sizes (28, 30, 32, 34…)" },
+    { value: "custom", label: "Custom product sizes" },
   ];
   if (profile === "footwear") return [
     { value: "shoe_eu", label: "Shoe size — EU (36, 37, 38…)" },
     { value: "shoe_uk", label: "Shoe size — UK (3, 4, 5…)" },
     { value: "shoe_us", label: "Shoe size — US (5, 6, 7…)" },
+    { value: "custom", label: "Custom product sizes" },
   ];
-  return [];
+  return [{ value: "custom", label: "Custom product sizes" }];
 };
 const sizePresets: Partial<Record<ProductSizeType, string[]>> = {
   apparel_alpha: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"],
@@ -61,7 +64,7 @@ export default function AdminPage() {
   const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
   const [categoryForm, setCategoryForm] = useState<CategoryFormState>({ id: null, name: "", description: "", image_url: "", sort_order: "0", is_active: true, size_profile: "none" });
   const [productEditorOpen, setProductEditorOpen] = useState(false);
-  const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
+  const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", supplier_cost_price: "", supplier_original_description: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
   const [productBusy, setProductBusy] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -84,7 +87,7 @@ export default function AdminPage() {
     const { data, error: orderError } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200);
     if (orderError) setError(orderError.message);
     else setOrders((data || []) as Order[]);
-    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,images,color_options,size_type,size_options,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
+    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,supplier_cost_price,supplier_original_description,compare_at_price,stock_quantity,image_url,images,color_options,size_type,size_options,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
     if (productError) setError(productError.message);
     else setProducts((productData || []) as StoreProduct[]);
     const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name,slug,description,image_url,sort_order,is_active,size_profile").order("sort_order", { ascending: true });
@@ -159,13 +162,45 @@ export default function AdminPage() {
 
   const openNewProduct = () => {
     setError("");
-    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: categories[0]?.id || "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
+    setProductForm({ id: null, name: "", sku: "", description: "", price: "", supplier_cost_price: "", supplier_original_description: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: categories[0]?.id || "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
     setProductEditorOpen(true);
   };
 
   const openEditProduct = (product: StoreProduct) => {
     setError("");
-    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), size_type: (["apparel_alpha", "apparel_numeric", "shoe_eu", "shoe_uk", "shoe_us", "numeric", "letter", "custom"].includes(product.size_type) ? product.size_type : "none") as ProductFormState["size_type"], size_options_text: Array.isArray(product.size_options) ? product.size_options.join(", ") : "", color_options: Array.isArray(product.color_options) ? product.color_options : [], category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
+    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), supplier_cost_price: product.supplier_cost_price == null ? "" : String(product.supplier_cost_price), supplier_original_description: product.supplier_original_description || "", compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), size_type: (["apparel_alpha", "apparel_numeric", "shoe_eu", "shoe_uk", "shoe_us", "numeric", "letter", "custom"].includes(product.size_type) ? product.size_type : "none") as ProductFormState["size_type"], size_options_text: Array.isArray(product.size_options) ? product.size_options.join(", ") : "", color_options: Array.isArray(product.color_options) ? product.color_options : [], category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
+    setProductEditorOpen(true);
+  };
+
+  const prepareImportedProduct = (imported: ShopBaseImportedProduct) => {
+    const importedCategory = imported.category.trim().toLowerCase();
+    const matchingCategory = categories.find(category =>
+      category.name.toLowerCase() === importedCategory || category.slug.toLowerCase() === importedCategory
+    ) || categories.find(category =>
+      importedCategory.length > 2 && (category.name.toLowerCase().includes(importedCategory) || importedCategory.includes(category.name.toLowerCase()))
+    );
+    const profile = matchingCategory?.size_profile || "none";
+    const sizeType: ProductSizeType = imported.sizes.length
+      ? profile === "apparel"
+        ? imported.sizes.every(size => /^\\d+$/.test(size)) ? "apparel_numeric" : "apparel_alpha"
+        : "custom"
+      : "none";
+    const colourMap = new Map(COLOR_OPTIONS.map(colour => [colour.name.toLowerCase(), colour.name]));
+    const colours = Array.from(new Set(imported.colors.map(colour => colourMap.get(colour.toLowerCase()) || colour).filter(Boolean)));
+    setError("");
+    setProductForm({
+      id: null, name: imported.name, sku: imported.sku,
+      description: imported.premiumDescription, price: "",
+      supplier_cost_price: imported.supplierPrice === null ? "" : String(imported.supplierPrice),
+      supplier_original_description: imported.originalDescription,
+      compare_at_price: "",
+      stock_quantity: imported.stockQuantity === null ? "0" : String(imported.stockQuantity),
+      image_url: imported.images[0] || "", images: imported.images.slice(0, 12),
+      size_type: sizeType, size_options_text: imported.sizes.join(", "),
+      color_options: colours, category_id: matchingCategory?.id || "",
+      is_active: false, is_featured: false, fulfillment_source: "shopbase_bd",
+      supplier_product_code: imported.sku, supplier_product_url: imported.sourceUrl,
+    });
     setProductEditorOpen(true);
   };
 
@@ -211,10 +246,11 @@ export default function AdminPage() {
     const price = Number(productForm.price);
     const stock = Number(productForm.stock_quantity);
     const compareAt = productForm.compare_at_price.trim() ? Number(productForm.compare_at_price) : null;
+    const supplierCostPrice = productForm.supplier_cost_price.trim() ? Number(productForm.supplier_cost_price) : null;
     const sizeOptions = productForm.size_type === "none" ? [] : Array.from(new Set(productForm.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean))).slice(0, 50);
     const imageUrls = Array.from(new Set([productForm.image_url.trim(), ...productForm.images].filter(Boolean))).slice(0, 12);
-    if (name.length < 2 || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0 || (compareAt !== null && (!Number.isFinite(compareAt) || compareAt < price))) {
-      setError("Check the product name, price, stock quantity and compare-at price.");
+    if (name.length < 2 || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0 || (compareAt !== null && (!Number.isFinite(compareAt) || compareAt < price)) || (supplierCostPrice !== null && (!Number.isFinite(supplierCostPrice) || supplierCostPrice < 0))) {
+      setError("Check the product name, prices and stock quantity. Supplier cost must be a non-negative amount.");
       return;
     }
     const productCategoryProfile = categories.find(category => category.id === productForm.category_id)?.size_profile || "none";
@@ -229,7 +265,7 @@ export default function AdminPage() {
     }
     const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const slug = `${slugBase || "product"}-${(productForm.id || crypto.randomUUID()).slice(0, 6)}`;
-    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: imageUrls[0] || null, images: imageUrls, size_type: productForm.size_type, size_options: sizeOptions, color_options: productForm.color_options, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: productForm.fulfillment_source, supplier_product_code: productForm.supplier_product_code.trim() || null, supplier_product_url: productForm.supplier_product_url.trim() || null, updated_at: new Date().toISOString() };
+    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, supplier_cost_price: supplierCostPrice, supplier_original_description: productForm.supplier_original_description.trim() || null, compare_at_price: compareAt, stock_quantity: stock, image_url: imageUrls[0] || null, images: imageUrls, size_type: productForm.size_type, size_options: sizeOptions, color_options: productForm.color_options, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: productForm.fulfillment_source, supplier_product_code: productForm.supplier_product_code.trim() || null, supplier_product_url: productForm.supplier_product_url.trim() || null, updated_at: new Date().toISOString() };
     setProductBusy(productForm.id || "new");
     setError("");
     const result = productForm.id
@@ -420,8 +456,8 @@ export default function AdminPage() {
           </tbody></table></div>}
       </section>
       <section className="admin-orders-card admin-products-card">
-        <div className="admin-orders-toolbar"><div><h2>Product management</h2><p>Add products, update prices and stock, or hide products without deleting order history.</p></div><button className="admin-product-add" onClick={openNewProduct}>+ Add product</button></div>
-        <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><button className="admin-product-edit" onClick={()=>openEditProduct(product)}>Edit</button></article>)}</div>
+        <div className="admin-orders-toolbar"><div><h2>Product management</h2><p>Add products, update prices and stock, or hide products without deleting order history.</p></div><div className="admin-shopbase-toolbar-actions"><AdminShopBaseImporter accessToken={session.access_token || ""} onDraftReady={prepareImportedProduct}/><button className="admin-product-add" onClick={openNewProduct}>+ Add product</button></div></div>
+        <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}{product.supplier_cost_price != null ? ` · Supplier cost: ${money(Number(product.supplier_cost_price))}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><button className="admin-product-edit" onClick={()=>openEditProduct(product)}>Edit</button></article>)}</div>
         <AdminProductImport categories={categories} onImported={refresh} />
       </section>
       <section className="admin-orders-card admin-products-card">
@@ -435,13 +471,15 @@ export default function AdminPage() {
       </section>
     </div>
     {categoryEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setCategoryEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">STORE CATEGORIES</p><h2>{categoryForm.id ? "Edit category" : "Add category"}</h2><small>Hidden categories stay attached to existing products.</small></div><button onClick={()=>setCategoryEditorOpen(false)}>×</button></div><form onSubmit={saveCategory} className="admin-product-form"><label>Category name<input required minLength={2} maxLength={80} value={categoryForm.name} onChange={e=>setCategoryForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Men's Fashion"/></label><label>Description<textarea rows={3} maxLength={1000} value={categoryForm.description} onChange={e=>setCategoryForm(current=>({...current,description:e.target.value}))} placeholder="Short category description"/></label><label>Category image URL<input type="url" value={categoryForm.image_url} onChange={e=>setCategoryForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label><label>Category sizing profile<select value={categoryForm.size_profile} onChange={e=>setCategoryForm(current=>({...current,size_profile:e.target.value as SizeProfile}))}><option value="none">No size selection</option><option value="apparel">Clothing & apparel — alphanumeric and numeric sizes</option><option value="footwear">Shoes & footwear — EU, UK and US shoe sizes</option></select><small>Choose the sizing family that matches products in this category. Product-level available sizes are managed separately.</small></label><div className="admin-product-form-grid"><label>Display order<input type="number" min="0" max="10000" step="1" value={categoryForm.sort_order} onChange={e=>setCategoryForm(current=>({...current,sort_order:e.target.value}))}/></label><label className="admin-category-visible"><span>Visible on storefront</span><input type="checkbox" checked={categoryForm.is_active} onChange={e=>setCategoryForm(current=>({...current,is_active:e.target.checked}))}/></label></div>{error&&<p className="admin-error" role="alert">{error}</p>}<div className="admin-product-form-actions"><button type="button" className="admin-secondary-btn" onClick={()=>setCategoryEditorOpen(false)}>Cancel</button><button type="submit" className="admin-product-add" disabled={busy}>{busy ? "Saving…" : categoryForm.id ? "Save category" : "Create category"}</button></div></form></section></div>}
-    {productEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setProductEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">CATALOGUE MANAGEMENT</p><h2>{productForm.id ? "Edit product" : "Add product"}</h2><small>Changes are saved to the live product catalogue.</small></div><button onClick={()=>setProductEditorOpen(false)}>×</button></div><form onSubmit={saveProduct} className="admin-product-form">
+    {productEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setProductEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">CATALOGUE MANAGEMENT</p><h2>{productForm.id ? "Edit product" : "Add product"}</h2><small>{productForm.id ? "Changes are saved to the product catalogue." : "Imported products stay hidden until you choose to publish them."}</small></div><button onClick={()=>setProductEditorOpen(false)}>×</button></div><form onSubmit={saveProduct} className="admin-product-form">
       <label>Product name<input required minLength={2} maxLength={140} value={productForm.name} onChange={e=>setProductForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Classic Linen Shirt"/></label>
       <label>Category<select value={productForm.category_id} onChange={e=>changeProductCategory(e.target.value)}><option value="">Choose category</option>{categories.filter(category=>category.is_active).map(category=><option key={category.id} value={category.id}>{category.name} · {sizeProfileLabel(category.size_profile)}</option>)}</select></label>
       <div className="admin-product-form-grid">
         <label>Price (BDT)<input required type="number" min="0" step="0.01" value={productForm.price} onChange={e=>setProductForm(current=>({...current,price:e.target.value}))}/></label>
-        <label>Compare-at price (BDT)<input type="number" min="0" step="0.01" value={productForm.compare_at_price} onChange={e=>setProductForm(current=>({...current,compare_at_price:e.target.value}))}/></label>
+        <label>Supplier cost price (BDT)<input type="number" min="0" step="0.01" value={productForm.supplier_cost_price} onChange={e=>setProductForm(current=>({...current,supplier_cost_price:e.target.value}))} placeholder="Imported from supplier when available"/><small>Private admin-only cost. Never shown to customers.</small></label>
+         <label>Compare-at price (BDT)<input type="number" min="0" step="0.01" value={productForm.compare_at_price} onChange={e=>setProductForm(current=>({...current,compare_at_price:e.target.value}))}/></label>
         <label>Stock quantity<input required type="number" min="0" step="1" value={productForm.stock_quantity} onChange={e=>setProductForm(current=>({...current,stock_quantity:e.target.value}))}/></label>
+        <label>Estimated gross profit (BDT)<input readOnly value={productForm.price.trim() && productForm.supplier_cost_price.trim() && Number.isFinite(Number(productForm.price)) && Number.isFinite(Number(productForm.supplier_cost_price)) ? money(Number(productForm.price) - Number(productForm.supplier_cost_price)) : "Enter both prices"} /></label>
         <label>SKU (optional)<input maxLength={80} value={productForm.sku} onChange={e=>setProductForm(current=>({...current,sku:e.target.value}))} placeholder="Product code"/></label>
       </div>
       <label>Primary product image URL<input type="url" value={productForm.image_url} onChange={e=>setProductForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label>
@@ -449,7 +487,7 @@ export default function AdminPage() {
       {productForm.images.length > 0 && <div className="admin-image-gallery" aria-label="Product image previews">{productForm.images.map((url,index)=><div className="admin-image-preview" key={url}><img src={url} alt={`Product image ${index+1}`}/><span>{index===0 ? "Primary" : `Image ${index+1}`}</span><button type="button" onClick={()=>removeProductImage(url)} aria-label={`Remove image ${index+1}`}>×</button></div>)}</div>}
       <div className="admin-product-size-settings">
         <div className="admin-size-profile-note"><b>{selectedProductCategory ? selectedProductCategory.name + " · " + sizeProfileLabel(selectedProductSizeProfile) : "Choose a category first"}</b><small>{selectedProductSizeProfile === "apparel" ? "Clothing products can use alphanumeric or numeric sizing." : selectedProductSizeProfile === "footwear" ? "Footwear uses its own regional shoe-size standards." : "This category is currently set to products without size selection. Set its profile in Category Management to enable clothing or shoe sizes."}</small></div>
-        {selectedProductSizeProfile !== "none" && <>
+        {(selectedProductSizeProfile !== "none" || productForm.size_type !== "none") && <>
           <label>Size system<select value={productForm.size_type} onChange={e=>setProductForm(current=>({...current,size_type:e.target.value as ProductSizeType,size_options_text:e.target.value==="none"?"":current.size_options_text}))}><option value="none">This product has no size selection</option>{productSizeTypeOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
           {productForm.size_type !== "none" && <>
             {suggestedSizes.length > 0 && <div className="admin-size-quick-add"><span>Quick add common sizes</span><div>{suggestedSizes.map(size=><button type="button" key={size} className={currentSizeValues.includes(size) ? "admin-size-chip selected" : "admin-size-chip"} onClick={()=>addSuggestedSize(size)} disabled={currentSizeValues.includes(size)}>{currentSizeValues.includes(size) ? "✓ " : "+ "}{size}</button>)}</div></div>}
@@ -462,15 +500,16 @@ export default function AdminPage() {
         <div className="admin-color-option-grid">{COLOR_OPTIONS.map(color => {
           const active = productForm.color_options.includes(color.name);
           return <button type="button" key={color.name} className={active ? "admin-color-option selected" : "admin-color-option"} aria-pressed={active} onClick={() => setProductForm(current => ({ ...current, color_options: active ? current.color_options.filter(name => name !== color.name) : [...current.color_options, color.name] }))}><span className="admin-color-swatch" style={{ background: color.hex }} />{color.name}{active && <b>✓</b>}</button>;
-        })}</div>
+        })}{productForm.color_options.filter(name => !COLOR_OPTIONS.some(option => option.name.toLowerCase() === name.toLowerCase())).map(name => <button type="button" key={"custom-" + name} className="admin-color-option selected" aria-pressed="true" onClick={() => setProductForm(current => ({ ...current, color_options: current.color_options.filter(value => value !== name) }))}><span className="admin-color-swatch" style={{ background: "#888888" }}/>{name} <small>Imported · remove</small><b>✓</b></button>)}</div>
         <small className="admin-color-selected-count">{productForm.color_options.length ? productForm.color_options.length + " colour(s) selected" : "No colour selection for this product"}</small>
       </section>
       <label>Fulfilment source<select value={productForm.fulfillment_source} onChange={e=>setProductForm(current=>({...current,fulfillment_source:e.target.value}))}><option value="own_stock">Own stock</option><option value="shopbase_bd">ShopBase BD</option><option value="dropshippingbd">DropshippingBD</option></select></label>
       <div className="admin-product-form-grid"><label>Supplier product code<input maxLength={100} value={productForm.supplier_product_code} onChange={e=>setProductForm(current=>({...current,supplier_product_code:e.target.value}))} placeholder="Supplier item/SKU code"/></label><label>Supplier product URL<input type="url" value={productForm.supplier_product_url} onChange={e=>setProductForm(current=>({...current,supplier_product_url:e.target.value}))} placeholder="https://supplier-product-page…"/></label></div>
-      <label>Description<textarea rows={3} maxLength={5000} value={productForm.description} onChange={e=>setProductForm(current=>({...current,description:e.target.value}))} placeholder="Product details and features"/></label>
+      <label>Description<textarea rows={5} maxLength={5000} value={productForm.description} onChange={e=>setProductForm(current=>({...current,description:e.target.value}))} placeholder="Product details and features"/></label>
+      {productForm.supplier_original_description && <details className="admin-shopbase-original"><summary>Original supplier description (saved for reference)</summary><textarea rows={4} readOnly value={productForm.supplier_original_description}/></details>}
       <div className="admin-product-flags"><label><input type="checkbox" checked={productForm.is_active} onChange={e=>setProductForm(current=>({...current,is_active:e.target.checked}))}/> Publish product</label><label><input type="checkbox" checked={productForm.is_featured} onChange={e=>setProductForm(current=>({...current,is_featured:e.target.checked}))}/> Featured product</label></div>
       {error&&<p className="admin-error" role="alert">{error}</p>}
-      <div className="admin-product-form-actions"><button type="button" className="admin-secondary-btn" onClick={()=>setProductEditorOpen(false)}>Cancel</button><button type="submit" className="admin-product-add" disabled={!!productBusy}>{productBusy ? "Saving…" : productForm.id ? "Save changes" : "Create product"}</button></div>
+      <div className="admin-product-form-actions"><button type="button" className="admin-secondary-btn" onClick={()=>setProductEditorOpen(false)}>Cancel</button><button type="submit" className="admin-product-add" disabled={!!productBusy}>{productBusy ? "Saving…" : productForm.id ? "Save changes" : productForm.is_active ? "Create & publish product" : "Save as draft"}</button></div>
     </form></section></div>}
     {selected && <div className="admin-modal-backdrop" onClick={()=>setSelected(null)}><section className="admin-order-modal" onClick={e=>e.stopPropagation()}>
       <div className="admin-modal-head"><div><p className="eyebrow">ORDER DETAILS</p><h2>{selected.order_number}</h2><small>{date(selected.created_at)}</small></div><button onClick={()=>setSelected(null)}>×</button></div>
