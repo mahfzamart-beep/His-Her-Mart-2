@@ -5,7 +5,7 @@ export const maxDuration = 30;
 
 const MAX_HTML_LENGTH = 4 * 1024 * 1024;
 const SHOPBASE_HOST = "shopbasebd.com";
-const AI_MODEL = "openai/gpt-5.4-nano";
+const AI_MODEL = "gemini-3.8-flash";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -246,69 +246,74 @@ async function writePremiumEnglishDescription(input: {
   category: string;
   colors: string[];
   sizes: string[];
-}, request: Request): Promise<string> {
-  const token = process.env.AI_GATEWAY_API_KEY
-    || request.headers.get("x-vercel-oidc-token")
-    || process.env.VERCEL_OIDC_TOKEN;
-  if (!token) {
-    throw new Error("AI writing is not connected to this Vercel deployment yet. Enable Vercel OIDC for the project or configure AI_GATEWAY_API_KEY.");
+}): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Gemini AI is not connected to this deployment. Add GEMINI_API_KEY in Vercel Project Environment Variables and redeploy the Preview.");
   }
 
-  const response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+  const systemInstruction = [
+    "You are the product copywriter for His & Her Mart, a premium, modern Bangladesh online store.",
+    "Rewrite the supplier's product description into polished, natural English only.",
+    "Do not invent, assume, exaggerate, or guarantee any product feature, material, dimension, quality, warranty, origin, certification, stock status, or benefit.",
+    "Use only facts explicitly present in the supplied product information. Preserve important factual details. Omit details that are unclear.",
+    "Use a refined, concise, customer-friendly tone. Do not mention the supplier, source website, wholesale cost, or AI.",
+    "Return plain text only, with short paragraphs and simple bullet points only when the source contains multiple factual specifications.",
+    "If the source description is empty, write only a brief neutral description based on the product name and supplied options, without claiming features."
+  ].join(" ");
+
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
     method: "POST",
     signal: AbortSignal.timeout(20000),
     headers: {
-      "Authorization": "Bearer " + token,
+      "x-goog-api-key": apiKey,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
       model: AI_MODEL,
-      messages: [
-        {
-          role: "system",
-          content: [
-            "You are the product copywriter for His & Her Mart, a premium, modern Bangladesh online store.",
-            "Rewrite the supplier's product description into polished, natural English only.",
-            "Do not invent, assume, exaggerate, or guarantee any product feature, material, dimension, quality, warranty, origin, certification, stock status, or benefit.",
-            "Use only facts explicitly present in the supplied product information. Preserve important factual details. Omit details that are unclear.",
-            "Use a refined, concise, customer-friendly tone. Do not mention the supplier, source website, wholesale cost, or AI.",
-            "Return plain text only, with short paragraphs and simple bullet points only when the source contains multiple factual specifications.",
-            "If the source description is empty, write only a brief neutral description based on the product name and supplied options, without claiming features."
-          ].join(" "),
-        },
-        {
-          role: "user",
-          content: JSON.stringify(input),
-        },
+      input: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: JSON.stringify(input) }
       ],
-      max_tokens: 650,
+      store: false,
+      generation_config: {
+        max_output_tokens: 650,
+        temperature: 0.35
+      }
     }),
   });
+
   const result = await response.json().catch(() => null) as {
-    error?: { message?: string };
-    choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string }> } }>;
+    error?: { message?: string; status?: string };
+    status?: string;
+    steps?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;
   } | null;
 
   if (!response.ok) {
-    const message = result?.error?.message || "The AI description service did not respond successfully.";
-    throw new Error(response.status === 401
-      ? "AI Gateway authentication failed. Enable Vercel OIDC for this project."
-      : response.status === 402
-        ? "AI Gateway has no available credits. Add AI Gateway credits or configure a BYOK provider."
+    const message = result?.error?.message || "Gemini did not respond successfully.";
+    throw new Error(response.status === 401 || response.status === 403
+      ? "Gemini API authentication failed. Check that GEMINI_API_KEY is correct and enabled in Vercel."
+      : response.status === 429
+        ? "Gemini API rate limit or quota reached. Check your Google AI Studio usage and billing limits."
         : message.slice(0, 220));
   }
 
-  const content = result?.choices?.[0]?.message?.content;
-  const description = typeof content === "string"
-    ? content
-    : Array.isArray(content)
-      ? content.map(part => part.text || "").join("\n")
-      : "";
-  const cleaned = description
-    .replace(/\x60{3}[a-z]*\n?/gi, "")
+  const description = (result?.steps || [])
+    .filter(step => step.type === "model_output")
+    .flatMap(step => step.content || [])
+    .filter(part => part.type === "text" && typeof part.text === "string")
+    .map(part => part.text || "")
+    .join("\n")
     .trim();
-  if (cleaned.length < 20) throw new Error("AI returned an empty description. Please retry the import.");
-  return cleaned.slice(0, 5000);
+
+  if (cleanedDescription(description).length < 20) {
+    throw new Error("Gemini returned an empty description. Please retry the import.");
+  }
+  return cleanedDescription(description).slice(0, 5000);
+}
+
+function cleanedDescription(value: string): string {
+  return value.replace(/\x60{3}[a-z]*\n?/gi, "").trim();
 }
 
 export async function POST(request: Request) {
@@ -365,7 +370,7 @@ export async function POST(request: Request) {
       category: extracted.category,
       colors: extracted.colors,
       sizes: extracted.sizes,
-    }, request);
+    });
 
     return json({
       product: {
