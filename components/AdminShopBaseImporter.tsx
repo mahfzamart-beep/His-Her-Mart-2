@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { ArrowDownToLine, ExternalLink, Link2, Sparkles, X } from "lucide-react";
 
 export type ShopBaseImportedProduct = {
@@ -31,7 +32,7 @@ export default function AdminShopBaseImporter({ accessToken, onDraftReady }: Pro
   const [error, setError] = useState("");
   const [product, setProduct] = useState<ShopBaseImportedProduct | null>(null);
 
-  async function scanProduct(event: React.FormEvent<HTMLFormElement>) {
+  async function scanProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
