@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       robots: { index: false, follow: true },
     };
   }
-  const title = `${product.name} | His & Her Mart`;
-  const description = (product.description || `Shop ${product.name} at His & Her Mart, Bangladesh. Discover thoughtfully selected everyday essentials.`).slice(0, 160);
+  const title = `${product.name} | His & Hers Mart`;
+  const description = (product.description || `Shop ${product.name} at His & Hers Mart, Bangladesh. Discover thoughtfully selected everyday essentials.`).slice(0, 160);
   const image = product.image_url && /^https?:\/\//i.test(product.image_url) ? product.image_url : undefined;
   return {
     title,
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       url: `${SITE_URL}/products/${encodeURIComponent(slug)}`,
-      siteName: "His & Her Mart",
+      siteName: "His & Hers Mart",
       locale: "en_BD",
       type: "website",
       ...(image ? { images: [{ url: image, alt: product.name }] } : {}),

@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Product checks & exchanges",
-  description: "How to inspect your His & Her Mart parcel and report a product defect.",
+  description: "How to inspect your His & Hers Mart parcel and report a product defect.",
   alternates: { canonical: "https://his-and-her-mart.vercel.app/returns" },
 };
 
@@ -13,7 +13,7 @@ export default function ReturnsPage() {
     <main className="policy-shell">
       <header className="policy-top">
         <Link href="/" className="tracking-back"><ArrowLeft size={16}/> Back to store</Link>
-        <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HER MART</small></Link>
+        <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HERS MART</small></Link>
       </header>
       <article className="policy-card">
         <div className="tracking-icon"><ShieldCheck size={24}/></div>
@@ -33,7 +33,7 @@ export default function ReturnsPage() {
           <p>Share your order number and explain the issue to our customer support team.</p>
           <a className="policy-link" href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">Contact support on WhatsApp <ArrowRight size={15}/></a>
         </section>
-        <p className="policy-updated">This page summarises the current product-inspection and exchange information shared by His & Her Mart. It does not promise an unconditional return or refund.</p>
+        <p className="policy-updated">This page summarises the current product-inspection and exchange information shared by His & Hers Mart. It does not promise an unconditional return or refund.</p>
         <Link href="/faq" className="policy-secondary">Read customer FAQs</Link>
       </article>
     </main>

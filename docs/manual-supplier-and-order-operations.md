@@ -1,4 +1,4 @@
-# His & Her Mart — Manual Supplier & Order Operations
+# His & Hers Mart — Manual Supplier & Order Operations
 
 This guide reflects the current setup: ShopBase BD and DropshippingBD are connected manually because no supplier API access is available. Do not assume live supplier stock, prices or order status are synced.
 

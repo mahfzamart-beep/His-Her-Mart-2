@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Truck } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Shipping information",
-  description: "Delivery charges and shipping information for His & Her Mart orders in Bangladesh.",
+  description: "Delivery charges and shipping information for His & Hers Mart orders in Bangladesh.",
   alternates: { canonical: "https://his-and-her-mart.vercel.app/shipping" },
 };
 
@@ -13,7 +13,7 @@ export default function ShippingPage() {
     <main className="policy-shell">
       <header className="policy-top">
         <Link href="/" className="tracking-back"><ArrowLeft size={16}/> Back to store</Link>
-        <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HER MART</small></Link>
+        <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HERS MART</small></Link>
       </header>
       <article className="policy-card">
         <div className="tracking-icon"><Truck size={24}/></div>

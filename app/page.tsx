@@ -354,7 +354,7 @@ export default function Home() {
       <div className="announcement"><span>THOUGHTFULLY CHOSEN FINDS</span><i>·</i><span>DELIVERED ACROSS BANGLADESH</span></div>
       <header className="header">
         <button className="icon-btn mobile-toggle" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? <X /> : <Menu />}</button>
-        <a className="brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a>
+        <a className="brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HERS MART</small></a>
         <nav className={mobileMenu ? "nav nav-open" : "nav"}>
           <a href="#shop" onClick={() => setMobileMenu(false)}>Shop All</a>
           <a href="#shop" onClick={() => { setCategory("Men's Fashion"); setMobileMenu(false); }}>For Him</a>
@@ -455,7 +455,7 @@ export default function Home() {
 
       <section className="story" id="story">
         <div className="story-image" />
-        <div className="story-copy"><p className="eyebrow">A BETTER WAY TO BROWSE</p><h2>Made for <em>every you.</em></h2><p>His & Her Mart brings together considered fashion, useful finds and everyday little luxuries. A simpler, more thoughtful way to shop for the people and moments that matter.</p><a href="#shop" className="text-link">Get to know our collection <ArrowRight size={16} /></a></div>
+        <div className="story-copy"><p className="eyebrow">A BETTER WAY TO BROWSE</p><h2>Made for <em>every you.</em></h2><p>His & Hers Mart brings together considered fashion, useful finds and everyday little luxuries. A simpler, more thoughtful way to shop for the people and moments that matter.</p><a href="#shop" className="text-link">Get to know our collection <ArrowRight size={16} /></a></div>
       </section>
 
       <section className="newsletter">
@@ -468,14 +468,14 @@ export default function Home() {
       <footer>
         <div className="footer-main">
           <div className="footer-brand-column">
-            <a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HER MART</small></a>
+            <a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HERS MART</small></a>
             <p>Thoughtfully chosen finds for every side of life. A more considered way to shop for him, her and home.</p>
           </div>
           <div className="footer-column"><b>EXPLORE</b><a href="#shop">Shop all</a><a href="#shop" onClick={() => setCategory("Men's Fashion")}>For him</a><a href="#shop" onClick={() => setCategory("Women's Fashion")}>For her</a><a href="#story">Our story</a></div>
           <div className="footer-column"><b>HELP</b><a href="/track-order">Track an order</a><a href="/wishlist">Wishlist</a><a href="/shipping">Shipping information</a><a href="/returns">Product checks & exchanges</a><a href="/faq">Help & FAQs</a><a href="/contact">Contact us</a></div>
           <div className="footer-column footer-contact"><b>GET IN TOUCH</b><span>Customer care</span><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp · +880 1969-419302</a><span>Cash on delivery available</span></div>
         </div>
-        <div className="footer-bottom"><span>© 2026 His & Her Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
+        <div className="footer-bottom"><span>© 2026 His & Hers Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
       </footer>
 
       <nav className="mobile-bottom-nav" aria-label="Quick navigation">
@@ -544,7 +544,7 @@ export default function Home() {
       {orderSuccessOpen && orderResult && <div className="overlay order-success-overlay">
         <section className="order-success-panel" role="dialog" aria-modal="true" aria-labelledby="order-success-title">
           <div className="success-mark">✓</div>
-          <p className="eyebrow">HIS & HER MART</p>
+          <p className="eyebrow">HIS & HERS MART</p>
           <h2 id="order-success-title">Congratulations!<br /><em>Your order has been received.</em></h2>
           <p className="success-intro">Thank you for shopping with us. Our team will verify product availability and coordinate fulfilment with the supplier.</p>
           <div className="order-reference">

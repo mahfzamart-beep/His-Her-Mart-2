@@ -381,7 +381,7 @@ export default function AdminPage() {
     <a className="admin-back" href="/"><ArrowLeft size={15} /> Back to store</a>
     <section className="admin-login-card">
       <div className="admin-brand-mark">H<span>&</span>H</div>
-      <p className="eyebrow">HIS & HER MART</p>
+      <p className="eyebrow">HIS & HERS MART</p>
       <h1>Admin sign in</h1>
       <p className="admin-muted">Secure access for authorised store administrators only.</p>
       {session && !authorized && <div className="admin-alert"><ShieldAlert size={17} /> {error || "This account is not an administrator."}</div>}
@@ -399,7 +399,7 @@ export default function AdminPage() {
 
   return <main className="admin-shell">
     <header className="admin-topbar">
-      <a className="admin-brand" href="/"><span>H<span>&</span>H</span><b>HIS & HER MART</b><small>ADMIN</small></a>
+      <a className="admin-brand" href="/"><span>H<span>&</span>H</span><b>HIS & HERS MART</b><small>ADMIN</small></a>
       <div className="admin-top-actions"><span>{session.user.email}</span><button onClick={refresh} aria-label="Refresh orders"><RefreshCw size={16}/></button><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </header>
     <div className="admin-content">

@@ -4,13 +4,13 @@ import { ArrowLeft, ArrowRight, MessageCircle, PackageSearch, HelpCircle, Clock3
 
 export const metadata: Metadata = {
   title: "Contact customer support",
-  description: "Contact His & Her Mart customer support for product, delivery and order questions in Bangladesh.",
+  description: "Contact His & Hers Mart customer support for product, delivery and order questions in Bangladesh.",
   alternates: { canonical: "https://his-and-her-mart.vercel.app/contact" },
   openGraph: {
-    title: "Contact customer support | His & Her Mart",
-    description: "We're one message away. Contact His & Her Mart for shopping and order support.",
+    title: "Contact customer support | His & Hers Mart",
+    description: "We're one message away. Contact His & Hers Mart for shopping and order support.",
     url: "https://his-and-her-mart.vercel.app/contact",
-    siteName: "His & Her Mart",
+    siteName: "His & Hers Mart",
     locale: "en_BD",
     type: "website",
   },
@@ -21,7 +21,7 @@ export default function ContactPage() {
     <main className="policy-shell">
       <header className="policy-top">
         <Link href="/" className="tracking-back"><ArrowLeft size={16}/> Back to store</Link>
-        <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HER MART</small></Link>
+        <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HERS MART</small></Link>
       </header>
       <article className="policy-card">
         <div className="tracking-icon"><MessageCircle size={24}/></div>
