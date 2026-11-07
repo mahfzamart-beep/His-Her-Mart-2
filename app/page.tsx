@@ -32,17 +32,6 @@ type OrderConfirmation = {
 };
 
 const defaultCategories = ["All", "Men's Fashion", "Women's Fashion", "Beauty & Cosmetics", "Shoes & Footwear", "Watches & Accessories", "Bags & Wallets", "Electronics", "Home & Lifestyle", "Kids & Baby", "Mother & Baby Care", "Health & Wellness", "Grocery & Food", "Kitchen & Dining", "Furniture & Home Decor", "Home Appliances", "Mobiles & Accessories", "Computers & Office", "Sports & Outdoors", "Toys & Games", "Books & Stationery", "Automotive & Motorbikes", "Pet Supplies", "Travel & Luggage", "Jewellery", "Men's Grooming", "Garden & Outdoor Living"];
-const fallbackProducts: Product[] = [
-  { id: 1, slug: "everyday-linen-shirt", name: "Everyday Linen Shirt", category: "Men's Fashion", price: 1290, oldPrice: 1590, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900&q=85", tag: "Bestseller" },
-  { id: 2, slug: "classic-womens-handbag", name: "Classic Women's Handbag", category: "Bags & Wallets", price: 1850, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&q=85", tag: "New" },
-  { id: 3, slug: "minimal-gold-watch", name: "Minimal Gold Watch", category: "Watches & Accessories", price: 2250, oldPrice: 2690, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=900&q=85" },
-  { id: 4, slug: "soft-glow-skincare-set", name: "Soft Glow Skincare Set", category: "Beauty & Cosmetics", price: 990, image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=900&q=85" },
-  { id: 5, slug: "everyday-sneakers", name: "Everyday Sneakers", category: "Shoes & Footwear", price: 2190, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&q=85", tag: "Popular" },
-  { id: 6, slug: "relaxed-fit-blazer", name: "Relaxed Fit Blazer", category: "Women's Fashion", price: 2890, oldPrice: 3290, image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&q=85" },
-  { id: 7, slug: "canvas-weekend-tote", name: "Canvas Weekend Tote", category: "Bags & Wallets", price: 890, image: "https://images.unsplash.com/photo-1590878400972-3c4a5b9a9d1c?w=900&q=85" },
-  { id: 8, slug: "modern-ceramic-vase", name: "Modern Ceramic Vase", category: "Home & Lifestyle", price: 1150, image: "https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=900&q=85" }
-];
-
 const money = (amount: number) => `৳${amount.toLocaleString("en-BD")}`;
 
 export default function Home() {
@@ -57,37 +46,10 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
     if (!supabase) {
-      setProducts(fallbackProducts.map((item, index) => ({
-        ...item,
-        id: ["f384859e-941b-4656-b3f1-c72ef49b108c", "ba8e7b95-7f11-4024-a4fd-461b6000f61f", "36e4f88b-6e23-41e0-9a4b-79be9acb1d61", "560b2af6-d324-4196-9b43-48b4055ad247", "37a8831d-485f-4357-9263-53c3b39b7acf", "9ef0d6c9-948b-44d9-9606-fafb806e7fff", "c172806b-7e65-4388-a81c-e411a1682bbb", "4c252b52-300f-46dc-9242-fccb57770f63"][index],
-        stockQuantity: [20, 15, 12, 18, 10, 8, 20, 9][index]
-      })));
+      setCatalogError("Our collection is temporarily unavailable. Please refresh or contact our team on WhatsApp.");
       setCatalogReady(true);
       return;
     }
-
-    const demoIds = [
-      "f384859e-941b-4656-b3f1-c72ef49b108c",
-      "ba8e7b95-7f11-4024-a4fd-461b6000f61f",
-      "36e4f88b-6e23-41e0-9a4b-79be9acb1d61",
-      "560b2af6-d324-4196-9b43-48b4055ad247",
-      "37a8831d-485f-4357-9263-53c3b39b7acf",
-      "9ef0d6c9-948b-44d9-9606-fafb806e7fff",
-      "c172806b-7e65-4388-a81c-e411a1682bbb",
-      "4c252b52-300f-46dc-9242-fccb57770f63"
-    ];
-    const showDemoProducts = () => {
-      if (cancelled) return;
-      setProducts(fallbackProducts.map((item, index) => ({
-        ...item, id: demoIds[index], stockQuantity: [20, 15, 12, 18, 10, 8, 20, 9][index]
-      })));
-      setCatalogReady(true);
-    };
-
-    // Never let a slow catalogue request keep the entire storefront in a
-    // loading state. Show the seeded demo catalogue quickly, then replace it
-    // with the live Supabase products as soon as that request completes.
-    const fallbackTimer = window.setTimeout(showDemoProducts, 1800);
 
     // Categories are helpful for labels and filters, but must not block products.
     const categoryRequest = supabase
@@ -112,8 +74,9 @@ export default function Home() {
         if (error) throw error;
 
         if (!data?.length) {
-          window.clearTimeout(fallbackTimer);
-          showDemoProducts();
+          setProducts([]);
+          setCatalogError("Our collection is being refreshed. Please check back soon.");
+          setCatalogReady(true);
           return;
         }
 
@@ -125,7 +88,6 @@ export default function Home() {
         ]);
         const categoryById = new Map((categoryResult.data || []).map((item: any) => [item.id, item.name]));
         if (cancelled) return;
-        window.clearTimeout(fallbackTimer);
         const mapped: Product[] = data.map((row: any) => ({
           id: row.id,
           slug: row.slug,
@@ -133,7 +95,7 @@ export default function Home() {
           category: categoryById.get(row.category_id) || "All",
           price: Number(row.price),
           oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
-          image: row.image_url || fallbackProducts[0].image,
+          image: typeof row.image_url === "string" ? row.image_url : "",
           tag: row.is_featured ? "Featured" : undefined,
           freeShippingEligible: row.free_shipping_eligible === true,
           stockQuantity: Number(row.stock_quantity ?? 0),
@@ -142,17 +104,17 @@ export default function Home() {
         }));
         setProducts(mapped);
         setCatalogReady(true);
-      } catch {
-        // Keep the storefront usable with demo products during a transient
-        // Supabase/network issue instead of leaving an endless spinner.
-        window.clearTimeout(fallbackTimer);
-        showDemoProducts();
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Unable to load the product catalogue:", error);
+        setProducts([]);
+        setCatalogError("We couldn't load the collection right now. Please refresh or contact customer support.");
+        setCatalogReady(true);
       }
     }
     void loadProducts();
     return () => {
       cancelled = true;
-      window.clearTimeout(fallbackTimer);
     };
   }, []);
   const [query, setQuery] = useState("");
@@ -479,7 +441,7 @@ export default function Home() {
         </div>
         <div className="product-grid">
           {visibleProducts.map(p => <article className="product-card" key={p.id}>
-            <div className="product-image-wrap"><Link href={"/products/" + p.slug} aria-label={`View ${p.name}`} className="product-image-link"><img src={p.image} alt={p.name} loading="lazy" decoding="async" /></Link>
+            <div className="product-image-wrap"><Link href={"/products/" + p.slug} aria-label={`View ${p.name}`} className="product-image-link">{p.image ? <img src={p.image} alt={p.name} loading="lazy" decoding="async" /> : <span className="product-image-placeholder">Image coming soon</span>}</Link>
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label={wishlist.includes(p.id) ? "Remove " + p.name + " from wishlist" : "Add " + p.name + " to wishlist"} onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
@@ -488,7 +450,7 @@ export default function Home() {
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
         </div>
-        {!catalogReady ? <div className="empty" role="status">Loading products…</div> : catalogError ? <div className="empty" role="alert">{catalogError}</div> : visibleProducts.length === 0 ? <div className="empty no-results"><b>No products found.</b><span>Try a different search or clear your filters to see the full collection.</span><button type="button" onClick={clearCatalogFilters}>Clear all filters</button></div> : null}
+        {!catalogReady ? <div className="empty" role="status">Loading products…</div> : catalogError ? <div className="empty no-results catalog-unavailable" role="alert"><b>We’ll be right back.</b><span>{catalogError}</span><div><button type="button" onClick={() => window.location.reload()}>Try again</button><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">Contact support</a></div></div> : visibleProducts.length === 0 ? <div className="empty no-results"><b>No products found.</b><span>Try a different search or clear your filters to see the full collection.</span><button type="button" onClick={clearCatalogFilters}>Clear all filters</button></div> : null}
       </section>
 
       <section className="story" id="story">
@@ -516,10 +478,18 @@ export default function Home() {
         <div className="footer-bottom"><span>© 2026 His & Her Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
       </footer>
 
+      <nav className="mobile-bottom-nav" aria-label="Quick navigation">
+        <a href="#shop" aria-label="Shop products"><Search size={19} /><span>Shop</span></a>
+        <Link href="/wishlist" aria-label={`Wishlist, ${wishlist.length} saved items`}><Heart size={19} /><span>Saved</span>{wishlist.length > 0 && <b>{wishlist.length}</b>}</Link>
+        <button type="button" onClick={() => setCartOpen(true)} aria-label={`Open bag, ${cartCount} items`}><ShoppingBag size={19} /><span>Bag</span>{cartCount > 0 && <b>{cartCount}</b>}</button>
+        <Link href="/track-order" aria-label="Track order"><Truck size={19} /><span>Track</span></Link>
+        <a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer" aria-label="Contact customer support"><MessageCircle size={19} /><span>Help</span></a>
+      </nav>
+
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
         {cartLines.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
-          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}><img src={line.product.image} alt={line.product.name} /><div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}{line.color && <small className="cart-selected-size">Colour: {line.color}</small>}<span>{money(line.product.price)}</span><div className="qty"><button onClick={() => changeQty(line.key, -1)}><Minus size={13} /></button>{line.quantity}<button onClick={() => changeQty(line.key, 1)}><Plus size={13} /></button></div></div></div>)}</div>
+          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}>{line.product.image ? <img src={line.product.image} alt={line.product.name} /> : <div className="cart-item-placeholder">No image</div>}<div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}{line.color && <small className="cart-selected-size">Colour: {line.color}</small>}<span>{money(line.product.price)}</span><div className="qty"><button onClick={() => changeQty(line.key, -1)}><Minus size={13} /></button>{line.quantity}<button onClick={() => changeQty(line.key, 1)}><Plus size={13} /></button></div></div></div>)}</div>
           <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div>{hasFreeShippingProducts && <div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div>}<small>Delivery is ৳80 inside Dhaka or ৳150 outside Dhaka{hasFreeShippingProducts ? ". Selected eligible products may qualify for free shipping." : "."}</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setBuyNow(null); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
