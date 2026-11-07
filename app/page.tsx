@@ -510,7 +510,7 @@ export default function Home() {
             <p>Thoughtfully chosen finds for every side of life. A more considered way to shop for him, her and home.</p>
           </div>
           <div className="footer-column"><b>EXPLORE</b><a href="#shop">Shop all</a><a href="#shop" onClick={() => setCategory("Men's Fashion")}>For him</a><a href="#shop" onClick={() => setCategory("Women's Fashion")}>For her</a><a href="#story">Our story</a></div>
-          <div className="footer-column"><b>HELP</b><a href="/track-order">Track an order</a><a href="/wishlist">Wishlist</a><a href="/shipping">Shipping information</a><a href="/returns">Product checks & exchanges</a><a href="/faq">Help & FAQs</a></div>
+          <div className="footer-column"><b>HELP</b><a href="/track-order">Track an order</a><a href="/wishlist">Wishlist</a><a href="/shipping">Shipping information</a><a href="/returns">Product checks & exchanges</a><a href="/faq">Help & FAQs</a><a href="/contact">Contact us</a></div>
           <div className="footer-column footer-contact"><b>GET IN TOUCH</b><span>Customer care</span><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp · +880 1969-419302</a><span>Cash on delivery available</span></div>
         </div>
         <div className="footer-bottom"><span>© 2026 His & Her Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
