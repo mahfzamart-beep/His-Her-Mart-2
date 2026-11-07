@@ -204,6 +204,35 @@ export default function AdminPage() {
     setProductEditorOpen(true);
   };
 
+  const uploadImportedProductImages = async (files: File[]): Promise<string[]> => {
+    if (!supabase || !authorized) throw new Error("Administrator access is required to upload product images.");
+    if (!files.length || files.length > 12) throw new Error("Select between 1 and 12 product images.");
+    if (files.some(file => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) {
+      throw new Error("Use JPG, PNG or WebP images only.");
+    }
+    if (files.some(file => file.size > 5 * 1024 * 1024)) {
+      throw new Error("Each product image must be 5 MB or smaller.");
+    }
+
+    setImageUploading(true);
+    try {
+      const urls: string[] = [];
+      for (const file of files) {
+        const ext = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
+        const path = "products/" + crypto.randomUUID() + "." + ext;
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(path, file, { cacheControl: "3600", contentType: file.type, upsert: false });
+        if (uploadError) throw new Error("Product image upload failed: " + uploadError.message);
+        const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+        urls.push(data.publicUrl);
+      }
+      return urls;
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   const uploadProductImages = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     event.target.value = "";
@@ -456,7 +485,7 @@ export default function AdminPage() {
           </tbody></table></div>}
       </section>
       <section className="admin-orders-card admin-products-card">
-        <div className="admin-orders-toolbar"><div><h2>Product management</h2><p>Add products, update prices and stock, or hide products without deleting order history.</p></div><div className="admin-shopbase-toolbar-actions"><AdminShopBaseImporter accessToken={session.access_token || ""} onDraftReady={prepareImportedProduct}/><button className="admin-product-add" onClick={openNewProduct}>+ Add product</button></div></div>
+        <div className="admin-orders-toolbar"><div><h2>Product management</h2><p>Add products, update prices and stock, or hide products without deleting order history.</p></div><div className="admin-shopbase-toolbar-actions"><AdminShopBaseImporter accessToken={session.access_token || ""} onDraftReady={prepareImportedProduct} onUploadImages={uploadImportedProductImages}/><button className="admin-product-add" onClick={openNewProduct}>+ Add product</button></div></div>
         <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}{product.supplier_cost_price != null ? ` · Supplier cost: ${money(Number(product.supplier_cost_price))}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><button className="admin-product-edit" onClick={()=>openEditProduct(product)}>Edit</button></article>)}</div>
         <AdminProductImport categories={categories} onImported={refresh} />
       </section>
