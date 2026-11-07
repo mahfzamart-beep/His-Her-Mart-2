@@ -271,10 +271,8 @@ async function writePremiumEnglishDescription(input: {
     },
     body: JSON.stringify({
       model: AI_MODEL,
-      input: [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: JSON.stringify(input) }
-      ],
+      input: JSON.stringify(input),
+      system_instruction: systemInstruction,
       store: false,
       generation_config: {
         max_output_tokens: 650,
