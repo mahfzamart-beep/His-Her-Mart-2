@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Heart, ShoppingBag, Plus, Minus, Check } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
+import { getColorHex } from "../../../lib/color-options";
 
 type Product = {
   id: string;
@@ -15,12 +16,13 @@ type Product = {
   images: string[] | null;
   size_type: string | null;
   size_options: string[] | null;
+  color_options: string[] | null;
   stock_quantity: number;
   category?: { name: string } | null;
   free_shipping_eligible?: boolean;
 };
 const money = (n: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(n);
-const makeCartKey = (productId: string, size?: string | null) => size ? `${productId}::${encodeURIComponent(size)}` : productId;
+const makeCartKey = (productId: string, size?: string | null, color?: string | null) => size || color ? productId + "::" + encodeURIComponent(size || "") + "::" + encodeURIComponent(color || "") : productId;
 const getCartProductId = (key: string) => key.split("::", 1)[0];
 const sizeHeading = (sizeType: string | null) => {
   if (sizeType === "apparel_alpha") return "Choose your clothing size · Alphanumeric";
@@ -41,6 +43,7 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
   const [inBagQty, setInBagQty] = useState(0);
   const [saved, setSaved] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState("");
   const [sizeError, setSizeError] = useState("");
 
@@ -49,7 +52,7 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
     async function load() {
       if (!supabase || !slug) { setBusy(false); return; }
       const { data, error } = await supabase.from("products")
-        .select("id,slug,name,description,price,compare_at_price,image_url,images,size_type,size_options,stock_quantity,free_shipping_eligible,category:categories(name)")
+        .select("id,slug,name,description,price,compare_at_price,image_url,images,size_type,size_options,color_options,stock_quantity,free_shipping_eligible,category:categories(name)")
         .eq("slug", slug).eq("is_active", true).maybeSingle();
       if (!active) return;
       if (!error && data) {
@@ -65,7 +68,8 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
   }, [slug]);
 
   const requiredSizes = Array.isArray(product?.size_options) ? product.size_options.filter(Boolean) : [];
-  const selectedCartKey = product ? makeCartKey(product.id, selectedSize) : "";
+  const requiredColors = Array.isArray(product?.color_options) ? product.color_options.filter(Boolean) : [];
+  const selectedCartKey = product ? makeCartKey(product.id, selectedSize, selectedColor) : "";
 
   useEffect(() => {
     if (!product) return;
@@ -83,6 +87,10 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
     if (!product) return;
     if (requiredSizes.length && (!selectedSize || !requiredSizes.includes(selectedSize))) {
       setSizeError("Please choose an available size before adding this item to your bag.");
+      return;
+    }
+    if (requiredColors.length && (!selectedColor || !requiredColors.includes(selectedColor))) {
+      setSizeError("Please choose an available colour before adding this item to your bag.");
       return;
     }
     let cart: Record<string, number> = {};
@@ -113,9 +121,14 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
       setSizeError("Please choose an available size before ordering.");
       return;
     }
+    if (requiredColors.length && (!selectedColor || !requiredColors.includes(selectedColor))) {
+      setSizeError("Please choose an available colour before ordering.");
+      return;
+    }
     const requested = Math.max(1, Math.min(10, Number(product.stock_quantity), qty));
     const sizeQuery = selectedSize ? "&size=" + encodeURIComponent(selectedSize) : "";
-    window.location.assign("/?buyNow=" + encodeURIComponent(product.id) + "&qty=" + requested + sizeQuery);
+    const colorQuery = selectedColor ? "&color=" + encodeURIComponent(selectedColor) : "";
+    window.location.assign("/?buyNow=" + encodeURIComponent(product.id) + "&qty=" + requested + sizeQuery + colorQuery);
   }
 
   function toggleSaved() {
@@ -146,6 +159,10 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
         <div className="detail-price">{money(Number(product.price))}{product.compare_at_price && Number(product.compare_at_price) > Number(product.price) && <del>{money(Number(product.compare_at_price))}</del>}</div>
         <p className="detail-stock">{stock > 0 ? (stock < 5 ? "Only " + stock + " left in stock" : "In stock and ready to order") : "Currently out of stock"}</p>
         <p className="detail-description">{product.description || "A thoughtfully selected find from His & Her Mart. Contact our team if you need more product information before ordering."}</p>
+        {requiredColors.length > 0 && <div className="detail-size-selector detail-color-selector">
+          <div className="detail-size-heading"><b>Choose your colour</b><small>{selectedColor ? "Selected: " + selectedColor : "Select one available colour"}</small></div>
+          <div className="detail-color-options">{requiredColors.map(color => <button type="button" key={color} className={selectedColor === color ? "detail-color-option selected" : "detail-color-option"} aria-pressed={selectedColor === color} onClick={() => { setSelectedColor(color); setSizeError(""); setAdded(false); }}><span className="detail-color-swatch" style={{ background: getColorHex(color) }} />{color}</button>)}</div>
+        </div>}
         {sizeRequired && <div className="detail-size-selector">
           <div className="detail-size-heading"><b>{sizeHeading(product.size_type)}</b><small>{selectedSize ? "Selected: " + selectedSize : "Select one available option"}</small></div>
           <div className="detail-size-options">{requiredSizes.map(size => <button type="button" key={size} className={selectedSize === size ? "detail-size-option selected" : "detail-size-option"} aria-pressed={selectedSize === size} onClick={() => { setSelectedSize(size); setSizeError(""); setAdded(false); }}>{size}</button>)}</div>
@@ -153,7 +170,7 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
         </div>}
         <div className="detail-quantity"><span>Quantity</span><div><button onClick={() => setQty(v => Math.max(1, v - 1))} disabled={qty <= 1}><Minus size={14} /></button><b>{qty}</b><button onClick={() => setQty(v => Math.min(stock, 10, v + 1))} disabled={qty >= stock || qty >= 10}><Plus size={14} /></button></div></div>
         {sizeError && <p className="detail-size-error" role="alert">{sizeError}</p>}
-        <div className="detail-actions"><button className="primary-btn" onClick={inBagQty > 0 ? openBag : addToBag} disabled={stock <= 0 || (sizeRequired && !selectedSize)}>{inBagQty > 0 ? "View in bag (" + inBagQty + ")" : "Add to bag"} {inBagQty > 0 ? <ShoppingBag size={16} /> : <Plus size={16} />}</button><button className="order-now-btn" onClick={orderNow} disabled={stock <= 0 || (sizeRequired && !selectedSize)}>Order now <ArrowRight size={16} /></button><button className={saved ? "detail-save saved" : "detail-save"} onClick={toggleSaved}><Heart size={17} fill={saved ? "currentColor" : "none"} />{saved ? "Saved" : "Save item"}</button></div>
+        <div className="detail-actions"><button className="primary-btn" onClick={inBagQty > 0 ? openBag : addToBag} disabled={stock <= 0 || (sizeRequired && !selectedSize) || (requiredColors.length > 0 && !selectedColor)}>{inBagQty > 0 ? "View in bag (" + inBagQty + ")" : "Add to bag"} {inBagQty > 0 ? <ShoppingBag size={16} /> : <Plus size={16} />}</button><button className="order-now-btn" onClick={orderNow} disabled={stock <= 0 || (sizeRequired && !selectedSize) || (requiredColors.length > 0 && !selectedColor)}>Order now <ArrowRight size={16} /></button><button className={saved ? "detail-save saved" : "detail-save"} onClick={toggleSaved}><Heart size={17} fill={saved ? "currentColor" : "none"} />{saved ? "Saved" : "Save item"}</button></div>
         {added && <p className="detail-added"><Check size={15} /> Added to your bag. <Link href="/?openBag=1">View your bag</Link></p>}
         <div className="detail-assurance"><div><b>Cash on Delivery</b><small>Pay when your parcel arrives</small></div><div><b>Order tracking</b><small>Track your order online</small></div><div><b>Need help?</b><small><Link href="/faq">Read our FAQs</Link></small></div></div>
       </section>
