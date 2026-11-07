@@ -936,3 +936,23 @@ main{width:100%;max-width:100%;overflow-x:clip}
  .category-strip>button{transition:none}
  .category-strip>button:hover{transform:none}
 }
+
+
+/* Clear policy pages */
+.policy-shell{min-height:100vh;background:#f7f3ec;color:#29251f;padding:0 18px 45px}
+.policy-top{height:72px;max-width:980px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e5ddd1}
+.policy-card{width:min(760px,100%);margin:58px auto 0;padding:clamp(24px,5vw,54px);background:#fffdfa;border:1px solid #e9e1d7;box-shadow:0 18px 60px rgba(45,35,24,.05)}
+.policy-card>.tracking-icon{margin-bottom:20px}
+.policy-card h1{font:normal clamp(36px,6vw,54px)/1.08 Georgia,serif;letter-spacing:-1.5px;margin:13px 0}
+.policy-card h1 em{color:#a94e2d;font-weight:400}
+.policy-lead{font-size:14px;line-height:1.7;color:#786e62;margin:12px 0 30px}
+.policy-section{padding:23px 0;border-top:1px solid #e9e1d7}
+.policy-section h2{font:21px Georgia;margin:0 0 13px;color:#29251f}
+.policy-section p{font-size:13px;line-height:1.9;color:#70675c;margin:9px 0}
+.policy-rate{display:flex;justify-content:space-between;gap:15px;padding:13px 0;border-bottom:1px solid #eee8df;font-size:13px;color:#62594e}
+.policy-rate b{font-size:15px;color:#29251f}
+.policy-link{display:inline-flex;align-items:center;gap:8px;margin-top:8px;color:#a94e2d;text-decoration:none;font-size:12px;font-weight:700}
+.policy-updated{font-size:11px;line-height:1.8;color:#82796e;border-top:1px solid #e9e1d7;padding-top:20px;margin-top:10px}
+.policy-updated a{color:#a94e2d}
+.policy-secondary{display:inline-block;margin-top:10px;color:#51473c;text-decoration:none;font-size:11px;border-bottom:1px solid #c96a2a;padding-bottom:4px}
+@media(max-width:640px){.policy-card{margin-top:30px;padding:25px 20px}.policy-top{height:64px}}
