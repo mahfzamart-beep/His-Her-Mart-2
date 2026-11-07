@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
-import { ArrowDownToLine, Sparkles, X, ImagePlus, UploadCloud, ExternalLink } from "lucide-react";
+import { ArrowDownToLine, Sparkles, X, ImagePlus } from "lucide-react";
 
 export type ShopBaseImportedProduct = {
   name: string;
