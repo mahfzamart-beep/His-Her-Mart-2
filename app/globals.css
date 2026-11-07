@@ -886,6 +886,10 @@ main{width:100%;max-width:100%;overflow-x:clip}
 .admin-shopbase-import-modal{width:min(740px,96vw);max-height:90vh;overflow:auto}
 .admin-shopbase-import-modal .admin-modal-head{position:sticky;top:-25px;z-index:2;background:#fffdf8;padding-top:5px}
 .admin-shopbase-import-modal .admin-product-form{gap:14px}
+.admin-shopbase-image-picker{display:flex;align-items:center;gap:9px;padding:13px;border:1px dashed #d9c9b7;background:#faf6ef;color:#98501f;font-size:11px;font-weight:700;cursor:pointer}
+.admin-shopbase-image-picker input{max-width:100%;margin-left:auto;font-size:10px;color:#74695c}
+.admin-shopbase-import-modal .admin-product-form textarea{width:100%;min-height:120px;resize:vertical;padding:12px;border:1px solid #e8dfd3;background:#fffdf8;color:#514a40;font:12px/1.6 Arial,sans-serif}
+.admin-shopbase-import-modal .admin-product-form label>small{display:block;margin-top:5px;font-size:9px;line-height:1.5;color:#8d8274}
 .admin-shopbase-import-progress{display:flex;align-items:center;gap:12px;margin-top:15px;padding:13px;background:#faf6ef;border:1px solid #e8dfd3;color:#514a40}
 .admin-shopbase-import-progress>div{display:grid;gap:4px}
 .admin-shopbase-import-progress b{font-size:11px}
