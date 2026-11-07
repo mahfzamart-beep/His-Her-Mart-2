@@ -7,10 +7,19 @@ import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
 import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck } from "lucide-react";
 
-type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number; sizeOptions?: string[] };
-type CartLine = { key: string; productId: string; size: string | null; quantity: number; product: Product };
-const makeCartKey = (productId: string, size?: string | null) => size ? `${productId}::${encodeURIComponent(size)}` : productId;
-const parseCartKey = (key: string) => { const splitAt = key.indexOf("::"); if (splitAt < 0) return { productId: key, size: null as string | null }; const rawSize = key.slice(splitAt + 2); let size = rawSize; try { size = decodeURIComponent(rawSize); } catch { /* Keep the stored value readable if legacy browser data is malformed. */ } return { productId: key.slice(0, splitAt), size }; };
+type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number; sizeOptions?: string[]; colorOptions?: string[] };
+type CartLine = { key: string; productId: string; size: string | null; color: string | null; quantity: number; product: Product };
+const makeCartKey = (productId: string, size?: string | null, color?: string | null) => size || color ? productId + "::" + encodeURIComponent(size || "") + "::" + encodeURIComponent(color || "") : productId;
+const decodeCartPart = (value: string) => { try { return decodeURIComponent(value); } catch { return value; } };
+const parseCartKey = (key: string) => {
+  const splitAt = key.indexOf("::");
+  if (splitAt < 0) return { productId: key, size: null as string | null, color: null as string | null };
+  const productId = key.slice(0, splitAt);
+  const options = key.slice(splitAt + 2);
+  const secondSeparator = options.indexOf("::");
+  if (secondSeparator < 0) return { productId, size: decodeCartPart(options) || null, color: null };
+  return { productId, size: decodeCartPart(options.slice(0, secondSeparator)) || null, color: decodeCartPart(options.slice(secondSeparator + 2)) || null };
+};
 type OrderConfirmation = {
   order_number: string;
   subtotal: number;
@@ -94,7 +103,7 @@ export default function Home() {
       try {
         const { data, error } = await supabase!
           .from("products")
-          .select("id,category_id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,size_options,size_type")
+          .select("id,category_id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,size_options,size_type,color_options")
           .eq("is_active", true)
           .order("created_at", { ascending: false });
         if (cancelled) return;
@@ -126,7 +135,8 @@ export default function Home() {
           tag: row.is_featured ? "Featured" : undefined,
           freeShippingEligible: row.free_shipping_eligible === true,
           stockQuantity: Number(row.stock_quantity ?? 0),
-          sizeOptions: Array.isArray(row.size_options) ? row.size_options.filter((size: unknown): size is string => typeof size === "string" && !!size.trim()) : []
+          sizeOptions: Array.isArray(row.size_options) ? row.size_options.filter((size: unknown): size is string => typeof size === "string" && !!size.trim()) : [],
+          colorOptions: Array.isArray(row.color_options) ? row.color_options.filter((color: unknown): color is string => typeof color === "string" && !!color.trim()) : []
         }));
         setProducts(mapped);
         setCatalogReady(true);
@@ -183,7 +193,7 @@ export default function Home() {
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [buyNow, setBuyNow] = useState<{ productId: string; quantity: number; size: string | null } | null>(null);
+  const [buyNow, setBuyNow] = useState<{ productId: string; quantity: number; size: string | null; color: string | null } | null>(null);
   const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState("");
@@ -205,14 +215,14 @@ export default function Home() {
   const cartLines: CartLine[] = Object.entries(cart).flatMap(([key, quantity]) => {
     const parsed = parseCartKey(key);
     const product = products.find(item => String(item.id) === parsed.productId);
-    return product && quantity > 0 ? [{ key, productId: parsed.productId, size: parsed.size, quantity, product }] : [];
+    return product && quantity > 0 ? [{ key, productId: parsed.productId, size: parsed.size, color: parsed.color, quantity, product }] : [];
   });
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
   const subtotal = cartLines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   const freeShippingEligibleCount = cartLines.reduce((sum, line) => sum + (line.product.freeShippingEligible ? line.quantity : 0), 0);
   const freeShippingUnlocked = freeShippingEligibleCount >= 3;
   const checkoutLines: CartLine[] = buyNow
-    ? (() => { const product = products.find(item => String(item.id) === buyNow.productId); return product ? [{ key: makeCartKey(buyNow.productId, buyNow.size), productId: buyNow.productId, size: buyNow.size, quantity: buyNow.quantity, product }] : []; })()
+    ? (() => { const product = products.find(item => String(item.id) === buyNow.productId); return product ? [{ key: makeCartKey(buyNow.productId, buyNow.size, buyNow.color), productId: buyNow.productId, size: buyNow.size, color: buyNow.color, quantity: buyNow.quantity, product }] : []; })()
     : cartLines;
   const checkoutSubtotal = checkoutLines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
   const checkoutFreeShippingEligibleCount = checkoutLines.reduce((sum, line) => sum + (line.product.freeShippingEligible ? line.quantity : 0), 0);
@@ -228,14 +238,22 @@ export default function Home() {
       const product = products.find(item => String(item.id) === productId);
       const requested = Math.max(1, Math.min(10, Number(params.get("qty") || 1)));
       const selectedSize = params.get("size");
+      const selectedColor = params.get("color");
       const availableSizes = product?.sizeOptions || [];
-      if (product && Number(product.stockQuantity ?? 0) > 0 && (!availableSizes.length || (selectedSize && availableSizes.includes(selectedSize)))) {
-        setBuyNow({ productId, quantity: Math.min(requested, Number(product.stockQuantity)), size: selectedSize || null });
+      const availableColors = product?.colorOptions || [];
+      const sizeIsValid = !availableSizes.length || (!!selectedSize && availableSizes.includes(selectedSize));
+      const colorIsValid = !availableColors.length || (!!selectedColor && availableColors.includes(selectedColor));
+      if (product && Number(product.stockQuantity ?? 0) > 0 && sizeIsValid && colorIsValid) {
+        setBuyNow({ productId, quantity: Math.min(requested, Number(product.stockQuantity)), size: selectedSize || null, color: selectedColor || null });
         setCheckoutOpen(true);
       } else if (product && availableSizes.length && !selectedSize) {
         setOrderError("Please choose a size before ordering this product.");
       } else if (product && availableSizes.length && selectedSize && !availableSizes.includes(selectedSize)) {
         setOrderError("The selected size is not available. Please choose again.");
+      } else if (product && availableColors.length && !selectedColor) {
+        setOrderError("Please choose a colour before ordering this product.");
+      } else if (product && availableColors.length && selectedColor && !availableColors.includes(selectedColor)) {
+        setOrderError("The selected colour is not available. Please choose again.");
       } else {
         setOrderError("This product is currently unavailable. Please refresh the product page.");
       }
@@ -252,12 +270,12 @@ export default function Home() {
 
   const startBuyNow = (product: Product) => {
     if (typeof product.id !== "string" || !/^[0-9a-f-]{36}$/i.test(product.id) || (product.stockQuantity ?? 0) <= 0) return;
-    if (product.sizeOptions?.length) {
+    if (product.sizeOptions?.length || product.colorOptions?.length) {
       window.location.assign("/products/" + product.slug);
       return;
     }
     setOrderError("");
-    setBuyNow({ productId: product.id, quantity: 1, size: null });
+    setBuyNow({ productId: product.id, quantity: 1, size: null, color: null });
     setCartOpen(false);
     setCheckoutOpen(true);
   };
@@ -289,7 +307,7 @@ export default function Home() {
       setOrderError("Please read and accept the unboxing video notice.");
       return;
     }
-    if (checkoutLines.length === 0 || checkoutLines.some(line => !/^[0-9a-f-]{36}$/i.test(line.productId) || (line.product.sizeOptions?.length && (!line.size || !line.product.sizeOptions.includes(line.size))))) {
+    if (checkoutLines.length === 0 || checkoutLines.some(line => !/^[0-9a-f-]{36}$/i.test(line.productId) || (line.product.sizeOptions?.length && (!line.size || !line.product.sizeOptions.includes(line.size))) || (line.product.colorOptions?.length && (!line.color || !line.product.colorOptions.includes(line.color))))) {
       setOrderError("Your cart needs to refresh before checkout. Please close checkout and try again.");
       return;
     }
@@ -311,6 +329,7 @@ export default function Home() {
             product_id: line.productId,
             quantity: line.quantity,
             selected_size: line.size,
+            selected_color: line.color,
           })),
           accept_unboxing_policy: true,
           website: "",
@@ -409,7 +428,7 @@ export default function Home() {
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
-              <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => p.sizeOptions?.length ? window.location.assign("/products/" + p.slug) : (cart[makeCartKey(String(p.id))] || 0) > 0 ? setCartOpen(true) : changeQty(makeCartKey(String(p.id)), 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : p.sizeOptions?.length ? "CHOOSE SIZE" : (cart[makeCartKey(String(p.id))] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[makeCartKey(String(p.id))] || 0) > 0 && !p.sizeOptions?.length ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>{p.sizeOptions?.length ? "CHOOSE SIZE" : "ORDER NOW"} <ArrowRight size={14} /></button></div>
+              <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => p.sizeOptions?.length ? window.location.assign("/products/" + p.slug) : (cart[makeCartKey(String(p.id))] || 0) > 0 ? setCartOpen(true) : changeQty(makeCartKey(String(p.id)), 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : (cart[makeCartKey(String(p.id))] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[makeCartKey(String(p.id))] || 0) > 0 && !(p.sizeOptions?.length || p.colorOptions?.length) ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>{(p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : "ORDER NOW"} <ArrowRight size={14} /></button></div>
             </div>
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
@@ -445,7 +464,7 @@ export default function Home() {
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
         {cartLines.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
-          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}><img src={line.product.image} alt={line.product.name} /><div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}<span>{money(line.product.price)}</span><div className="qty"><button onClick={() => changeQty(line.key, -1)}><Minus size={13} /></button>{line.quantity}<button onClick={() => changeQty(line.key, 1)}><Plus size={13} /></button></div></div></div>)}</div>
+          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}><img src={line.product.image} alt={line.product.name} /><div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}{line.color && <small className="cart-selected-size">Colour: {line.color}</small>}<span>{money(line.product.price)}</span><div className="qty"><button onClick={() => changeQty(line.key, -1)}><Minus size={13} /></button>{line.quantity}<button onClick={() => changeQty(line.key, 1)}><Plus size={13} /></button></div></div></div>)}</div>
           <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div>{hasFreeShippingProducts && <div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div>}<small>Delivery is ৳80 inside Dhaka or ৳150 outside Dhaka{hasFreeShippingProducts ? ". Selected eligible products may qualify for free shipping." : "."}</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setBuyNow(null); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
@@ -459,7 +478,7 @@ export default function Home() {
           <p className="checkout-helper">{buyNow ? "Order Now starts checkout for the selected product. Complete your delivery details and confirm the COD order below." : "Complete your delivery details and confirm your Cash on Delivery order below."}</p>
           <div className="checkout-order-summary">
             <b>Order summary</b>
-            {checkoutLines.map(line => <div key={line.key}><span>{line.product.name}{line.size ? ` · Size: ${line.size}` : ""} × {line.quantity}</span><strong>{money(line.product.price * line.quantity)}</strong></div>)}
+            {checkoutLines.map(line => <div key={line.key}><span>{line.product.name}{line.size ? ` · Size: ${line.size}` : ""}{line.color ? ` · Colour: ${line.color}` : ""} × {line.quantity}</span><strong>{money(line.product.price * line.quantity)}</strong></div>)}
           </div>
           <form onSubmit={handlePlaceOrder}>
             <div className="checkout-fields">
