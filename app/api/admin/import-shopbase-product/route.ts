@@ -423,7 +423,7 @@ export async function POST(request: Request) {
     }
     // ShopBase BD product URLs include /store/products/details/{id}
     // as well as storefront variants ending in /product/details/{id}.
-    if (!/(?:\/store\/products\/details\/\d+|\/product\/details\/\d+)\/?$/i.test(productUrl.pathname)) {
+    if (!/(?:\/store\/products\/details\/\d+|\/store\/[^/]+\/product\/details\/\d+|\/product\/details\/\d+)\/?$/i.test(productUrl.pathname)) {
       return json({ error: "This link does not appear to be a ShopBase BD product details page. Copy the Share / Product Details link from the selected product and try again." }, 400);
     }
 
