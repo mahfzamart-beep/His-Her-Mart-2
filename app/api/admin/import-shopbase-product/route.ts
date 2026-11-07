@@ -116,8 +116,17 @@ function isGenericShopBaseHeading(value: string): boolean {
   const text = value.toLowerCase().replace(/\s+/g, " ").trim();
   return !text ||
     /^(shopbase\s*bd|largest drop.?shipping platform in bangladesh|home|products|product|our products|about us|services|contact us|login|registration|sign in|sign up|হোম|আমাদের সম্পর্কে|প্রোডাক্টস|সার্ভিস সমূহ|যোগাযোগ|লগইন|রেজিস্ট্রেশন)$/i.test(text) ||
+    /(?:দেশের|বাংলাদেশের) সর্ববৃহৎ.*ড্রপ.?শিপিং.*(?:রিসেলিং|প্ল্যাটফর্ম)/i.test(text) ||
     /^(?:bdt|৳|tk\.?)\s*[\d,]+$/i.test(text) ||
     /(?:wholesale price|হোলসেল প্রাইস|suggested sale price|সাজেস্টেড বিক্রয়মূল্য)/i.test(text);
+}
+
+function isProductDetailsPath(pathname: string): boolean {
+  return /(?:\/store\/products\/details\/\d+|\/store\/[^/]+\/product\/details\/\d+|\/product\/details\/\d+)\/?$/i.test(pathname);
+}
+
+function isShopBaseLandingPage(pageText: string): boolean {
+  return /(?:দেশের|বাংলাদেশের) সর্ববৃহৎ.*ড্রপ.?শিপিং.*(?:রিসেলিং|প্ল্যাটফর্ম)|আমাদের প্রোডাক্ট সমূহ|রিসেলার\s*\/\s*ড্রপশিপার|largest drop.?shipping platform in bangladesh/i.test(pageText);
 }
 
 function extractHeadingText(html: string): string[] {
@@ -241,8 +250,19 @@ function extractProduct(html: string, pageUrl: URL) {
   const canonicalTag = html.match(/<link\b[^>]*rel\s*=\s*["']canonical["'][^>]*>/i)?.[0] || "";
   const canonical = canonicalTag ? tagAttributes(canonicalTag).href : "";
   const canonicalUrl = canonical ? toImageUrl(canonical, pageUrl) : null;
+  const hasProductStructuredData = jsonLdObjects.length > 0;
+  const hasProductMeta = /product/i.test(meta["og:type"] || "") ||
+    Boolean(meta["product:price:amount"] || meta["product:retailer_item_id"]);
+  const hasWholesalePriceSection = /(?:wholesale\s*price|হোলসেল\s*প্রাইস)/i.test(pageText);
+  const looksLikeLoginPage = /<input\b[^>]*type\s*=\s*["']password["']/i.test(html) &&
+    /(?:login|sign in|লগইন|সাইন ইন)/i.test(pageText);
+  const isProductPage = (hasProductStructuredData || hasProductMeta || hasWholesalePriceSection) &&
+    !isShopBaseLandingPage(pageText) &&
+    !looksLikeLoginPage;
 
   return {
+    isProductPage,
+    looksLikeLoginPage,
     name: stripMarkup(name).slice(0, 140),
     originalDescription: stripMarkup(originalDescription).slice(0, 5000),
     images,
@@ -276,6 +296,9 @@ async function fetchShopBasePage(startUrl: URL): Promise<{ html: string; finalUr
       if (!location || hop === 3) throw new Error("ShopBase BD redirected too many times. Open the product link in your browser and try its final URL.");
       const nextUrl = isShopBaseUrl(new URL(location, current).toString());
       if (!nextUrl) throw new Error("The ShopBase BD product link redirected outside the allowed ShopBase BD domain.");
+      if (!isProductDetailsPath(nextUrl.pathname)) {
+        throw new Error("ShopBase BD redirected this link to a general website or login page, not to the product details. This importer cannot use the ShopBase login session from your browser.");
+      }
       current = nextUrl;
       continue;
     }
@@ -415,15 +438,28 @@ export async function POST(request: Request) {
     }
 
     const { html, finalUrl } = await fetchShopBasePage(productUrl);
+    if (!isProductDetailsPath(finalUrl.pathname)) {
+      return json({
+        error: "ShopBase BD did not keep the request on a product details page. It may have opened a public homepage or login page instead. No draft was created.",
+      }, 422);
+    }
+
     const extracted = extractProduct(html, finalUrl);
+    if (!extracted.isProductPage) {
+      return json({
+        error: extracted.looksLikeLoginPage
+          ? "ShopBase BD returned a login page. Your ShopBase login in another browser tab is not shared with this server-side importer. We cannot access private product details using only the URL. No draft was created."
+          : "ShopBase BD returned its general website or category content, not verifiable product details. This importer will not turn the ShopBase website into a product. If the product page requires login, a public product link or an authorized supplier export/API is needed. No draft was created.",
+      }, 422);
+    }
+
     if (
       extracted.name.length < 2 ||
       isGenericShopBaseHeading(extracted.name) ||
-      /shopbase\s*bd|largest drop.?shipping platform/i.test(extracted.name) ||
       extracted.images.length === 0
     ) {
       return json({
-        error: "ShopBase BD opened, but the exact product name or product photos could not be identified. No draft was created. Copy the link from the specific product's Details page, not the ShopBase BD home, category, or seller dashboard.",
+        error: "A product details page opened, but its exact product name or product photos could not be verified. No draft was created.",
       }, 422);
     }
 
