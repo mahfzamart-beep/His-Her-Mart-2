@@ -45,8 +45,9 @@ function decodeHtml(value: string): string {
     .replace(/&mdash;/gi, "—");
 }
 
-function stripMarkup(value: string): string {
-  return decodeHtml(value.replace(/<\/?[^>]+>/g, " "))
+function stripMarkup(value: unknown): string {
+  const safeValue = typeof value === "string" ? value : "";
+  return decodeHtml(safeValue.replace(/<\/?[^>]+>/g, " "))
     .replace(/[\t\r\n]+/g, " ")
     .replace(/\s{2,}/g, " ")
     .trim();
