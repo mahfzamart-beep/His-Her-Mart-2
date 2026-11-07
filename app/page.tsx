@@ -447,7 +447,7 @@ export default function Home() {
           <span className="cat-number">03</span><b>Little Luxuries</b><small>Explore the full edit</small>
           <span className="category-arrow" aria-hidden="true">↗</span>
         </button>
-      </section>      </section>
+      </section>
 
       <section className="service-ribbon" aria-label="Shopping services">
         <div className="service-item"><span className="service-icon"><ShieldCheck size={19} /></span><span><b>Shop with confidence</b><small>Cash on delivery available</small></span></div>
