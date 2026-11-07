@@ -83,20 +83,20 @@ Deno.serve(async (req: Request) => {
   if (!Array.isArray(items) || items.length < 1 || items.length > 15) {
     return json({ error: "Your cart is empty or contains too many different products." }, 400, origin);
   }
-  if (!items.every((item) => item && typeof item === "object" &&
-      typeof (item as Record<string, unknown>).product_id === "string" &&
-      /^[0-9a-f-]{36}$/i.test((item as Record<string, unknown>).product_id as string) &&
-      Number.isInteger((item as Record<string, unknown>).quantity) &&
-      Number((item as Record<string, unknown>).quantity) >= 1 &&
-      Number((item as Record<string, unknown>).quantity) <= 10 &&
-      ((item as Record<string, unknown>).selected_size === undefined ||
-        (item as Record<string, unknown>).selected_size === null ||
-        (typeof (item as Record<string, unknown>).selected_size === "string" &&
-          ((item as Record<string, unknown>).selected_size as string).length <= 64)) &&
-      ((item as Record<string, unknown>).selected_color === undefined ||
-        (item as Record<string, unknown>).selected_color === null ||
-        (typeof (item as Record<string, unknown>).selected_color === "string" &&
-          ((item as Record<string, unknown>).selected_color as string).length <= 64))) {
+  const isOptionalSelection = (value: unknown) =>
+    value === undefined || value === null || (typeof value === "string" && value.length <= 64);
+  const validItems = items.every((item) => {
+    if (!item || typeof item !== "object") return false;
+    const line = item as Record<string, unknown>;
+    return typeof line.product_id === "string" &&
+      /^[0-9a-f-]{36}$/i.test(line.product_id) &&
+      Number.isInteger(line.quantity) &&
+      Number(line.quantity) >= 1 &&
+      Number(line.quantity) <= 10 &&
+      isOptionalSelection(line.selected_size) &&
+      isOptionalSelection(line.selected_color);
+  });
+  if (!validItems) {
     return json({ error: "Your cart contains an invalid product or quantity." }, 400, origin);
   }
   if (!accepted) return json({ error: "Please accept the unboxing video notice to continue." }, 400, origin);
