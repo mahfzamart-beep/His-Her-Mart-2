@@ -4,13 +4,13 @@ import { ArrowLeft, ArrowRight, HelpCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Help & FAQs",
-  description: "Helpful answers about ordering, Cash on Delivery, delivery charges, order tracking, cart and wishlist at His & Her Mart.",
+  description: "Helpful answers about ordering, Cash on Delivery, delivery charges, order tracking, cart and wishlist at His & Hers Mart.",
   alternates: { canonical: "https://his-and-her-mart.vercel.app/faq" },
   openGraph: {
-    title: "Help & FAQs | His & Her Mart",
-    description: "Helpful answers for shopping at His & Her Mart, Bangladesh.",
+    title: "Help & FAQs | His & Hers Mart",
+    description: "Helpful answers for shopping at His & Hers Mart, Bangladesh.",
     url: "https://his-and-her-mart.vercel.app/faq",
-    siteName: "His & Her Mart",
+    siteName: "His & Hers Mart",
     locale: "en_BD",
     type: "website",
   },
@@ -44,7 +44,7 @@ const faqs = [
   },
   {
     category: "Customer support",
-    question: "How can I contact His & Her Mart?",
+    question: "How can I contact His & Hers Mart?",
     answer: "Message our customer support team on WhatsApp at +8801969419302.",
     link: "https://wa.me/8801969419302",
     linkLabel: "Chat on WhatsApp",
@@ -72,7 +72,7 @@ export default function FaqPage() {
       </header>
       <section className="faq-intro">
         <div className="faq-mark"><HelpCircle size={22} /></div>
-        <p className="eyebrow">HIS & HER MART · CUSTOMER HELP</p>
+        <p className="eyebrow">HIS & HERS MART · CUSTOMER HELP</p>
         <h1>A little help.<br /><em>Before you shop.</em></h1>
         <p>Clear answers about ordering, payment, delivery, tracking and saved items.</p>
       </section>

@@ -1,4 +1,4 @@
-# His & Her Mart
+# His & Hers Mart
 
 A premium minimalist shopping storefront for Bangladesh, built with Next.js and Supabase.
 

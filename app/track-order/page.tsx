@@ -36,11 +36,11 @@ export default function TrackOrderPage() {
   return <main className="tracking-shell">
     <header className="tracking-top">
       <Link href="/" className="tracking-back"><ArrowLeft size={16} /> Back to store</Link>
-      <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HER MART</small></Link>
+      <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HERS MART</small></Link>
     </header>
     <section className="tracking-card">
       <div className="tracking-icon"><PackageSearch size={25} /></div>
-      <p className="eyebrow">HIS & HER MART</p>
+      <p className="eyebrow">HIS & HERS MART</p>
       <h1>Track your <em>order.</em></h1>
       <p className="tracking-intro">Enter the order number from your confirmation and the mobile number used at checkout.</p>
       <form onSubmit={submit} className="tracking-form">
