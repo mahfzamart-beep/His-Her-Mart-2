@@ -210,7 +210,7 @@ export default function AdminPage() {
     const price = Number(productForm.price);
     const stock = Number(productForm.stock_quantity);
     const compareAt = productForm.compare_at_price.trim() ? Number(productForm.compare_at_price) : null;
-    const sizeOptions = productForm.size_type === "none" ? [] : Array.from(new Set(productForm.size_options_text.split(/[,;\\n]+/).map(value => value.trim()).filter(Boolean))).slice(0, 50);
+    const sizeOptions = productForm.size_type === "none" ? [] : Array.from(new Set(productForm.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean))).slice(0, 50);
     const imageUrls = Array.from(new Set([productForm.image_url.trim(), ...productForm.images].filter(Boolean))).slice(0, 12);
     if (name.length < 2 || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0 || (compareAt !== null && (!Number.isFinite(compareAt) || compareAt < price))) {
       setError("Check the product name, price, stock quantity and compare-at price.");
@@ -356,11 +356,11 @@ export default function AdminPage() {
   const selectedProductSizeProfile = selectedProductCategory?.size_profile || "none";
   const productSizeTypeOptions = sizeTypeOptionsForProfile(selectedProductSizeProfile);
   const suggestedSizes = sizePresets[productForm.size_type] || [];
-  const currentSizeValues = productForm.size_options_text.split(/[,;\\n]+/).map(value => value.trim()).filter(Boolean);
+  const currentSizeValues = productForm.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean);
 
   const addSuggestedSize = (size: string) => {
     setProductForm(current => {
-      const values = current.size_options_text.split(/[,;\\n]+/).map(value => value.trim()).filter(Boolean);
+      const values = current.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean);
       if (values.includes(size)) return current;
       return { ...current, size_options_text: [...values, size].join(", ") };
     });
