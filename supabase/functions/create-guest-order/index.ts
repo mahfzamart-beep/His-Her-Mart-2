@@ -92,7 +92,11 @@ Deno.serve(async (req: Request) => {
       ((item as Record<string, unknown>).selected_size === undefined ||
         (item as Record<string, unknown>).selected_size === null ||
         (typeof (item as Record<string, unknown>).selected_size === "string" &&
-          ((item as Record<string, unknown>).selected_size as string).length <= 64)))) {
+          ((item as Record<string, unknown>).selected_size as string).length <= 64)) &&
+      ((item as Record<string, unknown>).selected_color === undefined ||
+        (item as Record<string, unknown>).selected_color === null ||
+        (typeof (item as Record<string, unknown>).selected_color === "string" &&
+          ((item as Record<string, unknown>).selected_color as string).length <= 64))) {
     return json({ error: "Your cart contains an invalid product or quantity." }, 400, origin);
   }
   if (!accepted) return json({ error: "Please accept the unboxing video notice to continue." }, 400, origin);
