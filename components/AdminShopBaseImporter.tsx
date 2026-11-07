@@ -85,7 +85,7 @@ export default function AdminShopBaseImporter({ accessToken, onDraftReady }: Pro
         <form className="admin-product-form" onSubmit={scanProduct}>
           <label>ShopBase BD product URL
             <input type="url" required value={url} onChange={event => setUrl(event.target.value)} placeholder="https://shopbasebd.com/…" />
-            <small>Paste the specific product details link. It must contain /product/details/ followed by the product ID. Home, category and dashboard links are not product links.</small>
+            <small>Paste the specific product details link. It must contain /products/details/ or /product/details/ followed by the product ID. Home, category and dashboard links are not product links.</small>
           </label>
           <button type="submit" className="admin-product-add" disabled={busy || !url.trim()}>
             {busy ? "Scanning product and writing description…" : "Scan product"}
