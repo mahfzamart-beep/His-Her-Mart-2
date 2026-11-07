@@ -848,3 +848,14 @@ main{width:100%;max-width:100%;overflow-x:clip}
   .admin-image-gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
   .detail-thumb{flex-basis:62px;width:62px;height:62px}
 }
+
+
+.admin-size-profile-note{display:grid;gap:5px;padding:11px 12px;background:#fff;border-left:3px solid #d9651e}
+.admin-size-profile-note>b{font-size:11px;color:#342e26}
+.admin-size-profile-note>small{font-size:10px;line-height:1.55;color:#81766c;font-weight:400}
+.admin-size-quick-add{display:grid;gap:8px}
+.admin-size-quick-add>span{font-size:10px;font-weight:700;color:#514a40}
+.admin-size-quick-add>div{display:flex;flex-wrap:wrap;gap:7px}
+.admin-size-chip{border:1px solid #ded4c6;background:#fffefa;color:#494137;padding:7px 10px;min-width:38px;font-size:10px;cursor:pointer}
+.admin-size-chip:hover:not(:disabled){border-color:#d9651e;color:#b6531b}
+.admin-size-chip.selected,.admin-size-chip:disabled{background:#f5e8dc;border-color:#e3c4a9;color:#97502a;cursor:default}

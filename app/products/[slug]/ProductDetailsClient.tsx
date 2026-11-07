@@ -22,6 +22,16 @@ type Product = {
 const money = (n: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(n);
 const makeCartKey = (productId: string, size?: string | null) => size ? `${productId}::${encodeURIComponent(size)}` : productId;
 const getCartProductId = (key: string) => key.split("::", 1)[0];
+const sizeHeading = (sizeType: string | null) => {
+  if (sizeType === "apparel_alpha") return "Choose your clothing size · Alphanumeric";
+  if (sizeType === "apparel_numeric") return "Choose your clothing size · Numeric";
+  if (sizeType === "shoe_eu") return "Choose your shoe size · EU";
+  if (sizeType === "shoe_uk") return "Choose your shoe size · UK";
+  if (sizeType === "shoe_us") return "Choose your shoe size · US";
+  if (sizeType === "letter") return "Choose your clothing size";
+  if (sizeType === "numeric") return "Choose your numeric size";
+  return "Choose your size";
+};
 
 export default function ProductDetailsPage({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -137,9 +147,9 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
         <p className="detail-stock">{stock > 0 ? (stock < 5 ? "Only " + stock + " left in stock" : "In stock and ready to order") : "Currently out of stock"}</p>
         <p className="detail-description">{product.description || "A thoughtfully selected find from His & Her Mart. Contact our team if you need more product information before ordering."}</p>
         {sizeRequired && <div className="detail-size-selector">
-          <div className="detail-size-heading"><b>Choose your size</b><small>{selectedSize ? "Selected: " + selectedSize : "Select one available option"}</small></div>
+          <div className="detail-size-heading"><b>{sizeHeading(product.size_type)}</b><small>{selectedSize ? "Selected: " + selectedSize : "Select one available option"}</small></div>
           <div className="detail-size-options">{requiredSizes.map(size => <button type="button" key={size} className={selectedSize === size ? "detail-size-option selected" : "detail-size-option"} aria-pressed={selectedSize === size} onClick={() => { setSelectedSize(size); setSizeError(""); setAdded(false); }}>{size}</button>)}</div>
-          <small className="detail-size-stock-note">Available sizes are set by the store. Product stock is shared across the listed sizes.</small>
+          <small className="detail-size-stock-note">{product.size_type?.startsWith("shoe_") ? "Choose from the available shoe sizes listed by the store." : "Choose from the available clothing sizes listed by the store."} Product stock is shared across the listed sizes.</small>
         </div>}
         <div className="detail-quantity"><span>Quantity</span><div><button onClick={() => setQty(v => Math.max(1, v - 1))} disabled={qty <= 1}><Minus size={14} /></button><b>{qty}</b><button onClick={() => setQty(v => Math.min(stock, 10, v + 1))} disabled={qty >= stock || qty >= 10}><Plus size={14} /></button></div></div>
         {sizeError && <p className="detail-size-error" role="alert">{sizeError}</p>}

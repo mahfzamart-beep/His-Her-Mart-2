@@ -17,9 +17,31 @@ type Order = {
   free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
 type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; images: string[] | null; size_type: string; size_options: string[] | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
-type StoreCategory = { id: string; name: string; slug: string; description: string | null; image_url: string | null; sort_order: number; is_active: boolean };
-type CategoryFormState = { id: string | null; name: string; description: string; image_url: string; sort_order: string; is_active: boolean };
-type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; size_type: "none" | "numeric" | "letter" | "custom"; size_options_text: string; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
+type SizeProfile = "none" | "apparel" | "footwear";
+type ProductSizeType = "none" | "apparel_alpha" | "apparel_numeric" | "shoe_eu" | "shoe_uk" | "shoe_us" | "numeric" | "letter" | "custom";
+type StoreCategory = { id: string; name: string; slug: string; description: string | null; image_url: string | null; sort_order: number; is_active: boolean; size_profile: SizeProfile };
+type CategoryFormState = { id: string | null; name: string; description: string; image_url: string; sort_order: string; is_active: boolean; size_profile: SizeProfile };
+type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; size_type: ProductSizeType; size_options_text: string; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
+const sizeTypeOptionsForProfile = (profile: SizeProfile): Array<{ value: ProductSizeType; label: string }> => {
+  if (profile === "apparel") return [
+    { value: "apparel_alpha", label: "Alphanumeric clothing sizes (XS, S, M, L, XL, 2XL…)" },
+    { value: "apparel_numeric", label: "Numeric clothing sizes (28, 30, 32, 34…)" },
+  ];
+  if (profile === "footwear") return [
+    { value: "shoe_eu", label: "Shoe size — EU (36, 37, 38…)" },
+    { value: "shoe_uk", label: "Shoe size — UK (3, 4, 5…)" },
+    { value: "shoe_us", label: "Shoe size — US (5, 6, 7…)" },
+  ];
+  return [];
+};
+const sizePresets: Partial<Record<ProductSizeType, string[]>> = {
+  apparel_alpha: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"],
+  apparel_numeric: ["28", "30", "32", "34", "36", "38", "40", "42", "44", "46", "48", "50"],
+  shoe_eu: ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"],
+  shoe_uk: ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+  shoe_us: ["5", "6", "7", "8", "9", "10", "11", "12", "13"],
+};
+const sizeProfileLabel = (profile: SizeProfile) => profile === "apparel" ? "Clothing & apparel" : profile === "footwear" ? "Shoes & footwear" : "No size system";
 const statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];
 const money = (value: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(value || 0));
 const date = (value: string) => new Intl.DateTimeFormat("en-BD", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -36,7 +58,7 @@ export default function AdminPage() {
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [categories, setCategories] = useState<StoreCategory[]>([]);
   const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
-  const [categoryForm, setCategoryForm] = useState<CategoryFormState>({ id: null, name: "", description: "", image_url: "", sort_order: "0", is_active: true });
+  const [categoryForm, setCategoryForm] = useState<CategoryFormState>({ id: null, name: "", description: "", image_url: "", sort_order: "0", is_active: true, size_profile: "none" });
   const [productEditorOpen, setProductEditorOpen] = useState(false);
   const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
   const [productBusy, setProductBusy] = useState<string | null>(null);
@@ -64,7 +86,7 @@ export default function AdminPage() {
     const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,images,size_type,size_options,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
     if (productError) setError(productError.message);
     else setProducts((productData || []) as StoreProduct[]);
-    const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name,slug,description,image_url,sort_order,is_active").order("sort_order", { ascending: true });
+    const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name,slug,description,image_url,sort_order,is_active,size_profile").order("sort_order", { ascending: true });
     if (categoryError) setError(categoryError.message);
     else setCategories(categoryData || []);
     setChecking(false);
@@ -103,13 +125,13 @@ export default function AdminPage() {
 
   const openNewCategory = () => {
     setError("");
-    setCategoryForm({ id: null, name: "", description: "", image_url: "", sort_order: String(categories.length), is_active: true });
+    setCategoryForm({ id: null, name: "", description: "", image_url: "", sort_order: String(categories.length), is_active: true, size_profile: "none" });
     setCategoryEditorOpen(true);
   };
 
   const openEditCategory = (category: StoreCategory) => {
     setError("");
-    setCategoryForm({ id: category.id, name: category.name, description: category.description || "", image_url: category.image_url || "", sort_order: String(category.sort_order), is_active: category.is_active });
+    setCategoryForm({ id: category.id, name: category.name, description: category.description || "", image_url: category.image_url || "", sort_order: String(category.sort_order), is_active: category.is_active, size_profile: category.size_profile || "none" });
     setCategoryEditorOpen(true);
   };
 
@@ -125,7 +147,7 @@ export default function AdminPage() {
     const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const slug = `${slugBase || "category"}-${(categoryForm.id || crypto.randomUUID()).slice(0, 6)}`;
     setBusy(true); setError("");
-    const payload = { name, slug, description: categoryForm.description.trim() || null, image_url: categoryForm.image_url.trim() || null, sort_order: sortOrder, is_active: categoryForm.is_active };
+    const payload = { name, slug, description: categoryForm.description.trim() || null, image_url: categoryForm.image_url.trim() || null, sort_order: sortOrder, is_active: categoryForm.is_active, size_profile: categoryForm.size_profile };
     const result = categoryForm.id
       ? await supabase.from("categories").update(payload).eq("id", categoryForm.id)
       : await supabase.from("categories").insert(payload);
@@ -142,7 +164,7 @@ export default function AdminPage() {
 
   const openEditProduct = (product: StoreProduct) => {
     setError("");
-    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), size_type: (["numeric", "letter", "custom"].includes(product.size_type) ? product.size_type : "none") as ProductFormState["size_type"], size_options_text: Array.isArray(product.size_options) ? product.size_options.join(", ") : "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
+    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), size_type: (["apparel_alpha", "apparel_numeric", "shoe_eu", "shoe_uk", "shoe_us", "numeric", "letter", "custom"].includes(product.size_type) ? product.size_type : "none") as ProductFormState["size_type"], size_options_text: Array.isArray(product.size_options) ? product.size_options.join(", ") : "", category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
     setProductEditorOpen(true);
   };
 
@@ -188,14 +210,20 @@ export default function AdminPage() {
     const price = Number(productForm.price);
     const stock = Number(productForm.stock_quantity);
     const compareAt = productForm.compare_at_price.trim() ? Number(productForm.compare_at_price) : null;
-    const sizeOptions = productForm.size_type === "none" ? [] : Array.from(new Set(productForm.size_options_text.split(/[,;\\n]+/).map(value => value.trim()).filter(Boolean))).slice(0, 50);
+    const sizeOptions = productForm.size_type === "none" ? [] : Array.from(new Set(productForm.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean))).slice(0, 50);
     const imageUrls = Array.from(new Set([productForm.image_url.trim(), ...productForm.images].filter(Boolean))).slice(0, 12);
     if (name.length < 2 || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0 || (compareAt !== null && (!Number.isFinite(compareAt) || compareAt < price))) {
       setError("Check the product name, price, stock quantity and compare-at price.");
       return;
     }
+    const productCategoryProfile = categories.find(category => category.id === productForm.category_id)?.size_profile || "none";
+    const sizeTypeAllowed = sizeTypeOptionsForProfile(productCategoryProfile).some(option => option.value === productForm.size_type);
+    if (productForm.size_type !== "none" && !sizeTypeAllowed) {
+      setError("Choose a size system that matches this product category.");
+      return;
+    }
     if (productForm.size_type !== "none" && sizeOptions.length === 0) {
-      setError("Add at least one available size, separated by commas.");
+      setError("Add at least one available size. Customers will only see the sizes entered here.");
       return;
     }
     const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -324,6 +352,28 @@ export default function AdminPage() {
     shipped: orders.filter(o => o.order_status === "shipped").length,
   }), [orders]);
 
+  const selectedProductCategory = categories.find(category => category.id === productForm.category_id);
+  const selectedProductSizeProfile = selectedProductCategory?.size_profile || "none";
+  const productSizeTypeOptions = sizeTypeOptionsForProfile(selectedProductSizeProfile);
+  const suggestedSizes = sizePresets[productForm.size_type] || [];
+  const currentSizeValues = productForm.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean);
+
+  const addSuggestedSize = (size: string) => {
+    setProductForm(current => {
+      const values = current.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean);
+      if (values.includes(size)) return current;
+      return { ...current, size_options_text: [...values, size].join(", ") };
+    });
+  };
+
+  const changeProductCategory = (categoryId: string) => {
+    const profile = categories.find(category => category.id === categoryId)?.size_profile || "none";
+    setProductForm(current => {
+      const compatible = current.size_type === "none" || sizeTypeOptionsForProfile(profile).some(option => option.value === current.size_type);
+      return { ...current, category_id: categoryId, size_type: compatible ? current.size_type : "none", size_options_text: compatible ? current.size_options_text : "" };
+    });
+  };
+
   if (checking) return <main className="admin-shell"><div className="admin-loading"><RefreshCw className="spin" /> Checking secure admin access…</div></main>;
 
   if (!session || !authorized) return <main className="admin-shell admin-login-shell">
@@ -375,7 +425,7 @@ export default function AdminPage() {
       </section>
       <section className="admin-orders-card admin-products-card">
         <div className="admin-orders-toolbar"><div><h2>Category management</h2><p>Create categories and control their storefront visibility and display order.</p></div><button className="admin-product-add" onClick={openNewCategory}>+ Add category</button></div>
-        <div className="admin-product-list">{categories.map(category=><article key={category.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{category.name}</b><small>Display order: {category.sort_order} · {category.slug}</small><span className={category.is_active ? "admin-product-live" : "admin-product-inactive"}>{category.is_active ? "Visible on storefront" : "Hidden from storefront"}</span></div><button className="admin-product-edit" onClick={()=>openEditCategory(category)}>Edit</button></article>)}</div>
+        <div className="admin-product-list">{categories.map(category=><article key={category.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{category.name}</b><small>Display order: {category.sort_order} · Sizing: {sizeProfileLabel(category.size_profile)}</small><span className={category.is_active ? "admin-product-live" : "admin-product-inactive"}>{category.is_active ? "Visible on storefront" : "Hidden from storefront"}</span></div><button className="admin-product-edit" onClick={()=>openEditCategory(category)}>Edit</button></article>)}</div>
       </section>
       <section className="admin-orders-card admin-products-card">
         <div className="admin-orders-toolbar"><div><h2>Free shipping selection</h2><p>Choose exactly which products are included in the 3-item free delivery offer.</p></div></div>
@@ -383,10 +433,10 @@ export default function AdminPage() {
         {products.length === 0 ? <div className="admin-empty"><Boxes size={28}/><b>No products found</b><span>Products connected to the store will appear here.</span></div> : <div className="admin-free-shipping-grid">{products.map(product => <article key={product.id} className="admin-free-shipping-product"><div className="admin-free-shipping-product-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}</span></div><label className="admin-toggle"><input type="checkbox" checked={product.free_shipping_eligible} disabled={productBusy === product.id || !product.is_active} onChange={event => void toggleFreeShipping(product, event.target.checked)}/><span>{productBusy === product.id ? "Saving…" : product.free_shipping_eligible ? "Included" : "Not included"}</span></label></article>)}</div>}
       </section>
     </div>
-    {categoryEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setCategoryEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">STORE CATEGORIES</p><h2>{categoryForm.id ? "Edit category" : "Add category"}</h2><small>Hidden categories stay attached to existing products.</small></div><button onClick={()=>setCategoryEditorOpen(false)}>×</button></div><form onSubmit={saveCategory} className="admin-product-form"><label>Category name<input required minLength={2} maxLength={80} value={categoryForm.name} onChange={e=>setCategoryForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Men's Fashion"/></label><label>Description<textarea rows={3} maxLength={1000} value={categoryForm.description} onChange={e=>setCategoryForm(current=>({...current,description:e.target.value}))} placeholder="Short category description"/></label><label>Category image URL<input type="url" value={categoryForm.image_url} onChange={e=>setCategoryForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label><div className="admin-product-form-grid"><label>Display order<input type="number" min="0" max="10000" step="1" value={categoryForm.sort_order} onChange={e=>setCategoryForm(current=>({...current,sort_order:e.target.value}))}/></label><label className="admin-category-visible"><span>Visible on storefront</span><input type="checkbox" checked={categoryForm.is_active} onChange={e=>setCategoryForm(current=>({...current,is_active:e.target.checked}))}/></label></div>{error&&<p className="admin-error" role="alert">{error}</p>}<div className="admin-product-form-actions"><button type="button" className="admin-secondary-btn" onClick={()=>setCategoryEditorOpen(false)}>Cancel</button><button type="submit" className="admin-product-add" disabled={busy}>{busy ? "Saving…" : categoryForm.id ? "Save category" : "Create category"}</button></div></form></section></div>}
+    {categoryEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setCategoryEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">STORE CATEGORIES</p><h2>{categoryForm.id ? "Edit category" : "Add category"}</h2><small>Hidden categories stay attached to existing products.</small></div><button onClick={()=>setCategoryEditorOpen(false)}>×</button></div><form onSubmit={saveCategory} className="admin-product-form"><label>Category name<input required minLength={2} maxLength={80} value={categoryForm.name} onChange={e=>setCategoryForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Men's Fashion"/></label><label>Description<textarea rows={3} maxLength={1000} value={categoryForm.description} onChange={e=>setCategoryForm(current=>({...current,description:e.target.value}))} placeholder="Short category description"/></label><label>Category image URL<input type="url" value={categoryForm.image_url} onChange={e=>setCategoryForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label><label>Category sizing profile<select value={categoryForm.size_profile} onChange={e=>setCategoryForm(current=>({...current,size_profile:e.target.value as SizeProfile}))}><option value="none">No size selection</option><option value="apparel">Clothing & apparel — alphanumeric and numeric sizes</option><option value="footwear">Shoes & footwear — EU, UK and US shoe sizes</option></select><small>Choose the sizing family that matches products in this category. Product-level available sizes are managed separately.</small></label><div className="admin-product-form-grid"><label>Display order<input type="number" min="0" max="10000" step="1" value={categoryForm.sort_order} onChange={e=>setCategoryForm(current=>({...current,sort_order:e.target.value}))}/></label><label className="admin-category-visible"><span>Visible on storefront</span><input type="checkbox" checked={categoryForm.is_active} onChange={e=>setCategoryForm(current=>({...current,is_active:e.target.checked}))}/></label></div>{error&&<p className="admin-error" role="alert">{error}</p>}<div className="admin-product-form-actions"><button type="button" className="admin-secondary-btn" onClick={()=>setCategoryEditorOpen(false)}>Cancel</button><button type="submit" className="admin-product-add" disabled={busy}>{busy ? "Saving…" : categoryForm.id ? "Save category" : "Create category"}</button></div></form></section></div>}
     {productEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setProductEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">CATALOGUE MANAGEMENT</p><h2>{productForm.id ? "Edit product" : "Add product"}</h2><small>Changes are saved to the live product catalogue.</small></div><button onClick={()=>setProductEditorOpen(false)}>×</button></div><form onSubmit={saveProduct} className="admin-product-form">
       <label>Product name<input required minLength={2} maxLength={140} value={productForm.name} onChange={e=>setProductForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Classic Linen Shirt"/></label>
-      <label>Category<select value={productForm.category_id} onChange={e=>setProductForm(current=>({...current,category_id:e.target.value}))}><option value="">Choose category</option>{categories.filter(category=>category.is_active).map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+      <label>Category<select value={productForm.category_id} onChange={e=>changeProductCategory(e.target.value)}><option value="">Choose category</option>{categories.filter(category=>category.is_active).map(category=><option key={category.id} value={category.id}>{category.name} · {sizeProfileLabel(category.size_profile)}</option>)}</select></label>
       <div className="admin-product-form-grid">
         <label>Price (BDT)<input required type="number" min="0" step="0.01" value={productForm.price} onChange={e=>setProductForm(current=>({...current,price:e.target.value}))}/></label>
         <label>Compare-at price (BDT)<input type="number" min="0" step="0.01" value={productForm.compare_at_price} onChange={e=>setProductForm(current=>({...current,compare_at_price:e.target.value}))}/></label>
@@ -397,8 +447,14 @@ export default function AdminPage() {
       <label className="admin-image-upload">Upload product images<input type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={imageUploading || productForm.images.length >= 12} onChange={uploadProductImages}/><small>{imageUploading ? "Uploading images…" : `JPG, PNG or WebP · maximum 5 MB each · up to 12 images total. ${productForm.images.length}/12 added.`}</small></label>
       {productForm.images.length > 0 && <div className="admin-image-gallery" aria-label="Product image previews">{productForm.images.map((url,index)=><div className="admin-image-preview" key={url}><img src={url} alt={`Product image ${index+1}`}/><span>{index===0 ? "Primary" : `Image ${index+1}`}</span><button type="button" onClick={()=>removeProductImage(url)} aria-label={`Remove image ${index+1}`}>×</button></div>)}</div>}
       <div className="admin-product-size-settings">
-        <label>Available size type<select value={productForm.size_type} onChange={e=>setProductForm(current=>({...current,size_type:e.target.value as ProductFormState["size_type"],size_options_text:e.target.value==="none"?"":current.size_options_text}))}><option value="none">No size selection</option><option value="numeric">Numeric sizes (e.g. 54, 56, 9, 10)</option><option value="letter">Letter sizes (S, M, L, XL, XXL)</option><option value="custom">Custom sizes / other options</option></select></label>
-        {productForm.size_type !== "none" && <label>Available sizes<input value={productForm.size_options_text} onChange={e=>setProductForm(current=>({...current,size_options_text:e.target.value}))} placeholder={productForm.size_type==="numeric"?"54, 56, 9, 10":productForm.size_type==="letter"?"S, M, L, XL, XXL":"Enter options separated by commas"}/><small>Separate each option with a comma. Customers must choose one before adding to bag or ordering.</small></label>}
+        <div className="admin-size-profile-note"><b>{selectedProductCategory ? selectedProductCategory.name + " · " + sizeProfileLabel(selectedProductSizeProfile) : "Choose a category first"}</b><small>{selectedProductSizeProfile === "apparel" ? "Clothing products can use alphanumeric or numeric sizing." : selectedProductSizeProfile === "footwear" ? "Footwear uses its own regional shoe-size standards." : "This category is currently set to products without size selection. Set its profile in Category Management to enable clothing or shoe sizes."}</small></div>
+        {selectedProductSizeProfile !== "none" && <>
+          <label>Size system<select value={productForm.size_type} onChange={e=>setProductForm(current=>({...current,size_type:e.target.value as ProductSizeType,size_options_text:e.target.value==="none"?"":current.size_options_text}))}><option value="none">This product has no size selection</option>{productSizeTypeOptions.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+          {productForm.size_type !== "none" && <>
+            {suggestedSizes.length > 0 && <div className="admin-size-quick-add"><span>Quick add common sizes</span><div>{suggestedSizes.map(size=><button type="button" key={size} className={currentSizeValues.includes(size) ? "admin-size-chip selected" : "admin-size-chip"} onClick={()=>addSuggestedSize(size)} disabled={currentSizeValues.includes(size)}>{currentSizeValues.includes(size) ? "✓ " : "+ "}{size}</button>)}</div></div>}
+            <label>Available sizes<input value={productForm.size_options_text} onChange={e=>setProductForm(current=>({...current,size_options_text:e.target.value}))} placeholder={productForm.size_type==="apparel_alpha"?"XS, S, M, L, XL, XXL":productForm.size_type==="apparel_numeric"?"28, 30, 32, 34, 36, 38":productForm.size_type==="shoe_eu"?"36, 37, 38, 39, 40, 41":productForm.size_type==="shoe_uk"?"3, 4, 5, 6, 7, 8":"5, 6, 7, 8, 9, 10"}/><small>Enter only the sizes available for this product, separated by commas. You can add more from the quick-size buttons above. Customers can select only these saved options.</small></label>
+          </>}
+        </>}
       </div>
       <label>Fulfilment source<select value={productForm.fulfillment_source} onChange={e=>setProductForm(current=>({...current,fulfillment_source:e.target.value}))}><option value="own_stock">Own stock</option><option value="shopbase_bd">ShopBase BD</option><option value="dropshippingbd">DropshippingBD</option></select></label>
       <div className="admin-product-form-grid"><label>Supplier product code<input maxLength={100} value={productForm.supplier_product_code} onChange={e=>setProductForm(current=>({...current,supplier_product_code:e.target.value}))} placeholder="Supplier item/SKU code"/></label><label>Supplier product URL<input type="url" value={productForm.supplier_product_url} onChange={e=>setProductForm(current=>({...current,supplier_product_url:e.target.value}))} placeholder="https://supplier-product-page…"/></label></div>
