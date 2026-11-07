@@ -1,0 +1,383 @@
+import { createClient } from "@supabase/supabase-js";
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
+const MAX_HTML_LENGTH = 4 * 1024 * 1024;
+const SHOPBASE_HOST = "shopbasebd.com";
+const AI_MODEL = "openai/gpt-5.4-nano";
+
+type JsonRecord = Record<string, unknown>;
+
+function json(data: unknown, status = 200) {
+  return Response.json(data, { status });
+}
+
+function isShopBaseUrl(value: string): URL | null {
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    if (
+      url.protocol !== "https:" ||
+      (hostname !== SHOPBASE_HOST && !hostname.endsWith("." + SHOPBASE_HOST)) ||
+      (url.port && url.port !== "443") ||
+      url.username ||
+      url.password
+    ) return null;
+    url.hash = "";
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function decodeHtml(value: string): string {
+  return value
+    .replace(/&#x([\da-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&ndash;/gi, "–")
+    .replace(/&mdash;/gi, "—");
+}
+
+function stripMarkup(value: string): string {
+  return decodeHtml(value.replace(/<\/?[^>]+>/g, " "))
+    .replace(/[\t\r\n]+/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function tagAttributes(tag: string): Record<string, string> {
+  const attributes: Record<string, string> = {};
+  const body = tag.replace(/^<[a-z0-9:-]+/i, "").replace(/>$/, "");
+  const regex = /([a-z_:][-a-z0-9_:.]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(body))) {
+    attributes[match[1].toLowerCase()] = decodeHtml(match[2] ?? match[3] ?? match[4] ?? "");
+  }
+  return attributes;
+}
+
+function metaValues(html: string): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const tag of html.match(/<meta\b[^>]*>/gi) || []) {
+    const attrs = tagAttributes(tag);
+    const key = (attrs.property || attrs.name || attrs.itemprop || "").toLowerCase();
+    if (key && attrs.content) values[key] = attrs.content.trim();
+  }
+  return values;
+}
+
+function flattenStrings(value: unknown): string[] {
+  if (typeof value === "string") return [stripMarkup(value)].filter(Boolean);
+  if (Array.isArray(value)) return value.flatMap(flattenStrings);
+  if (value && typeof value === "object") {
+    const obj = value as JsonRecord;
+    const candidate = obj.name ?? obj.value ?? obj.url;
+    return candidate === undefined ? [] : flattenStrings(candidate);
+  }
+  return [];
+}
+
+function walkObjects(value: unknown, visit: (obj: JsonRecord) => void, depth = 0): void {
+  if (depth > 12 || !value || typeof value !== "object") return;
+  if (Array.isArray(value)) {
+    for (const item of value) walkObjects(item, visit, depth + 1);
+    return;
+  }
+  const obj = value as JsonRecord;
+  visit(obj);
+  for (const child of Object.values(obj)) walkObjects(child, visit, depth + 1);
+}
+
+function isProductObject(value: JsonRecord): boolean {
+  const rawType = value["@type"];
+  const types = Array.isArray(rawType) ? rawType : [rawType];
+  return types.some(type => typeof type === "string" && /product/i.test(type));
+}
+
+function toImageUrl(value: string, base: URL): string | null {
+  try {
+    const url = new URL(value, base);
+    if (url.protocol !== "https:" || url.username || url.password) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function extractProduct(html: string, pageUrl: URL) {
+  const meta = metaValues(html);
+  const titleTag = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "";
+  const jsonLdObjects: JsonRecord[] = [];
+  for (const match of html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const parsed = JSON.parse(match[1].trim()) as unknown;
+      walkObjects(parsed, obj => { if (isProductObject(obj)) jsonLdObjects.push(obj); });
+    } catch {
+      // Ignore malformed structured-data blocks and use page metadata.
+    }
+  }
+
+  const product = jsonLdObjects[0] || {};
+  const offersValue = product.offers;
+  const offer = (Array.isArray(offersValue) ? offersValue[0] : offersValue) as JsonRecord | undefined;
+  const jsonPrice = offer && (offer.price ?? offer.lowPrice ?? offer.highPrice);
+  const currency = String(offer?.priceCurrency ?? meta["product:price:currency"] ?? "BDT").toUpperCase();
+  const metaPrice = meta["product:price:amount"] ?? meta["og:price:amount"] ?? meta["twitter:data1"];
+  const pageText = stripMarkup(html
+    .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, " "));
+  const visiblePrice = pageText.match(/(?:৳|BDT\s*|Tk\.?\s*)([0-9][0-9,]*(?:\.\d{1,2})?)/i)
+    ?? pageText.match(/([0-9][0-9,]*(?:\.\d{1,2})?)\s*(?:৳|BDT|Tk\.?)/i);
+  const rawPrice = jsonPrice ?? metaPrice ?? visiblePrice?.[1];
+  const numericPrice = typeof rawPrice === "number" || typeof rawPrice === "string"
+    ? Number(String(rawPrice).replace(/,/g, ""))
+    : NaN;
+  const supplierPrice = currency === "BDT" && Number.isFinite(numericPrice) && numericPrice >= 0
+    ? numericPrice
+    : null;
+
+  const name = flattenStrings(product.name)[0]
+    || meta["og:title"]
+    || meta["twitter:title"]
+    || stripMarkup(titleTag).replace(/\s*[|–-]\s*ShopBase BD.*$/i, "");
+  const originalDescription = flattenStrings(product.description)[0]
+    || meta["og:description"]
+    || meta["description"]
+    || meta["twitter:description"]
+    || "";
+  const imageValues = [
+    ...flattenStrings(product.image),
+    ...flattenStrings(product.images),
+    meta["og:image"] || "",
+    meta["twitter:image"] || "",
+    meta["image"] || "",
+  ];
+  const images = Array.from(new Set(imageValues
+    .map(value => toImageUrl(value, pageUrl))
+    .filter((value): value is string => Boolean(value)))).slice(0, 12);
+
+  const colors = new Set<string>();
+  const sizes = new Set<string>();
+  walkObjects(product, obj => {
+    for (const value of flattenStrings(obj.color ?? obj.colors)) {
+      if (value.length <= 60) colors.add(value);
+    }
+    for (const value of flattenStrings(obj.size ?? obj.sizes)) {
+      if (value.length <= 40) sizes.add(value);
+    }
+  });
+  const category = flattenStrings(product.category)[0] || meta["product:category"] || "";
+  const sku = flattenStrings(product.sku ?? product.mpn)[0] || meta["product:retailer_item_id"] || "";
+  const availabilityText = String(offer?.availability ?? "");
+  const explicitStock = product.inventoryLevel ?? product.inventoryQuantity;
+  const stockNumber = Number(explicitStock);
+  const stockQuantity = Number.isInteger(stockNumber) && stockNumber >= 0
+    ? stockNumber
+    : /outofstock|soldout/i.test(availabilityText) ? 0 : null;
+
+  const canonicalTag = html.match(/<link\b[^>]*rel\s*=\s*["']canonical["'][^>]*>/i)?.[0] || "";
+  const canonical = canonicalTag ? tagAttributes(canonicalTag).href : "";
+  const canonicalUrl = canonical ? toImageUrl(canonical, pageUrl) : null;
+
+  return {
+    name: stripMarkup(name).slice(0, 140),
+    originalDescription: stripMarkup(originalDescription).slice(0, 5000),
+    images,
+    supplierPrice,
+    currency,
+    sku: stripMarkup(sku).slice(0, 80),
+    colors: Array.from(colors).slice(0, 50),
+    sizes: Array.from(sizes).slice(0, 50),
+    category: stripMarkup(category).slice(0, 100),
+    stockQuantity,
+    sourceUrl: canonicalUrl && isShopBaseUrl(canonicalUrl) ? canonicalUrl.toString() : pageUrl.toString(),
+  };
+}
+
+async function fetchShopBasePage(startUrl: URL): Promise<{ html: string; finalUrl: URL }> {
+  let current = startUrl;
+  for (let hop = 0; hop <= 3; hop++) {
+    const response = await fetch(current, {
+      method: "GET",
+      redirect: "manual",
+      signal: AbortSignal.timeout(12000),
+      headers: {
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "bn-BD,bn;q=0.9,en;q=0.8",
+        "User-Agent": "Mozilla/5.0 (compatible; HisAndHerMartProductImporter/1.0)",
+      },
+      cache: "no-store",
+    });
+    if ([301, 302, 303, 307, 308].includes(response.status)) {
+      const location = response.headers.get("location");
+      if (!location || hop === 3) throw new Error("ShopBase BD redirected too many times. Open the product link in your browser and try its final URL.");
+      const nextUrl = isShopBaseUrl(new URL(location, current).toString());
+      if (!nextUrl) throw new Error("The ShopBase BD product link redirected outside the allowed ShopBase BD domain.");
+      current = nextUrl;
+      continue;
+    }
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("This ShopBase BD page requires login or blocks server access. Try a public product link, or provide the product details manually.");
+    }
+    if (!response.ok) throw new Error("ShopBase BD could not load this page (HTTP " + response.status + ").");
+    const contentType = response.headers.get("content-type") || "";
+    if (!/text\/html|application\/xhtml\+xml/i.test(contentType)) {
+      throw new Error("That link did not return a readable product webpage.");
+    }
+    const length = Number(response.headers.get("content-length") || 0);
+    if (length > MAX_HTML_LENGTH) throw new Error("The product page is too large to scan.");
+    const html = await response.text();
+    if (html.length > MAX_HTML_LENGTH) throw new Error("The product page is too large to scan.");
+    return { html, finalUrl: current };
+  }
+  throw new Error("Unable to follow the ShopBase BD product link.");
+}
+
+async function writePremiumEnglishDescription(input: {
+  name: string;
+  originalDescription: string;
+  category: string;
+  colors: string[];
+  sizes: string[];
+}, request: Request): Promise<string> {
+  const token = process.env.AI_GATEWAY_API_KEY
+    || request.headers.get("x-vercel-oidc-token")
+    || process.env.VERCEL_OIDC_TOKEN;
+  if (!token) {
+    throw new Error("AI writing is not connected to this Vercel deployment yet. Enable Vercel OIDC for the project or configure AI_GATEWAY_API_KEY.");
+  }
+
+  const response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+    method: "POST",
+    signal: AbortSignal.timeout(20000),
+    headers: {
+      "Authorization": "Bearer " + token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: [
+            "You are the product copywriter for His & Her Mart, a premium, modern Bangladesh online store.",
+            "Rewrite the supplier's product description into polished, natural English only.",
+            "Do not invent, assume, exaggerate, or guarantee any product feature, material, dimension, quality, warranty, origin, certification, stock status, or benefit.",
+            "Use only facts explicitly present in the supplied product information. Preserve important factual details. Omit details that are unclear.",
+            "Use a refined, concise, customer-friendly tone. Do not mention the supplier, source website, wholesale cost, or AI.",
+            "Return plain text only, with short paragraphs and simple bullet points only when the source contains multiple factual specifications.",
+            "If the source description is empty, write only a brief neutral description based on the product name and supplied options, without claiming features."
+          ].join(" "),
+        },
+        {
+          role: "user",
+          content: JSON.stringify(input),
+        },
+      ],
+      max_tokens: 650,
+    }),
+  });
+  const result = await response.json().catch(() => null) as {
+    error?: { message?: string };
+    choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string }> } }>;
+  } | null;
+
+  if (!response.ok) {
+    const message = result?.error?.message || "The AI description service did not respond successfully.";
+    throw new Error(response.status === 401
+      ? "AI Gateway authentication failed. Enable Vercel OIDC for this project."
+      : response.status === 402
+        ? "AI Gateway has no available credits. Add AI Gateway credits or configure a BYOK provider."
+        : message.slice(0, 220));
+  }
+
+  const content = result?.choices?.[0]?.message?.content;
+  const description = typeof content === "string"
+    ? content
+    : Array.isArray(content)
+      ? content.map(part => part.text || "").join("\n")
+      : "";
+  const cleaned = description
+    .replace(/\x60{3}[a-z]*\n?/gi, "")
+    .trim();
+  if (cleaned.length < 20) throw new Error("AI returned an empty description. Please retry the import.");
+  return cleaned.slice(0, 5000);
+}
+
+export async function POST(request: Request) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const authorization = request.headers.get("authorization") || "";
+    const accessToken = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+    if (!supabaseUrl || !publishableKey || !accessToken) {
+      return json({ error: "Sign in to the admin panel before importing a product." }, 401);
+    }
+
+    const supabase = createClient(supabaseUrl, publishableKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: { headers: { Authorization: "Bearer " + accessToken } },
+    });
+    const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
+    if (authError || !authData.user) return json({ error: "Your admin session has expired. Please sign in again." }, 401);
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", authData.user.id)
+      .maybeSingle();
+    if (profileError || profile?.role !== "admin") return json({ error: "Administrator access is required." }, 403);
+
+    const body = await request.json().catch(() => null) as { url?: unknown } | null;
+    const rawUrl = typeof body?.url === "string" ? body.url.trim() : "";
+    const productUrl = isShopBaseUrl(rawUrl);
+    if (!productUrl) {
+      return json({ error: "Paste a valid HTTPS product URL from shopbasebd.com." }, 400);
+    }
+
+    const { data: duplicate, error: duplicateError } = await supabase
+      .from("products")
+      .select("id,name")
+      .eq("supplier_product_url", productUrl.toString())
+      .maybeSingle();
+    if (duplicateError) return json({ error: "Could not check for duplicate products. Please retry." }, 500);
+    if (duplicate) {
+      return json({ error: "This supplier link is already imported as: " + duplicate.name, duplicateProductId: duplicate.id }, 409);
+    }
+
+    const { html, finalUrl } = await fetchShopBasePage(productUrl);
+    const extracted = extractProduct(html, finalUrl);
+    if (extracted.name.length < 2 || extracted.images.length === 0) {
+      return json({
+        error: "The page opened, but the product name or images were not available to import. This link may require a ShopBase BD login or use a page format we cannot read yet.",
+      }, 422);
+    }
+
+    const premiumDescription = await writePremiumEnglishDescription({
+      name: extracted.name,
+      originalDescription: extracted.originalDescription,
+      category: extracted.category,
+      colors: extracted.colors,
+      sizes: extracted.sizes,
+    }, request);
+
+    return json({
+      product: {
+        ...extracted,
+        sourceUrl: finalUrl.toString(),
+        premiumDescription,
+        aiModel: AI_MODEL,
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Product import failed. Please retry.";
+    const status = /timed out|timeout/i.test(message) ? 504 : 400;
+    return json({ error: message.slice(0, 320) }, status);
+  }
+}
