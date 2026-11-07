@@ -7,7 +7,10 @@ import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
 import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck } from "lucide-react";
 
-type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number };
+type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number; sizeOptions?: string[] };
+type CartLine = { key: string; productId: string; size: string | null; quantity: number; product: Product };
+const makeCartKey = (productId: string, size?: string | null) => size ? `${productId}::${encodeURIComponent(size)}` : productId;
+const parseCartKey = (key: string) => { const splitAt = key.indexOf("::"); if (splitAt < 0) return { productId: key, size: null as string | null }; const rawSize = key.slice(splitAt + 2); let size = rawSize; try { size = decodeURIComponent(rawSize); } catch { /* Keep the stored value readable if legacy browser data is malformed. */ } return { productId: key.slice(0, splitAt), size }; };
 type OrderConfirmation = {
   order_number: string;
   subtotal: number;
@@ -91,7 +94,7 @@ export default function Home() {
       try {
         const { data, error } = await supabase!
           .from("products")
-          .select("id,category_id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity")
+          .select("id,category_id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,size_options,size_type")
           .eq("is_active", true)
           .order("created_at", { ascending: false });
         if (cancelled) return;
@@ -122,7 +125,8 @@ export default function Home() {
           image: row.image_url || fallbackProducts[0].image,
           tag: row.is_featured ? "Featured" : undefined,
           freeShippingEligible: row.free_shipping_eligible === true,
-          stockQuantity: Number(row.stock_quantity ?? 0)
+          stockQuantity: Number(row.stock_quantity ?? 0),
+          sizeOptions: Array.isArray(row.size_options) ? row.size_options.filter((size: unknown): size is string => typeof size === "string" && !!size.trim()) : []
         }));
         setProducts(mapped);
         setCatalogReady(true);
@@ -179,7 +183,7 @@ export default function Home() {
   const [cartOpen, setCartOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [buyNow, setBuyNow] = useState<{ productId: string; quantity: number } | null>(null);
+  const [buyNow, setBuyNow] = useState<{ productId: string; quantity: number; size: string | null } | null>(null);
   const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState("");
@@ -198,15 +202,20 @@ export default function Home() {
     `${p.name} ${p.category}`.toLowerCase().includes(query.toLowerCase())
   ), [category, query]);
 
-  const cartItems = products.filter(p => cart[p.id]);
+  const cartLines: CartLine[] = Object.entries(cart).flatMap(([key, quantity]) => {
+    const parsed = parseCartKey(key);
+    const product = products.find(item => String(item.id) === parsed.productId);
+    return product && quantity > 0 ? [{ key, productId: parsed.productId, size: parsed.size, quantity, product }] : [];
+  });
   const cartCount = Object.values(cart).reduce((a, b) => a + b, 0);
-  const subtotal = cartItems.reduce((sum, p) => sum + p.price * cart[p.id], 0);
-  const freeShippingEligibleCount = cartItems.reduce((sum, p) => sum + (p.freeShippingEligible ? cart[p.id] : 0), 0);
+  const subtotal = cartLines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  const freeShippingEligibleCount = cartLines.reduce((sum, line) => sum + (line.product.freeShippingEligible ? line.quantity : 0), 0);
   const freeShippingUnlocked = freeShippingEligibleCount >= 3;
-  const checkoutQuantities: Record<string, number> = buyNow ? { [buyNow.productId]: buyNow.quantity } : cart;
-  const checkoutItems = products.filter(p => checkoutQuantities[p.id]);
-  const checkoutSubtotal = checkoutItems.reduce((sum, p) => sum + p.price * checkoutQuantities[p.id], 0);
-  const checkoutFreeShippingEligibleCount = checkoutItems.reduce((sum, p) => sum + (p.freeShippingEligible ? checkoutQuantities[p.id] : 0), 0);
+  const checkoutLines: CartLine[] = buyNow
+    ? (() => { const product = products.find(item => String(item.id) === buyNow.productId); return product ? [{ key: makeCartKey(buyNow.productId, buyNow.size), productId: buyNow.productId, size: buyNow.size, quantity: buyNow.quantity, product }] : []; })()
+    : cartLines;
+  const checkoutSubtotal = checkoutLines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
+  const checkoutFreeShippingEligibleCount = checkoutLines.reduce((sum, line) => sum + (line.product.freeShippingEligible ? line.quantity : 0), 0);
   const checkoutFreeShippingUnlocked = checkoutFreeShippingEligibleCount >= 3;
   const hasFreeShippingProducts = products.some(product => product.freeShippingEligible === true);
   const deliveryChargePreview = checkoutFreeShippingUnlocked ? 0 : deliveryZone === "inside_dhaka" ? 80 : deliveryZone === "outside_dhaka" ? 150 : null;
@@ -218,9 +227,15 @@ export default function Home() {
     if (productId) {
       const product = products.find(item => String(item.id) === productId);
       const requested = Math.max(1, Math.min(10, Number(params.get("qty") || 1)));
-      if (product && Number(product.stockQuantity ?? 0) > 0) {
-        setBuyNow({ productId, quantity: Math.min(requested, Number(product.stockQuantity)) });
+      const selectedSize = params.get("size");
+      const availableSizes = product?.sizeOptions || [];
+      if (product && Number(product.stockQuantity ?? 0) > 0 && (!availableSizes.length || (selectedSize && availableSizes.includes(selectedSize)))) {
+        setBuyNow({ productId, quantity: Math.min(requested, Number(product.stockQuantity)), size: selectedSize || null });
         setCheckoutOpen(true);
+      } else if (product && availableSizes.length && !selectedSize) {
+        setOrderError("Please choose a size before ordering this product.");
+      } else if (product && availableSizes.length && selectedSize && !availableSizes.includes(selectedSize)) {
+        setOrderError("The selected size is not available. Please choose again.");
       } else {
         setOrderError("This product is currently unavailable. Please refresh the product page.");
       }
@@ -237,17 +252,28 @@ export default function Home() {
 
   const startBuyNow = (product: Product) => {
     if (typeof product.id !== "string" || !/^[0-9a-f-]{36}$/i.test(product.id) || (product.stockQuantity ?? 0) <= 0) return;
+    if (product.sizeOptions?.length) {
+      window.location.assign("/products/" + product.slug);
+      return;
+    }
     setOrderError("");
-    setBuyNow({ productId: product.id, quantity: 1 });
+    setBuyNow({ productId: product.id, quantity: 1, size: null });
     setCartOpen(false);
     setCheckoutOpen(true);
   };
 
-  const changeQty = (id: string | number, delta: number) => setCart(old => {
-    const product = products.find(item => item.id === id);
-    const stockLimit = product?.stockQuantity ?? 999;
-    const next = { ...old, [id]: Math.min(stockLimit, Math.max(0, (old[id] || 0) + delta)) };
-    if (!next[id]) delete next[id];
+  const changeQty = (key: string, delta: number) => setCart(old => {
+    const { productId } = parseCartKey(key);
+    const product = products.find(item => String(item.id) === productId);
+    const otherSizeQuantity = Object.entries(old).reduce((sum, [otherKey, quantity]) => {
+      if (otherKey === key) return sum;
+      return parseCartKey(otherKey).productId === productId ? sum + quantity : sum;
+    }, 0);
+    const stockLimit = Math.max(0, Math.min(10, Number(product?.stockQuantity ?? 999) - otherSizeQuantity));
+    const nextQuantity = Math.min(stockLimit, Math.max(0, (old[key] || 0) + delta));
+    const next = { ...old };
+    if (nextQuantity) next[key] = nextQuantity;
+    else delete next[key];
     return next;
   });
 
@@ -263,7 +289,7 @@ export default function Home() {
       setOrderError("Please read and accept the unboxing video notice.");
       return;
     }
-    if (checkoutItems.length === 0 || checkoutItems.some(item => typeof item.id !== "string" || !/^[0-9a-f-]{36}$/i.test(item.id))) {
+    if (checkoutLines.length === 0 || checkoutLines.some(line => !/^[0-9a-f-]{36}$/i.test(line.productId) || (line.product.sizeOptions?.length && (!line.size || !line.product.sizeOptions.includes(line.size))))) {
       setOrderError("Your cart needs to refresh before checkout. Please close checkout and try again.");
       return;
     }
@@ -281,9 +307,10 @@ export default function Home() {
             area: area.trim(),
             address_line: addressLine.trim(),
           },
-          items: checkoutItems.map(item => ({
-            product_id: String(item.id),
-            quantity: checkoutQuantities[item.id],
+          items: checkoutLines.map(line => ({
+            product_id: line.productId,
+            quantity: line.quantity,
+            selected_size: line.size,
           })),
           accept_unboxing_policy: true,
           website: "",
@@ -382,7 +409,7 @@ export default function Home() {
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label="Toggle wishlist" onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
-              <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => (cart[p.id] || 0) > 0 ? setCartOpen(true) : changeQty(p.id, 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (cart[p.id] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[p.id] || 0) > 0 ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>ORDER NOW <ArrowRight size={14} /></button></div>
+              <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => p.sizeOptions?.length ? window.location.assign("/products/" + p.slug) : (cart[makeCartKey(String(p.id))] || 0) > 0 ? setCartOpen(true) : changeQty(makeCartKey(String(p.id)), 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : p.sizeOptions?.length ? "CHOOSE SIZE" : (cart[makeCartKey(String(p.id))] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[makeCartKey(String(p.id))] || 0) > 0 && !p.sizeOptions?.length ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>{p.sizeOptions?.length ? "CHOOSE SIZE" : "ORDER NOW"} <ArrowRight size={14} /></button></div>
             </div>
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
@@ -417,8 +444,8 @@ export default function Home() {
 
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
-        {cartItems.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
-          <div className="cart-list">{cartItems.map(p => <div className="cart-item" key={p.id}><img src={p.image} alt={p.name} /><div className="cart-item-info"><b>{p.name}</b><span>{money(p.price)}</span><div className="qty"><button onClick={() => changeQty(p.id, -1)}><Minus size={13} /></button>{cart[p.id]}<button onClick={() => changeQty(p.id, 1)}><Plus size={13} /></button></div></div></div>)}</div>
+        {cartLines.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
+          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}><img src={line.product.image} alt={line.product.name} /><div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}<span>{money(line.product.price)}</span><div className="qty"><button onClick={() => changeQty(line.key, -1)}><Minus size={13} /></button>{line.quantity}<button onClick={() => changeQty(line.key, 1)}><Plus size={13} /></button></div></div></div>)}</div>
           <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div>{hasFreeShippingProducts && <div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div>}<small>Delivery is ৳80 inside Dhaka or ৳150 outside Dhaka{hasFreeShippingProducts ? ". Selected eligible products may qualify for free shipping." : "."}</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setBuyNow(null); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
@@ -432,7 +459,7 @@ export default function Home() {
           <p className="checkout-helper">{buyNow ? "Order Now starts checkout for the selected product. Complete your delivery details and confirm the COD order below." : "Complete your delivery details and confirm your Cash on Delivery order below."}</p>
           <div className="checkout-order-summary">
             <b>Order summary</b>
-            {checkoutItems.map(item => <div key={item.id}><span>{item.name} × {checkoutQuantities[item.id]}</span><strong>{money(item.price * checkoutQuantities[item.id])}</strong></div>)}
+            {checkoutLines.map(line => <div key={line.key}><span>{line.product.name}{line.size ? ` · Size: ${line.size}` : ""} × {line.quantity}</span><strong>{money(line.product.price * line.quantity)}</strong></div>)}
           </div>
           <form onSubmit={handlePlaceOrder}>
             <div className="checkout-fields">
@@ -462,7 +489,7 @@ export default function Home() {
             {orderError && <p className="checkout-error" role="alert">{orderError}</p>}
             <div className="checkout-actions">
               <button type="button" className="back-to-bag" onClick={() => { setCheckoutOpen(false); setBuyNow(null); }}>Back to bag</button>
-              <button type="submit" className="primary-btn place-order-btn" disabled={isSubmitting || checkoutItems.length === 0}>
+              <button type="submit" className="primary-btn place-order-btn" disabled={isSubmitting || checkoutLines.length === 0}>
                 {isSubmitting ? "PLACING ORDER..." : "PLACE COD ORDER"} <ArrowRight size={16} />
               </button>
             </div>

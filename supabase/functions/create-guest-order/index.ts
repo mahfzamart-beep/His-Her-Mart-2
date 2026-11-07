@@ -88,7 +88,11 @@ Deno.serve(async (req: Request) => {
       /^[0-9a-f-]{36}$/i.test((item as Record<string, unknown>).product_id as string) &&
       Number.isInteger((item as Record<string, unknown>).quantity) &&
       Number((item as Record<string, unknown>).quantity) >= 1 &&
-      Number((item as Record<string, unknown>).quantity) <= 10)) {
+      Number((item as Record<string, unknown>).quantity) <= 10 &&
+      ((item as Record<string, unknown>).selected_size === undefined ||
+        (item as Record<string, unknown>).selected_size === null ||
+        (typeof (item as Record<string, unknown>).selected_size === "string" &&
+          ((item as Record<string, unknown>).selected_size as string).length <= 64)))) {
     return json({ error: "Your cart contains an invalid product or quantity." }, 400, origin);
   }
   if (!accepted) return json({ error: "Please accept the unboxing video notice to continue." }, 400, origin);
