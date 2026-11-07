@@ -128,7 +128,7 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
     <header className="detail-top"><Link href="/" className="detail-back"><ArrowLeft size={16} /> Back to store</Link><Link href="/wishlist" className="detail-wishlist"><Heart size={17} /> Wishlist</Link></header>
     <div className="detail-grid">
       <div className="detail-gallery">
-        <div className="detail-image">{selectedImage ? <img src={selectedImage} alt={product.name} /> : <span className="detail-image-placeholder">Image coming soon</span>}{product.free_shipping_eligible && <span>SELECTED FREE SHIPPING</span>}</div>
+        <div className="detail-image">{selectedImage ? <img src={selectedImage} alt={product.name} /> : <div className="detail-image-placeholder">Image coming soon</div>}{product.free_shipping_eligible && <span>SELECTED FREE SHIPPING</span>}</div>
         {gallery.length > 1 && <div className="detail-thumbnails" aria-label="More product images">{gallery.map((url, index) => <button type="button" key={url} className={selectedImage === url ? "detail-thumb active" : "detail-thumb"} onClick={() => setSelectedImage(url)} aria-label={`Show product image ${index + 1}`}><img src={url} alt={`${product.name} view ${index + 1}`} /></button>)}</div>}
       </div>
       <section className="detail-copy">
