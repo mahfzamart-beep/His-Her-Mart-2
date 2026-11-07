@@ -489,7 +489,7 @@ export default function Home() {
             {orderError && <p className="checkout-error" role="alert">{orderError}</p>}
             <div className="checkout-actions">
               <button type="button" className="back-to-bag" onClick={() => { setCheckoutOpen(false); setBuyNow(null); }}>Back to bag</button>
-              <button type="submit" className="primary-btn place-order-btn" disabled={isSubmitting || checkoutItems.length === 0}>
+              <button type="submit" className="primary-btn place-order-btn" disabled={isSubmitting || checkoutLines.length === 0}>
                 {isSubmitting ? "PLACING ORDER..." : "PLACE COD ORDER"} <ArrowRight size={16} />
               </button>
             </div>
