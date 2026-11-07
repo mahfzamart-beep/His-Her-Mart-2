@@ -234,8 +234,8 @@ function extractProduct(html: string, pageUrl: URL) {
     ? pageText.slice(nameIndex + name.length).split(/largest drop.?shipping platform in bangladesh|legal\s*&\s*information/i)[0].trim()
     : "";
   const originalDescription = flattenStrings(product.description)[0]
-    || meta["og:description"] || meta["description"] || meta["twitter:description"]
-    || descriptionText.slice(0, 5000);
+    || descriptionText.slice(0, 5000)
+    || meta["og:description"] || meta["description"] || meta["twitter:description"];
 
   const canonicalTag = html.match(/<link\b[^>]*rel\s*=\s*["']canonical["'][^>]*>/i)?.[0] || "";
   const canonical = canonicalTag ? tagAttributes(canonicalTag).href : "";
@@ -330,8 +330,7 @@ async function writePremiumEnglishDescription(input: {
       system_instruction: systemInstruction,
       store: false,
       generation_config: {
-        max_output_tokens: 650,
-        temperature: 0.35
+        max_output_tokens: 650
       }
     }),
   });
