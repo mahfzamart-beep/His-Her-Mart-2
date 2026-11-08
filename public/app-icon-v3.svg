@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="His and Hers Mart">
+<rect width="512" height="512" rx="84" fill="#F7F4EE"/><rect x="28" y="28" width="456" height="456" rx="66" fill="none" stroke="#D9C7AE" stroke-width="4"/>
+<path d="M54 192 C123 125 185 150 248 142 C325 132 371 85 429 112 C465 129 467 163 442 190" fill="none" stroke="#F27808" stroke-width="13" stroke-linecap="round"/>
+<text x="256" y="302" text-anchor="middle" font-family="Georgia,Times New Roman,serif" font-size="102" font-weight="bold" letter-spacing="-7" fill="#20231F">His<tspan fill="#F27808">&amp;</tspan>Hers</text>
+<path d="M88 330 H166 M346 330 H424" stroke="#F27808" stroke-width="4" stroke-linecap="round"/>
+<text x="256" y="344" text-anchor="middle" font-family="Georgia,Times New Roman,serif" font-size="23" letter-spacing="3" fill="#20231F">SHOP SMART. LIVE BETTER.</text></svg>

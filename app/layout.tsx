@@ -18,11 +18,11 @@ export const metadata: Metadata = {
   openGraph: { title: "His & Hers Mart", description: "Modern Shopping · For Him & Her", url: "https://his-and-her-mart.vercel.app", siteName: "His & Hers Mart", locale: "en_BD", type: "website" },
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/app-icons/hhm-pwa-192-v2.jpg", sizes: "192x192", type: "image/jpeg" },
-      { url: "/app-icons/hhm-pwa-512-v2.jpg", sizes: "512x512", type: "image/jpeg" }
+      { url: "/app-icon-v3.svg?v=3", type: "image/svg+xml" },
+      { url: "/app-icon-v3.svg?v=3", sizes: "any", type: "image/svg+xml" },
+      { url: "/app-icon-v3.svg?v=3", sizes: "any", type: "image/svg+xml" }
     ],
-    apple: [{ url: "/app-icons/hhm-pwa-192-v2.jpg", sizes: "192x192", type: "image/jpeg" }]
+    apple: [{ url: "/app-icon-v3.svg?v=3", sizes: "any", type: "image/svg+xml" }]
   },
   robots: { index: true, follow: true },
 };
