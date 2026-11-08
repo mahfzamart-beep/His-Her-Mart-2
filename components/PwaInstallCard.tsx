@@ -86,6 +86,7 @@ export default function PwaInstallCard() {
         </div>
       )}
       <p className="pwa-install-note">This is the official installable web app (PWA), not an APK or a Play Store download. It uses the same live website and does not create a separate account.</p>
+      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the old His &amp; Hers Mart shortcut from your home screen, then install again to refresh the new app icon.</p>
     </section>
   );
 }
