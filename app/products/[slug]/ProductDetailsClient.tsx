@@ -164,7 +164,26 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
   const stock = Number(product.stock_quantity || 0);
   const gallery = Array.from(new Set([product.image_url, ...(Array.isArray(product.images) ? product.images : [])].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)))).slice(0, 12);
   const sizeRequired = requiredSizes.length > 0;
+  const missingOptions = (sizeRequired && !selectedSize) || (requiredColors.length > 0 && !selectedColor);
+  const productStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || undefined,
+    image: gallery,
+    category: product.category?.name || undefined,
+    brand: { "@type": "Brand", name: "His & Hers Mart" },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "BDT",
+      price: Number(product.price),
+      availability: stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: "https://his-and-her-mart.vercel.app/products/" + encodeURIComponent(product.slug),
+      itemCondition: "https://schema.org/NewCondition"
+    }
+  };
   return <main className="detail-shell">
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productStructuredData).replace(/</g, "\\u003c") }} />
     <header className="detail-top"><Link href="/" className="detail-back"><ArrowLeft size={16} /> Back to store</Link><div className="detail-top-actions"><button type="button" className="detail-share" onClick={shareProduct}><Share2 size={16} /> Share</button><Link href="/wishlist" className="detail-wishlist"><Heart size={17} /> Wishlist</Link></div></header>
     <div className="detail-grid">
       <div className="detail-gallery">
@@ -193,6 +212,24 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
         <div className="detail-assurance"><div><b>Cash on Delivery</b><small>Pay when your parcel arrives</small></div><div><b>Order tracking</b><small>Track your order online</small></div><div><b>Need help?</b><small><Link href="/faq">Read our FAQs</Link></small></div></div>
         <div className="detail-delivery-card"><div className="detail-delivery-title"><Truck size={18} /><span><b>Delivery across Bangladesh</b><small>Inside Dhaka ৳80 · Outside Dhaka ৳150</small></span></div><p>Selected eligible products qualify for free delivery when your order includes at least 3 eligible quantity units.</p><div><Link href="/shipping">Shipping information</Link><Link href="/returns">Returns & exchange policy</Link></div></div>
       </section>
+    </div>
+    <div className="mobile-sticky-purchase" aria-label="Quick purchase">
+      <div className="mobile-sticky-price"><small>{stock > 0 ? (stock < 5 ? "LIMITED STOCK" : "READY TO ORDER") : "OUT OF STOCK"}</small><b>{money(Number(product.price))}</b></div>
+      <div className="mobile-sticky-actions">
+        <button type="button" className="mobile-sticky-add" disabled={stock <= 0} onClick={() => {
+          if (missingOptions) {
+            setSizeError("Please choose the available size and colour options above.");
+            document.querySelector(".detail-size-selector")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          } else if (inBagQty > 0) openBag();
+          else addToBag();
+        }}>{missingOptions ? "Choose options" : inBagQty > 0 ? "View bag" : "Add to bag"}</button>
+        <button type="button" className="mobile-sticky-order" disabled={stock <= 0} onClick={() => {
+          if (missingOptions) {
+            setSizeError("Please choose the available size and colour options above.");
+            document.querySelector(".detail-size-selector")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          } else orderNow();
+        }}>{missingOptions ? "Select options" : "Order now"}</button>
+      </div>
     </div>
     {imageZoomOpen && selectedImage && <div className="detail-image-lightbox" role="dialog" aria-modal="true" aria-label="Product image preview" onClick={() => setImageZoomOpen(false)}><button type="button" aria-label="Close image preview" onClick={() => setImageZoomOpen(false)}><X size={22} /></button><img src={selectedImage} alt={product.name + " enlarged"} onClick={event => event.stopPropagation()} /></div>}
   </main>;
