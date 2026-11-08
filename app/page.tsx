@@ -52,17 +52,16 @@ export default function Home() {
       return;
     }
 
-    // Categories are helpful for labels and filters, but must not block products.
-    const categoryRequest = supabase
-      .from("categories")
-      .select("id,name,slug")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-    void Promise.resolve(categoryRequest).then(({ data, error }) => {
-      if (!cancelled && !error && data?.length) {
-        setCategories(["All", ...data.map((item: any) => item.name)]);
-      }
-    }).catch(() => undefined);
+    // Resolve the category lookup once and reuse the same promise below.
+    // A timeout fallback here previously labelled every product as "All",
+    // which made category and combined filters return an empty catalogue.
+    const categoryPromise = Promise.resolve(
+      supabase
+        .from("categories")
+        .select("id,name,slug")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+    );
 
     async function loadProducts() {
       try {
@@ -81,20 +80,21 @@ export default function Home() {
           return;
         }
 
-        // Give the independent category request a brief chance to finish;
-        // product rendering itself never waits indefinitely for categories.
-        const categoryResult = await Promise.race([
-          categoryRequest,
-          new Promise<{ data: null; error: null }>(resolve => window.setTimeout(() => resolve({ data: null, error: null }), 700))
-        ]);
-        const categoryById = new Map((categoryResult.data || []).map((item: any) => [item.id, item.name]));
+        // Keep product-category mapping deterministic. Never use "All" as a
+        // product category: it is a filter sentinel, not a real category.
+        const categoryResult = await categoryPromise;
         if (cancelled) return;
+        if (categoryResult.error) {
+          console.warn("Unable to load product categories:", categoryResult.error);
+        }
+        const categoryRows = categoryResult.data || [];
+        const categoryById = new Map(categoryRows.map((item: any) => [item.id, item.name]));
         const mapped: Product[] = data.map((row: any) => ({
           id: row.id,
           slug: row.slug,
           name: row.name,
           description: typeof row.description === "string" ? row.description : "",
-          category: categoryById.get(row.category_id) || "All",
+          category: categoryById.get(row.category_id) || "Uncategorised",
           price: Number(row.price),
           oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
           image: typeof row.image_url === "string" ? row.image_url : "",
@@ -104,6 +104,12 @@ export default function Home() {
           sizeOptions: Array.isArray(row.size_options) ? row.size_options.filter((size: unknown): size is string => typeof size === "string" && !!size.trim()) : [],
           colorOptions: Array.isArray(row.color_options) ? row.color_options.filter((color: unknown): color is string => typeof color === "string" && !!color.trim()) : []
         }));
+        const categoriesWithProducts = new Set(mapped.map(product => product.category));
+        const orderedCategories = categoryRows
+          .map((item: any) => item.name)
+          .filter((name: string) => categoriesWithProducts.has(name));
+        if (categoriesWithProducts.has("Uncategorised")) orderedCategories.push("Uncategorised");
+        setCategories(["All", ...orderedCategories]);
         setProducts(mapped);
         setCatalogReady(true);
       } catch (error) {
