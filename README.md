@@ -22,7 +22,7 @@ A premium minimalist shopping storefront for Bangladesh, built with Next.js and 
 - Manual fulfilment mapping for own stock, ShopBase BD and DropshippingBD. Supplier orders and stock are not automatically synced.
 - Selected-product free shipping: at least 3 quantity units from products explicitly marked eligible qualify.
 - Customer Help & FAQs page for ordering, COD, selected-product free shipping, delivery charges, order tracking and browser-saved items.
-- Store icon, installable web app manifest, sitemap, robots.txt, canonical product URLs, Open Graph metadata and structured data for the store and product pages.
+- Store icon, web app manifest, sitemap, robots.txt, canonical product URLs, Open Graph metadata and structured data for the store and product pages.
 
 ## Important implementation notes
 
