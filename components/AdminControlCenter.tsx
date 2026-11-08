@@ -31,6 +31,7 @@ type Order = {
   shipping_address: Record<string, string>;
   subtotal: number;
   delivery_charge: number;
+  discount: number;
   total: number;
   payment_method: string;
   payment_status: string;
@@ -130,7 +131,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     setLoading(true);
     setError("");
     const [orderResult, productResult, supplierResult, expenseResult, activityResult] = await Promise.all([
-      supabase.from("orders").select("id,order_number,customer_name,customer_phone,customer_email,shipping_address,subtotal,delivery_charge,total,payment_method,payment_status,order_status,created_at,updated_at,courier_partner,courier_tracking_number,courier_status_note,handed_over_at,delivered_at,order_items(id,product_id,product_name,unit_price,quantity,line_total,fulfillment_source,supplier_id,supplier_cost_snapshot,supplier_order_reference,supplier_fulfillment_status)").order("created_at", { ascending: false }).limit(500),
+      supabase.from("orders").select("id,order_number,customer_name,customer_phone,customer_email,shipping_address,subtotal,delivery_charge,discount,total,payment_method,payment_status,order_status,created_at,updated_at,courier_partner,courier_tracking_number,courier_status_note,handed_over_at,delivered_at,order_items(id,product_id,product_name,unit_price,quantity,line_total,fulfillment_source,supplier_id,supplier_cost_snapshot,supplier_order_reference,supplier_fulfillment_status)").order("created_at", { ascending: false }).limit(500),
       supabase.from("products").select("id,name,sku,price,stock_quantity,supplier_cost_price,supplier_id,fulfillment_source,is_active").order("name", { ascending: true }).limit(1000),
       supabase.from("suppliers").select("id,name,platform_code,contact_person,phone,email,website_url,notes,is_active").order("name", { ascending: true }),
       supabase.from("operating_expenses").select("id,category,description,amount,incurred_on,supplier_id,payment_method,reference,notes,supplier:suppliers(name)").order("incurred_on", { ascending: false }).limit(500),
@@ -192,7 +193,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     let knownLines = 0;
     let missingLines = 0;
     for (const order of deliveredOrders) {
-      revenue += Number(order.subtotal || 0);
+      revenue += Math.max(0, Number(order.subtotal || 0) - Number(order.discount || 0));
       for (const item of order.order_items || []) {
         const currentCost = item.product_id ? productById.get(item.product_id)?.supplier_cost_price : null;
         const snapshot = item.supplier_cost_snapshot;
@@ -276,7 +277,8 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     }).eq("id", product.id);
     if (updateError) setError(updateError.message);
     else {
-      await log("inventory_updated", "product", product.id, "Updated inventory and supplier cost for " + product.name, { stock_quantity: stock, supplier_cost_price: cost });
+      setInventoryDrafts(current => ({ ...current, [product.id]: { stock: String(stock), cost: cost == null ? "" : String(cost), supplier: draft.supplier || "" } }));
+      await log("inventory_updated", "product", product.id, "Updated inventory and unit cost for " + product.name, { stock_quantity: stock, supplier_cost_price: cost });
       setNotice("Inventory saved for " + product.name + ".");
       await refresh();
     }
@@ -386,7 +388,11 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     if (!supabase || selectedOrderIds.length === 0) return;
     if (!window.confirm("Update " + selectedOrderIds.length + " selected order(s) to " + bulkStatus.toUpperCase() + "?")) return;
     setSaving(true); setError(""); setNotice("");
-    const { error: updateError } = await supabase.from("orders").update({ order_status: bulkStatus, updated_at: new Date().toISOString() }).in("id", selectedOrderIds);
+    const now = new Date().toISOString();
+    const bulkPayload: Record<string, unknown> = { order_status: bulkStatus, updated_at: now };
+    if (bulkStatus === "shipped") bulkPayload.handed_over_at = now;
+    if (bulkStatus === "delivered") bulkPayload.delivered_at = now;
+    const { error: updateError } = await supabase.from("orders").update(bulkPayload).in("id", selectedOrderIds);
     if (updateError) setError(updateError.message);
     else {
       await log("orders_bulk_status_updated", "order", null, "Bulk-updated " + selectedOrderIds.length + " orders to " + bulkStatus, { order_ids: selectedOrderIds });
@@ -413,11 +419,11 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
   };
 
   const exportOrders = () => {
-    const headers = ["Order Number", "Created At", "Customer", "Phone", "Email", "District", "Area", "Address", "Subtotal", "Delivery", "Total", "Payment", "Payment Status", "Order Status", "Courier", "Tracking"];
+    const headers = ["Order Number", "Created At", "Customer", "Phone", "Email", "District", "Area", "Address", "Subtotal", "Discount", "Delivery", "Total", "Payment", "Payment Status", "Order Status", "Courier", "Tracking"];
     const rows = filteredOrders.map(order => [
       order.order_number, order.created_at, order.customer_name, order.customer_phone, order.customer_email,
       order.shipping_address?.district, order.shipping_address?.area, order.shipping_address?.address_line,
-      order.subtotal, order.delivery_charge, order.total, order.payment_method, order.payment_status,
+      order.subtotal, order.discount, order.delivery_charge, order.total, order.payment_method, order.payment_status,
       order.order_status, order.courier_partner, order.courier_tracking_number
     ]);
     downloadCsv("his-her-mart-orders.csv", [headers, ...rows]);
@@ -445,7 +451,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     const invoiceWindow = window.open("", "_blank", "width=850,height=900");
     if (!invoiceWindow) { setError("Allow pop-ups to print the invoice."); return; }
     const itemRows = (order.order_items || []).map(item => "<tr><td>" + escapeHtml(item.product_name) + "</td><td>" + Number(item.quantity) + "</td><td>" + money(Number(item.unit_price)) + "</td><td>" + money(Number(item.line_total)) + "</td></tr>").join("");
-    invoiceWindow.document.write("<!doctype html><html><head><title>Invoice " + escapeHtml(order.order_number) + "</title><meta name='viewport' content='width=device-width,initial-scale=1'><style>body{font:14px Arial,sans-serif;color:#222;margin:40px}header{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:18px}h1{font-family:Georgia,serif;font-size:30px}table{width:100%;border-collapse:collapse;margin-top:30px}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.total{margin:25px 0 0 auto;width:260px}.total p{display:flex;justify-content:space-between}@media print{button{display:none}}</style></head><body><header><div><h1>HIS &amp; HERS MART</h1><p>Order invoice / Cash on Delivery</p></div><div><b>" + escapeHtml(order.order_number) + "</b><p>" + escapeHtml(fullDate(order.created_at)) + "</p></div></header><h3>Customer</h3><p>" + escapeHtml(order.customer_name) + "<br>" + escapeHtml(order.customer_phone) + "<br>" + escapeHtml(order.shipping_address?.address_line) + ", " + escapeHtml(order.shipping_address?.area) + ", " + escapeHtml(order.shipping_address?.district) + "</p><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr></thead><tbody>" + itemRows + "</tbody></table><div class='total'><p><span>Subtotal</span><b>" + money(Number(order.subtotal)) + "</b></p><p><span>Delivery</span><b>" + money(Number(order.delivery_charge)) + "</b></p><p><span>Total</span><b>" + money(Number(order.total)) + "</b></p></div><script>window.onload=()=>window.print()</script></body></html>");
+    invoiceWindow.document.write("<!doctype html><html><head><title>Invoice " + escapeHtml(order.order_number) + "</title><meta name='viewport' content='width=device-width,initial-scale=1'><style>body{font:14px Arial,sans-serif;color:#222;margin:40px}header{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:18px}h1{font-family:Georgia,serif;font-size:30px}table{width:100%;border-collapse:collapse;margin-top:30px}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.total{margin:25px 0 0 auto;width:260px}.total p{display:flex;justify-content:space-between}@media print{button{display:none}}</style></head><body><header><div><h1>HIS &amp; HERS MART</h1><p>Order invoice / Cash on Delivery</p></div><div><b>" + escapeHtml(order.order_number) + "</b><p>" + escapeHtml(fullDate(order.created_at)) + "</p></div></header><h3>Customer</h3><p>" + escapeHtml(order.customer_name) + "<br>" + escapeHtml(order.customer_phone) + "<br>" + escapeHtml(order.shipping_address?.address_line) + ", " + escapeHtml(order.shipping_address?.area) + ", " + escapeHtml(order.shipping_address?.district) + "</p><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr></thead><tbody>" + itemRows + "</tbody></table><div class='total'><p><span>Subtotal</span><b>" + money(Number(order.subtotal)) + "</b></p><p><span>Discount</span><b>− " + money(Number(order.discount || 0)) + "</b></p><p><span>Delivery</span><b>" + money(Number(order.delivery_charge)) + "</b></p><p><span>Total</span><b>" + money(Number(order.total)) + "</b></p></div><script>window.onload=()=>window.print()</script></body></html>");
     invoiceWindow.document.close();
   };
 
