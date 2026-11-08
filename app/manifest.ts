@@ -13,8 +13,8 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#F7F4EE",
     categories: ["shopping", "lifestyle"],
     icons: [
-      { src: "/app-icons/hhm-pwa-192-v2.jpg", sizes: "192x192", type: "image/jpeg", purpose: "any" },
-      { src: "/app-icons/hhm-pwa-512-v2.jpg", sizes: "512x512", type: "image/jpeg", purpose: "any" }
+      { src: "/app-icons/app-icon-v3.svg", sizes: "192x192", type: "image/svg+xml", purpose: "any" },
+      { src: "/app-icons/app-icon-v3.svg", sizes: "512x512", type: "image/svg+xml", purpose: "any" }
     ]
   };
 }
