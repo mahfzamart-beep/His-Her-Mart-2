@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#20231F" };
 export const metadata: Metadata = {
  metadataBase: new URL("https://his-and-her-mart.vercel.app"),
  title: { default: "His & Hers Mart | Modern Shopping · For Him & Her", template: "%s | His & Hers Mart" },
