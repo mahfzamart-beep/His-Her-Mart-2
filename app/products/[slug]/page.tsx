@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       robots: { index: false, follow: true },
     };
   }
-  const title = `${product.name} | His & Hers Mart`;
+  const title = product.name;
   const description = (product.description || `Shop ${product.name} at His & Hers Mart, Bangladesh. Discover thoughtfully selected everyday essentials.`).slice(0, 160);
   const image = product.image_url && /^https?:\/\//i.test(product.image_url) ? product.image_url : undefined;
   return {
