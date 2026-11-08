@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Heart, ShoppingBag, Plus, Minus, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Heart, ShoppingBag, Plus, Minus, Check, Share2, ZoomIn, X, Truck } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
 import { getColorHex } from "../../../lib/color-options";
 
@@ -46,6 +46,8 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState("");
   const [sizeError, setSizeError] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
+  const [imageZoomOpen, setImageZoomOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -58,6 +60,11 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
       if (!error && data) {
         const item = data as unknown as Product;
         setProduct(item);
+        try {
+          const previous = JSON.parse(localStorage.getItem("hhm-recently-viewed-v1") || "[]");
+          const ids = Array.isArray(previous) ? previous.filter((id): id is string => typeof id === "string" && id !== item.id) : [];
+          localStorage.setItem("hhm-recently-viewed-v1", JSON.stringify([item.id, ...ids].slice(0, 8)));
+        } catch { /* Browsing history is optional when browser storage is unavailable. */ }
         const gallery = Array.from(new Set([item.image_url, ...(Array.isArray(item.images) ? item.images : [])].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)))).slice(0, 12);
         setSelectedImage(gallery[0] || "");
       }
@@ -113,6 +120,16 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
     setAdded(true);
   }
 
+  async function shareProduct() {
+    if (!product) return;
+    const url = window.location.href;
+    try {
+      if (navigator.share) { await navigator.share({ title: product.name + " | His & Hers Mart", text: "Take a look at this product from His & Hers Mart.", url }); setShareMessage("Ready to share."); }
+      else if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(url); setShareMessage("Product link copied."); }
+      else { setShareMessage("Copy this page address to share the product."); }
+    } catch (error) { if (!(error instanceof DOMException && error.name === "AbortError")) setShareMessage("Sharing is unavailable right now."); }
+  }
+
   function openBag() { window.location.assign("/?openBag=1"); }
 
   function orderNow() {
@@ -148,10 +165,10 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
   const gallery = Array.from(new Set([product.image_url, ...(Array.isArray(product.images) ? product.images : [])].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)))).slice(0, 12);
   const sizeRequired = requiredSizes.length > 0;
   return <main className="detail-shell">
-    <header className="detail-top"><Link href="/" className="detail-back"><ArrowLeft size={16} /> Back to store</Link><Link href="/wishlist" className="detail-wishlist"><Heart size={17} /> Wishlist</Link></header>
+    <header className="detail-top"><Link href="/" className="detail-back"><ArrowLeft size={16} /> Back to store</Link><div className="detail-top-actions"><button type="button" className="detail-share" onClick={shareProduct}><Share2 size={16} /> Share</button><Link href="/wishlist" className="detail-wishlist"><Heart size={17} /> Wishlist</Link></div></header>
     <div className="detail-grid">
       <div className="detail-gallery">
-        <div className="detail-image">{selectedImage ? <img src={selectedImage} alt={product.name} /> : <div className="detail-image-placeholder">Image coming soon</div>}{product.free_shipping_eligible && <span>SELECTED FREE SHIPPING</span>}</div>
+        <div className="detail-image">{selectedImage ? <><img src={selectedImage} alt={product.name} /><button type="button" className="detail-zoom-trigger" onClick={() => setImageZoomOpen(true)} aria-label="Zoom product image"><ZoomIn size={18} /></button></> : <div className="detail-image-placeholder">Image coming soon</div>}{product.free_shipping_eligible && <span>SELECTED FREE SHIPPING</span>}</div>
         {gallery.length > 1 && <div className="detail-thumbnails" aria-label="More product images">{gallery.map((url, index) => <button type="button" key={url} className={selectedImage === url ? "detail-thumb active" : "detail-thumb"} onClick={() => setSelectedImage(url)} aria-label={`Show product image ${index + 1}`}><img src={url} alt={`${product.name} view ${index + 1}`} /></button>)}</div>}
       </div>
       <section className="detail-copy">
@@ -172,8 +189,11 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
         {sizeError && <p className="detail-size-error" role="alert">{sizeError}</p>}
         <div className="detail-actions"><button className="primary-btn" onClick={inBagQty > 0 ? openBag : addToBag} disabled={stock <= 0 || (sizeRequired && !selectedSize) || (requiredColors.length > 0 && !selectedColor)}>{inBagQty > 0 ? "View in bag (" + inBagQty + ")" : "Add to bag"} {inBagQty > 0 ? <ShoppingBag size={16} /> : <Plus size={16} />}</button><button className="order-now-btn" onClick={orderNow} disabled={stock <= 0 || (sizeRequired && !selectedSize) || (requiredColors.length > 0 && !selectedColor)}>Order now <ArrowRight size={16} /></button><button className={saved ? "detail-save saved" : "detail-save"} onClick={toggleSaved}><Heart size={17} fill={saved ? "currentColor" : "none"} />{saved ? "Saved" : "Save item"}</button></div>
         {added && <p className="detail-added"><Check size={15} /> Added to your bag. <Link href="/?openBag=1">View your bag</Link></p>}
+        {shareMessage && <p className="detail-share-message" role="status">{shareMessage}</p>}
         <div className="detail-assurance"><div><b>Cash on Delivery</b><small>Pay when your parcel arrives</small></div><div><b>Order tracking</b><small>Track your order online</small></div><div><b>Need help?</b><small><Link href="/faq">Read our FAQs</Link></small></div></div>
+        <div className="detail-delivery-card"><div className="detail-delivery-title"><Truck size={18} /><span><b>Delivery across Bangladesh</b><small>Inside Dhaka ৳80 · Outside Dhaka ৳150</small></span></div><p>Selected eligible products qualify for free delivery when your order includes at least 3 eligible quantity units.</p><div><Link href="/shipping">Shipping information</Link><Link href="/returns">Returns & exchange policy</Link></div></div>
       </section>
     </div>
+    {imageZoomOpen && selectedImage && <div className="detail-image-lightbox" role="dialog" aria-modal="true" aria-label="Product image preview" onClick={() => setImageZoomOpen(false)}><button type="button" aria-label="Close image preview" onClick={() => setImageZoomOpen(false)}><X size={22} /></button><img src={selectedImage} alt={product.name + " enlarged"} onClick={event => event.stopPropagation()} /></div>}
   </main>;
 }

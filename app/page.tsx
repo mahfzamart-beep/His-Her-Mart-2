@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { FormEvent } from "react";
 import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
-import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck } from "lucide-react";
+import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck, Clock } from "lucide-react";
 
 type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number; sizeOptions?: string[]; colorOptions?: string[] };
 type CartLine = { key: string; productId: string; size: string | null; color: string | null; quantity: number; product: Product };
@@ -42,6 +42,7 @@ export default function Home() {
   const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("recommended");
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [recentViewedIds, setRecentViewedIds] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,6 +125,13 @@ export default function Home() {
 
   useEffect(() => {
     try {
+      const saved = JSON.parse(localStorage.getItem("hhm-recently-viewed-v1") || "[]");
+      setRecentViewedIds(Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string").slice(0, 8) : []);
+    } catch { setRecentViewedIds([]); }
+  }, []);
+
+  useEffect(() => {
+    try {
       const savedCart = localStorage.getItem("hhm-cart-v1");
       const savedWishlist = localStorage.getItem("hhm-wishlist-v1");
       if (savedCart) setCart(JSON.parse(savedCart));
@@ -183,6 +191,9 @@ export default function Home() {
     if (sortBy === "recommended") filtered.sort((a, b) => Number(Boolean(b.tag)) - Number(Boolean(a.tag)));
     return filtered;
   }, [products, category, query, sortBy, inStockOnly]);
+
+  const recentViewedProducts = useMemo(() => recentViewedIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).filter(product => product.stockQuantity !== undefined).slice(0, 6), [recentViewedIds, products]);
+  const clearRecentlyViewed = () => { setRecentViewedIds([]); localStorage.removeItem("hhm-recently-viewed-v1"); };
 
   const browseCategory = (nextCategory: string) => {
     setCategory(nextCategory);
@@ -416,6 +427,11 @@ export default function Home() {
         <div className="service-item"><span className="service-icon"><Truck size={19} /></span><span><b>Delivery across Bangladesh</b><small>৳80 in Dhaka · ৳150 outside</small></span></div>
         <a className="service-item service-help" href="https://wa.me/8801969419302" target="_blank" rel="noreferrer"><span className="service-icon"><MessageCircle size={19} /></span><span><b>Here to help</b><small>Chat with us on WhatsApp</small></span><ArrowRight size={15} /></a>
       </section>
+
+      {recentViewedProducts.length > 0 && <section className="recently-viewed-section" aria-labelledby="recently-viewed-title">
+        <div className="recently-viewed-heading"><div><p className="eyebrow"><Clock size={13} /> YOUR BROWSING HISTORY</p><h2 id="recently-viewed-title">Recently <em>viewed.</em></h2></div><button type="button" onClick={clearRecentlyViewed}>Clear history</button></div>
+        <div className="recently-viewed-grid">{recentViewedProducts.map(product => <Link className="recently-viewed-card" href={"/products/" + product.slug} key={product.id}><span className="recently-viewed-image">{product.image ? <img src={product.image} alt={product.name} loading="lazy" /> : <span>No image</span>}</span><span className="recently-viewed-meta"><small>{product.category}</small><b>{product.name}</b><strong>{money(product.price)}</strong></span></Link>)}</div>
+      </section>}
 
       <section className="shop-section" id="shop">
         <div className="section-heading">
