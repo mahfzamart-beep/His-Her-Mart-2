@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, HelpCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Help & FAQs",
-  description: "Helpful answers about ordering, Cash on Delivery, delivery charges, order tracking, cart and wishlist at His & Hers Mart.",
+  description: "Answers about ordering, COD, delivery, order tracking, product comparisons, quick view, cart and wishlist at His & Hers Mart.",
   alternates: { canonical: "https://his-and-her-mart.vercel.app/faq" },
   openGraph: {
     title: "Help & FAQs | His & Hers Mart",
@@ -55,6 +55,21 @@ const faqs = [
     answer: "Open the Track Order page and enter the order number and the same Bangladesh mobile number used at checkout. The page displays the current order and payment status without showing your full delivery address.",
     link: "/track-order",
     linkLabel: "Track an order",
+  },
+  {
+    category: "Product discovery",
+    question: "Can I preview or compare products before ordering?",
+    answer: "Use Quick View on a product card for a fast look at its price, description and stock. You can add up to three products to Compare and see their prices, category, availability and available options side by side.",
+  },
+  {
+    category: "Saved items",
+    question: "Can I save an item from my shopping bag for later?",
+    answer: "Choose Save for later under an item in your bag. It will move to your wishlist so you can find it again while browsing. Wishlist and comparison selections stay in the current browser on your device.",
+  },
+  {
+    category: "Product questions",
+    question: "How can I ask about a specific product?",
+    answer: "Open the product details page and choose Ask about this product on WhatsApp. The message includes the product name and its store link so our team can understand which item you mean.",
   },
   {
     category: "Saved items",
