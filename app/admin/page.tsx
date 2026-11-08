@@ -264,10 +264,10 @@ export default function AdminPage() {
     }
 
     const historyWarning = (count || 0) > 0
-      ? `\\n\\nThis product is linked to ${count} saved order item(s). Their saved product name, SKU, price and quantity will remain in order history.`
+      ? `\n\nThis product is linked to ${count} saved order item(s). Their saved product name, SKU, price and quantity will remain in order history.`
       : "";
     const confirmed = window.confirm(
-      `Permanently delete "${product.name}" from the catalogue?${historyWarning}\\n\\nWishlist entries for this product will also be removed. This action cannot be undone.`
+      `Permanently delete "${product.name}" from the catalogue?${historyWarning}\n\nWishlist entries for this product will also be removed. This action cannot be undone.`
     );
 
     if (!confirmed) {
@@ -382,11 +382,11 @@ export default function AdminPage() {
       order.order_status,
     ]);
     const cell = (value: unknown) => {
-      let text = value == null ? "" : String(value).replace(/[\\r\\n]+/g, " ");
+      let text = value == null ? "" : String(value).replace(/[\\r\n]+/g, " ");
       if (/^\\s*[=+@-]/.test(text)) text = "'" + text;
       return '"' + text.replace(/"/g, '""') + '"';
     };
-    const csv = [headers, ...rows].map(row => row.map(cell).join(",")).join("\\r\\n");
+    const csv = [headers, ...rows].map(row => row.map(cell).join(",")).join("\\r\n");
     const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -474,7 +474,8 @@ export default function AdminPage() {
       </section>
       <section className="admin-orders-card admin-products-card">
         <div className="admin-orders-toolbar"><div><h2>Product management</h2><p>Add products, update prices and stock, or hide products without deleting order history.</p></div><button className="admin-product-add" onClick={openNewProduct}>+ Add product</button></div>
-        {productNotice && <p className="admin-product-success" role="status">{productNotice}</p>}\n        <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><div className="admin-product-row-actions"><button className="admin-product-edit" disabled={!!productBusy} onClick={()=>openEditProduct(product)}>Edit</button><button className="admin-product-delete" disabled={!!productBusy} onClick={()=>void deleteProduct(product)} title={`Delete ${product.name}`}><Trash2 size={13}/>{productBusy === product.id ? "Deleting…" : "Delete"}</button></div></article>)}</div>
+        {productNotice && <p className="admin-product-success" role="status">{productNotice}</p>}
+        <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><div className="admin-product-row-actions"><button className="admin-product-edit" disabled={!!productBusy} onClick={()=>openEditProduct(product)}>Edit</button><button className="admin-product-delete" disabled={!!productBusy} onClick={()=>void deleteProduct(product)} title={`Delete ${product.name}`}><Trash2 size={13}/>{productBusy === product.id ? "Deleting…" : "Delete"}</button></div></article>)}</div>
         <AdminProductImport categories={categories} onImported={refresh} />
       </section>
       <section className="admin-orders-card admin-products-card">
