@@ -1584,3 +1584,12 @@ footer p{color:var(--champagne)}
 .success-track-link{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--line);color:var(--ink);font-size:10px;font-weight:700;text-decoration:none}
 .success-actions .success-close{margin:0;min-width:0}
 @media(max-width:420px){.success-actions{grid-template-columns:1fr}.product-whatsapp-help{font-size:9px}}
+
+.wishlist-card-purchase{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px}
+.wishlist-card-purchase button{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:36px;padding:8px 6px;border:0;background:var(--ink);color:#fff;font-size:9px;font-weight:800;cursor:pointer}
+.wishlist-card-purchase button+button{background:var(--tan)}
+.wishlist-card-purchase button:disabled{opacity:.45;cursor:not-allowed}
+.wishlist-stock-in{color:#627c55!important;font-weight:700}
+.wishlist-stock-out{color:#a14f42!important;font-weight:700}
+.wishlist-notice{max-width:1040px;margin:0 auto 16px;padding:10px 13px;background:#F1EDE5;color:var(--ink);font-size:10px}
+@media(max-width:480px){.wishlist-card-purchase{grid-template-columns:1fr;gap:6px}.wishlist-card-purchase button{min-height:34px}}
