@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft, Boxes, CheckCircle2, ClipboardList, LogOut, PackageCheck, RefreshCw, Search, ShieldAlert, Truck } from "lucide-react";
 import AdminProductImport from "../../components/AdminProductImport";
+import AdminControlCenter from "../../components/AdminControlCenter";
 import { COLOR_OPTIONS } from "../../lib/color-options";
 
 type OrderItem = { id: string; product_id: string | null; product_name: string; product_sku: string | null; unit_price: number; quantity: number; line_total: number; selected_size: string | null; selected_color: string | null; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null };
@@ -403,6 +404,7 @@ export default function AdminPage() {
       <div className="admin-top-actions"><span>{session.user.email}</span><button onClick={refresh} aria-label="Refresh orders"><RefreshCw size={16}/></button><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </header>
     <div className="admin-content">
+      <AdminControlCenter actorId={session.user.id} />
       <div className="admin-heading"><div><p className="eyebrow">STORE MANAGEMENT</p><h1>Order dashboard</h1><p>Review incoming orders and update their fulfilment status.</p></div><button className="admin-refresh" onClick={refresh}><RefreshCw size={15}/> Refresh</button></div>
       {error && <div className="admin-alert"><ShieldAlert size={17}/>{error}</div>}
       <section className="admin-stats">
