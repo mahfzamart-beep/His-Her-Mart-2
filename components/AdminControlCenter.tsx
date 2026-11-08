@@ -124,7 +124,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
   const [inventoryDrafts, setInventoryDrafts] = useState<Record<string, { stock: string; cost: string; supplier: string }>>({});
   const [supplierDraft, setSupplierDraft] = useState({ name: "", platform_code: "", contact_person: "", phone: "", email: "", website_url: "", notes: "" });
   const [expenseDraft, setExpenseDraft] = useState({ category: "operations", description: "", amount: "", incurred_on: new Date().toISOString().slice(0, 10), supplier_id: "", payment_method: "cash", reference: "", notes: "" });
-  const [courierDraft, setCourierDraft] = useState({ courier_partner: "", courier_tracking_number: "", courier_status_note: "", order_status: "pending" });
+  const [courierDraft, setCourierDraft] = useState({ courier_partner: "", courier_tracking_number: "", courier_status_note: "", order_status: "pending", payment_status: "pending" });
 
   const refresh = useCallback(async () => {
     if (!supabase) { setError("Supabase is not configured."); setLoading(false); return; }
@@ -356,7 +356,8 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       courier_partner: order.courier_partner || "",
       courier_tracking_number: order.courier_tracking_number || "",
       courier_status_note: order.courier_status_note || "",
-      order_status: order.order_status
+      order_status: order.order_status,
+      payment_status: order.payment_status
     });
   };
 
@@ -370,6 +371,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       courier_tracking_number: courierDraft.courier_tracking_number.trim() || null,
       courier_status_note: courierDraft.courier_status_note.trim() || null,
       order_status: courierDraft.order_status,
+      payment_status: courierDraft.payment_status,
       updated_at: now
     };
     if (courierDraft.order_status === "shipped" && !order.handed_over_at) payload.handed_over_at = now;
@@ -377,8 +379,8 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     const { error: updateError } = await supabase.from("orders").update(payload).eq("id", order.id);
     if (updateError) setError(updateError.message);
     else {
-      await log("order_fulfilment_updated", "order", order.id, "Updated delivery details for " + order.order_number, { courier_partner: payload.courier_partner, courier_tracking_number: payload.courier_tracking_number, order_status: payload.order_status });
-      setNotice("Delivery and order status saved.");
+      await log("order_fulfilment_updated", "order", order.id, "Updated order, payment and delivery details for " + order.order_number, { courier_partner: payload.courier_partner, courier_tracking_number: payload.courier_tracking_number, order_status: payload.order_status, payment_status: payload.payment_status });
+      setNotice("Order, payment and delivery details saved.");
       await refresh();
     }
     setSaving(false);
@@ -389,13 +391,19 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     if (!window.confirm("Update " + selectedOrderIds.length + " selected order(s) to " + bulkStatus.toUpperCase() + "?")) return;
     setSaving(true); setError(""); setNotice("");
     const now = new Date().toISOString();
-    const bulkPayload: Record<string, unknown> = { order_status: bulkStatus, updated_at: now };
-    if (bulkStatus === "shipped") bulkPayload.handed_over_at = now;
-    if (bulkStatus === "delivered") bulkPayload.delivered_at = now;
-    const { error: updateError } = await supabase.from("orders").update(bulkPayload).in("id", selectedOrderIds);
-    if (updateError) setError(updateError.message);
-    else {
-      await log("orders_bulk_status_updated", "order", null, "Bulk-updated " + selectedOrderIds.length + " orders to " + bulkStatus, { order_ids: selectedOrderIds });
+    const selectedOrders = orders.filter(order => selectedOrderIds.includes(order.id));
+    const results = await Promise.all(selectedOrders.map(order => {
+      const payload: Record<string, unknown> = { order_status: bulkStatus, updated_at: now };
+      if (bulkStatus === "shipped" && !order.handed_over_at) payload.handed_over_at = now;
+      if (bulkStatus === "delivered" && !order.delivered_at) payload.delivered_at = now;
+      return supabase.from("orders").update(payload).eq("id", order.id);
+    }));
+    const failures = results.filter(result => result.error);
+    if (failures.length) {
+      setError(`${failures.length} of ${selectedOrders.length} selected order(s) could not be updated. Refresh and verify each order before retrying.`);
+      await refresh();
+    } else {
+      await log("orders_bulk_status_updated", "order", null, "Bulk-updated " + selectedOrders.length + " orders to " + bulkStatus, { order_ids: selectedOrderIds });
       setNotice("Selected orders updated.");
       setSelectedOrderIds([]);
       await refresh();
@@ -541,9 +549,9 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
         <div className="admin-control-search"><Search size={16}/><input value={orderSearch} onChange={event => setOrderSearch(event.target.value)} placeholder="Search order number, customer or phone"/></div>
         <div className="admin-control-bulk"><label><input type="checkbox" checked={filteredOrders.length > 0 && filteredOrders.every(order => selectedOrderIds.includes(order.id))} onChange={event => setSelectedOrderIds(event.target.checked ? Array.from(new Set([...selectedOrderIds, ...filteredOrders.map(order => order.id)])) : selectedOrderIds.filter(id => !filteredOrders.some(order => order.id === id)))}/> Select visible orders</label><select value={bulkStatus} onChange={event => setBulkStatus(event.target.value)}>{ORDER_STATUSES.map(status => <option key={status} value={status}>{status.toUpperCase()}</option>)}</select><button type="button" onClick={() => void bulkUpdateOrders()} disabled={!selectedOrderIds.length || saving}>Update {selectedOrderIds.length || ""} selected</button></div>
         <section className="admin-control-card">
-          <div className="admin-control-table-wrap"><table><thead><tr><th></th><th>Order / Customer</th><th>Date</th><th>Amount</th><th>Status</th><th>Delivery</th><th>Actions</th></tr></thead><tbody>
-            {filteredOrders.map(order => <tr key={order.id}><td><input type="checkbox" checked={selectedOrderIds.includes(order.id)} onChange={event => setSelectedOrderIds(current => event.target.checked ? [...current, order.id] : current.filter(id => id !== order.id))}/></td><td><b>{order.order_number}</b><small>{order.customer_name} · {order.customer_phone}</small></td><td>{shortDate(order.created_at)}</td><td>{money(order.total)}</td><td><span className={"admin-control-status " + order.order_status}>{order.order_status}</span></td><td>{order.courier_tracking_number || "Not assigned"}<small>{order.courier_partner || "Manual fulfilment"}</small></td><td><button type="button" className="admin-control-small-btn" onClick={() => selectOrder(order)}>Manage</button></td></tr>)}
-            {filteredOrders.length === 0 && <tr><td colSpan={7}>No matching orders.</td></tr>}
+          <div className="admin-control-table-wrap"><table><thead><tr><th></th><th>Order / Customer</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th><th>Delivery</th><th>Actions</th></tr></thead><tbody>
+            {filteredOrders.map(order => <tr key={order.id}><td><input type="checkbox" checked={selectedOrderIds.includes(order.id)} onChange={event => setSelectedOrderIds(current => event.target.checked ? [...current, order.id] : current.filter(id => id !== order.id))}/></td><td><b>{order.order_number}</b><small>{order.customer_name} · {order.customer_phone}</small></td><td>{shortDate(order.created_at)}</td><td>{money(order.total)}</td><td><span className={"admin-control-status " + order.order_status}>{order.order_status}</span></td><td>{order.payment_status.toUpperCase()}</td><td>{order.courier_tracking_number || "Not assigned"}<small>{order.courier_partner || "Manual fulfilment"}</small></td><td><button type="button" className="admin-control-small-btn" onClick={() => selectOrder(order)}>Manage</button></td></tr>)}
+            {filteredOrders.length === 0 && <tr><td colSpan={8}>No matching orders.</td></tr>}
           </tbody></table></div>
         </section>
         {selectedOrderId && (() => {
@@ -555,9 +563,11 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
               <label>Courier / delivery partner<input value={courierDraft.courier_partner} onChange={event => setCourierDraft(current => ({ ...current, courier_partner: event.target.value }))} placeholder="Supplier courier / courier name"/></label>
               <label>Tracking / consignment number<input value={courierDraft.courier_tracking_number} onChange={event => setCourierDraft(current => ({ ...current, courier_tracking_number: event.target.value }))} placeholder="Tracking reference"/></label>
               <label>Order status<select value={courierDraft.order_status} onChange={event => setCourierDraft(current => ({ ...current, order_status: event.target.value }))}>{ORDER_STATUSES.map(status => <option key={status} value={status}>{status.toUpperCase()}</option>)}</select></label>
+              <label>Payment status<select value={courierDraft.payment_status} onChange={event => setCourierDraft(current => ({ ...current, payment_status: event.target.value }))}><option value="pending">PENDING</option><option value="paid">PAID</option><option value="failed">FAILED</option><option value="refunded">REFUNDED</option></select></label>
               <label className="wide">Delivery / courier note<textarea rows={2} value={courierDraft.courier_status_note} onChange={event => setCourierDraft(current => ({ ...current, courier_status_note: event.target.value }))} placeholder="Manual dispatch or delivery update"/></label>
             </div>
-            <div className="admin-control-order-meta"><span>Subtotal <b>{money(order.subtotal)}</b></span><span>Delivery <b>{money(order.delivery_charge)}</b></span><span>Total <b>{money(order.total)}</b></span><span>Handed over <b>{order.handed_over_at ? fullDate(order.handed_over_at) : "Not recorded"}</b></span><span>Delivered <b>{order.delivered_at ? fullDate(order.delivered_at) : "Not recorded"}</b></span></div>
+            {order.order_status === "delivered" && order.payment_status === "pending" && <p className="admin-control-note"><AlertTriangle size={16}/><span>Delivered order with payment still marked pending. Verify cash / COD collection before changing payment status to PAID.</span></p>}
+             <div className="admin-control-order-meta"><span>Subtotal <b>{money(order.subtotal)}</b></span><span>Delivery <b>{money(order.delivery_charge)}</b></span><span>Total <b>{money(order.total)}</b></span><span>Handed over <b>{order.handed_over_at ? fullDate(order.handed_over_at) : "Not recorded"}</b></span><span>Delivered <b>{order.delivered_at ? fullDate(order.delivered_at) : "Not recorded"}</b></span></div>
             <div className="admin-control-actions"><button type="button" onClick={() => void saveCourier()} disabled={saving}><Check size={15}/> Save fulfilment</button><button type="button" className="secondary" onClick={() => printInvoice(order)}><FileText size={15}/> Print invoice</button></div>
             <p className="admin-control-hint">Courier status is recorded manually. No courier API or live tracking connection is configured.</p>
           </section>;
