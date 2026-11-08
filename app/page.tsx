@@ -188,6 +188,7 @@ export default function Home() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [buyNow, setBuyNow] = useState<{ productId: string; quantity: number; size: string | null; color: string | null } | null>(null);
   const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
+  const [orderCopied, setOrderCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [policyAccepted, setPolicyAccepted] = useState(false);
@@ -210,7 +211,7 @@ export default function Home() {
         (priceFilter === "500to1000" && p.price >= 500 && p.price < 1000) ||
         (priceFilter === "1000to2500" && p.price >= 1000 && p.price < 2500) ||
         (priceFilter === "2500plus" && p.price >= 2500)) &&
-      `${p.name} ${p.category}`.toLowerCase().includes(query.trim().toLowerCase())
+      `${p.name} ${p.category} ${p.description || ""}`.toLowerCase().includes(query.trim().toLowerCase())
     );
     if (sortBy === "newest") filtered.sort((a, b) => products.indexOf(a) - products.indexOf(b));
     if (sortBy === "price-low") filtered.sort((a, b) => a.price - b.price);
@@ -413,6 +414,7 @@ export default function Home() {
       if (!confirmation?.order_number) {
         throw new Error("The order response could not be verified. Please contact the store before trying again.");
       }
+      setOrderCopied(false);
       setOrderResult({
         ...confirmation,
         subtotal: Number(confirmation.subtotal),
@@ -716,6 +718,10 @@ export default function Home() {
           <div className="order-reference">
             <span>YOUR ORDER NUMBER</span>
             <strong>{orderResult.order_number}</strong>
+            <button type="button" className="copy-order-number" onClick={async () => {
+              try { await navigator.clipboard.writeText(orderResult.order_number); setOrderCopied(true); }
+              catch { setOrderCopied(false); }
+            }}>{orderCopied ? "Copied" : "Copy order number"}</button>
             <div><span>Order status</span><b>Awaiting store confirmation</b></div>
             <div><span>Payment</span><b>Cash on Delivery</b></div>
             <div><span>Product subtotal</span><b>{money(orderResult.subtotal)}</b></div>
@@ -724,7 +730,10 @@ export default function Home() {
             <small>{orderResult.free_shipping_applied ? `Free shipping applied to ${orderResult.free_shipping_eligible_quantity} eligible item(s).` : `Delivery charge applied: ${orderResult.delivery_charge === 80 ? "Inside Dhaka ৳80" : "Outside Dhaka ৳150"}.`}</small>
           </div>
           <UnboxingNotice showConsent={false} />
-          <button className="primary-btn success-close" onClick={() => setOrderSuccessOpen(false)}>Continue shopping <ArrowRight size={16} /></button>
+          <div className="success-actions">
+            <Link className="success-track-link" href="/track-order" onClick={() => setOrderSuccessOpen(false)}>Track your order</Link>
+            <button className="primary-btn success-close" onClick={() => setOrderSuccessOpen(false)}>Continue shopping <ArrowRight size={16} /></button>
+          </div>
         </section>
       </div>}
     </main>
