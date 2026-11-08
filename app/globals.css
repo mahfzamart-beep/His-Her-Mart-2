@@ -1573,3 +1573,6 @@ footer p{color:var(--champagne)}
  .mobile-sticky-actions{gap:5px}
  .mobile-sticky-actions button{font-size:8px;padding:8px 4px}
 }
+
+.cart-save-for-later{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;margin-top:1px;padding:4px 0;border:0;background:transparent;color:var(--tan);font-size:9px;font-weight:700;cursor:pointer}
+.cart-save-for-later:hover{text-decoration:underline;text-underline-offset:3px}
