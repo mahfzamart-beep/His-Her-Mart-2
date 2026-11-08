@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
-import { ArrowLeft, Boxes, CheckCircle2, ClipboardList, LogOut, PackageCheck, RefreshCw, Search, ShieldAlert, Truck } from "lucide-react";
+import { ArrowLeft, Boxes, CheckCircle2, ClipboardList, LogOut, PackageCheck, RefreshCw, Search, ShieldAlert, Trash2, Truck } from "lucide-react";
 import AdminProductImport from "../../components/AdminProductImport";
 import AdminControlCenter from "../../components/AdminControlCenter";
 import { COLOR_OPTIONS } from "../../lib/color-options";
@@ -64,6 +64,8 @@ export default function AdminPage() {
   const [productEditorOpen, setProductEditorOpen] = useState(false);
   const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
   const [productBusy, setProductBusy] = useState<string | null>(null);
+  const [adminRefreshKey, setAdminRefreshKey] = useState(0);
+  const [productNotice, setProductNotice] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -244,6 +246,55 @@ export default function AdminPage() {
     setProductBusy(null);
   };
 
+  const deleteProduct = async (product: StoreProduct) => {
+    if (!supabase || !authorized || productBusy) return;
+    setProductBusy(product.id);
+    setError("");
+    setProductNotice("");
+
+    const { count, error: historyError } = await supabase
+      .from("order_items")
+      .select("id", { count: "exact", head: true })
+      .eq("product_id", product.id);
+
+    if (historyError) {
+      setError("Could not verify this product's order history. Nothing was deleted. " + historyError.message);
+      setProductBusy(null);
+      return;
+    }
+
+    const historyWarning = (count || 0) > 0
+      ? `\\n\\nThis product is linked to ${count} saved order item(s). Their saved product name, SKU, price and quantity will remain in order history.`
+      : "";
+    const confirmed = window.confirm(
+      `Permanently delete "${product.name}" from the catalogue?${historyWarning}\\n\\nWishlist entries for this product will also be removed. This action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      setProductBusy(null);
+      return;
+    }
+
+    const { data, error: deleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", product.id)
+      .select("id");
+
+    if (deleteError) {
+      setError("Product could not be deleted. " + deleteError.message);
+    } else if (!data || data.length === 0) {
+      setError("No product was deleted. Please refresh and confirm that your admin account still has permission.");
+    } else {
+      setProducts(current => current.filter(item => item.id !== product.id));
+      if (productForm.id === product.id) setProductEditorOpen(false);
+      setAdminRefreshKey(current => current + 1);
+      setProductNotice(`"${product.name}" was deleted from the catalogue.`);
+    }
+
+    setProductBusy(null);
+  };
+
   const toggleFreeShipping = async (product: StoreProduct, eligible: boolean) => {
     if (!supabase || !authorized) return;
     setProductBusy(product.id); setError("");
@@ -404,7 +455,7 @@ export default function AdminPage() {
       <div className="admin-top-actions"><span>{session.user.email}</span><button onClick={refresh} aria-label="Refresh orders"><RefreshCw size={16}/></button><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </header>
     <div className="admin-content">
-      <AdminControlCenter actorId={session.user.id} />
+      <AdminControlCenter key={adminRefreshKey} actorId={session.user.id} />
       <div className="admin-heading"><div><p className="eyebrow">STORE MANAGEMENT</p><h1>Order dashboard</h1><p>Review incoming orders and update their fulfilment status.</p></div><button className="admin-refresh" onClick={refresh}><RefreshCw size={15}/> Refresh</button></div>
       {error && <div className="admin-alert"><ShieldAlert size={17}/>{error}</div>}
       <section className="admin-stats">
@@ -423,7 +474,7 @@ export default function AdminPage() {
       </section>
       <section className="admin-orders-card admin-products-card">
         <div className="admin-orders-toolbar"><div><h2>Product management</h2><p>Add products, update prices and stock, or hide products without deleting order history.</p></div><button className="admin-product-add" onClick={openNewProduct}>+ Add product</button></div>
-        <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><button className="admin-product-edit" onClick={()=>openEditProduct(product)}>Edit</button></article>)}</div>
+        {productNotice && <p className="admin-product-success" role="status">{productNotice}</p>}\n        <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><div className="admin-product-row-actions"><button className="admin-product-edit" disabled={!!productBusy} onClick={()=>openEditProduct(product)}>Edit</button><button className="admin-product-delete" disabled={!!productBusy} onClick={()=>void deleteProduct(product)} title={`Delete ${product.name}`}><Trash2 size={13}/>{productBusy === product.id ? "Deleting…" : "Delete"}</button></div></article>)}</div>
         <AdminProductImport categories={categories} onImported={refresh} />
       </section>
       <section className="admin-orders-card admin-products-card">
