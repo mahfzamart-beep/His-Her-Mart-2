@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./storefront-upgrade.css";
 import PwaInstallManager from "../components/PwaInstallManager";
 
 export const viewport: Viewport = {
