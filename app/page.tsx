@@ -439,6 +439,21 @@ export default function Home() {
     }
   };
 
+  const categoryShowcase = catalogReady
+    ? categories.filter(name => name !== "All" && name !== "Uncategorised").slice(0, 6).map(name => ({
+        name,
+        count: products.filter(product => product.category === name).length,
+        image: products.find(product => product.category === name && product.image)?.image || ""
+      }))
+    : [];
+  const newestProducts = products.slice(0, 4);
+  const browseBudget = (nextFilter: string) => {
+    setCategory("All");
+    setQuery("");
+    setPriceFilter(nextFilter);
+    document.getElementById("shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -521,6 +536,52 @@ export default function Home() {
         <a className="service-item service-help" href="https://wa.me/8801969419302" target="_blank" rel="noreferrer"><span className="service-icon"><MessageCircle size={19} /></span><span><b>Here to help</b><small>Chat with us on WhatsApp</small></span><ArrowRight size={15} /></a>
       </section>
 
+      {categoryShowcase.length > 0 && <section className="vibe-section" aria-labelledby="vibe-title">
+        <div className="vibe-heading">
+          <div><p className="eyebrow">A GOOD PLACE TO START</p><h2 id="vibe-title">Find your kind of <em>everyday.</em></h2></div>
+          <p>Browse the collections by what you are looking for. No endless scrolling needed.</p>
+        </div>
+        <div className="vibe-grid">
+          {categoryShowcase.map((item, index) => <button type="button" className={"vibe-card vibe-card-" + (index + 1)} key={item.name} onClick={() => browseCategory(item.name)}>
+            <span className="vibe-image">{item.image ? <img src={item.image} alt="" loading="lazy" /> : <span className="vibe-image-placeholder"><Sparkles size={24}/></span>}</span>
+            <span className="vibe-card-copy"><small>EXPLORE COLLECTION</small><b>{item.name}</b><span>{item.count} {item.count === 1 ? "find" : "finds"} to explore <ArrowRight size={15}/></span></span>
+          </button>)}
+        </div>
+      </section>}
+
+      <section className="his-hers-edit" aria-label="Shop for him and her">
+        <div className="his-hers-copy">
+          <p className="eyebrow">TWO SIDES. ONE GOOD PLACE.</p>
+          <h2>His picks. Her picks.<br/><em>Your kind of style.</em></h2>
+          <p>Explore everyday finds, personal style and thoughtful little extras—curated for every side of life.</p>
+          <div className="his-hers-actions">
+            <button type="button" onClick={() => browseCategory("Men's Fashion")}>Shop for him <ArrowRight size={15}/></button>
+            <button type="button" onClick={() => browseCategory("Women's Fashion")}>Shop for her <ArrowRight size={15}/></button>
+          </div>
+        </div>
+        <div className="his-hers-art" aria-hidden="true"><span className="hh-orbit hh-orbit-one"></span><span className="hh-orbit hh-orbit-two"></span><span className="hh-monogram">H<span>&</span>H</span><small>HIS & HERS MART</small></div>
+      </section>
+
+      <section className="budget-section" aria-labelledby="budget-title">
+        <div><p className="eyebrow">GOOD FINDS, YOUR BUDGET</p><h2 id="budget-title">A little something for <em>every budget.</em></h2></div>
+        <div className="budget-chips">
+          <button type="button" onClick={() => browseBudget("under500")}><small>STARTING EASY</small><b>Under ৳500</b><ArrowRight size={15}/></button>
+          <button type="button" onClick={() => browseBudget("500to1000")}><small>EVERYDAY PICKS</small><b>৳500–৳999</b><ArrowRight size={15}/></button>
+          <button type="button" onClick={() => browseBudget("1000to2500")}><small>LEVEL UP</small><b>৳1,000–৳2,499</b><ArrowRight size={15}/></button>
+          <button type="button" onClick={() => browseBudget("2500plus")}><small>SPECIAL FINDS</small><b>৳2,500+</b><ArrowRight size={15}/></button>
+        </div>
+      </section>
+
+      {newestProducts.length > 0 && <section className="new-arrivals-section" aria-labelledby="new-arrivals-title">
+        <div className="new-arrivals-heading"><div><p className="eyebrow"><Sparkles size={13}/> FRESH FROM THE COLLECTION</p><h2 id="new-arrivals-title">Just <em>landed.</em></h2></div><button type="button" onClick={() => { setSortBy("newest"); setCategory("All"); setQuery(""); document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" }); }}>Explore all finds <ArrowRight size={15}/></button></div>
+        <div className="new-arrivals-grid">
+          {newestProducts.map((product, index) => <Link className="arrival-card" href={"/products/" + product.slug} key={product.id}>
+            <span className="arrival-image">{product.image ? <img src={product.image} alt={product.name} loading="lazy"/> : <span>Image coming soon</span>}<small>{String(index + 1).padStart(2, "0")}</small></span>
+            <span className="arrival-meta"><small>{product.category}</small><b>{product.name}</b><strong>{money(product.price)}</strong></span>
+          </Link>)}
+        </div>
+      </section>}
+
       {recentViewedProducts.length > 0 && <section className="recently-viewed-section" aria-labelledby="recently-viewed-title">
         <div className="recently-viewed-heading"><div><p className="eyebrow"><Clock size={13} /> YOUR BROWSING HISTORY</p><h2 id="recently-viewed-title">Recently <em>viewed.</em></h2></div><button type="button" onClick={clearRecentlyViewed}>Clear history</button></div>
         <div className="recently-viewed-grid">{recentViewedProducts.map(product => <Link className="recently-viewed-card" href={"/products/" + product.slug} key={product.id}><span className="recently-viewed-image">{product.image ? <img src={product.image} alt={product.name} loading="lazy" /> : <span>No image</span>}</span><span className="recently-viewed-meta"><small>{product.category}</small><b>{product.name}</b><strong>{money(product.price)}</strong></span></Link>)}</div>
@@ -568,8 +629,8 @@ export default function Home() {
               <button className={compareIds.includes(String(p.id)) ? "compare-product active" : "compare-product"} type="button" aria-label={compareIds.includes(String(p.id)) ? "Remove " + p.name + " from comparison" : "Compare " + p.name} aria-pressed={compareIds.includes(String(p.id))} onClick={() => toggleCompare(p)}><ArrowLeftRight size={15} /></button>
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label={wishlist.includes(p.id) ? "Remove " + p.name + " from wishlist" : "Add " + p.name + " to wishlist"} onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
               <button className="quick-view-trigger" type="button" onClick={() => setQuickViewId(String(p.id))}><Eye size={14} /> Quick view</button>
-              <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => (p.sizeOptions?.length || p.colorOptions?.length) ? window.location.assign("/products/" + p.slug) : (cart[makeCartKey(String(p.id))] || 0) > 0 ? setCartOpen(true) : changeQty(makeCartKey(String(p.id)), 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : (cart[makeCartKey(String(p.id))] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[makeCartKey(String(p.id))] || 0) > 0 && !(p.sizeOptions?.length || p.colorOptions?.length) ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>{(p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : "ORDER NOW"} <ArrowRight size={14} /></button></div>
             </div>
+            <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => (p.sizeOptions?.length || p.colorOptions?.length) ? window.location.assign("/products/" + p.slug) : (cart[makeCartKey(String(p.id))] || 0) > 0 ? setCartOpen(true) : changeQty(makeCartKey(String(p.id)), 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : (cart[makeCartKey(String(p.id))] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[makeCartKey(String(p.id))] || 0) > 0 && !(p.sizeOptions?.length || p.colorOptions?.length) ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>{(p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : "ORDER NOW"} <ArrowRight size={14} /></button></div>
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
           </article>)}
         </div>
