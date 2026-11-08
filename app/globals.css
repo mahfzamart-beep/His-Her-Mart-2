@@ -1593,3 +1593,49 @@ footer p{color:var(--champagne)}
 .wishlist-stock-out{color:#a14f42!important;font-weight:700}
 .wishlist-notice{max-width:1040px;margin:0 auto 16px;padding:10px 13px;background:#F1EDE5;color:var(--ink);font-size:10px}
 @media(max-width:480px){.wishlist-card-purchase{grid-template-columns:1fr;gap:6px}.wishlist-card-purchase button{min-height:34px}}
+
+
+/* Official His & Hers wordmark and install-app entry point */
+.header>.brand img{display:block;width:clamp(150px,15vw,205px);height:auto;max-height:68px;object-fit:contain}
+.footer-brand-column .footer-brand{display:inline-flex;width:max-content;max-width:100%;padding:8px 10px;background:#F7F4EE;border:1px solid rgba(217,199,174,.35)}
+.footer-brand-column .footer-brand img{display:block;width:min(220px,100%);height:auto;max-height:100px;object-fit:contain}
+.nav .nav-install-link{color:var(--tan);font-weight:800;border-bottom:1px solid var(--champagne);padding-bottom:4px}
+.nav .nav-install-link:hover{color:var(--ink)}
+@media(max-width:640px){
+ .header>.brand{width:148px;max-width:40vw}
+ .header>.brand img{width:100%;max-height:58px}
+ .footer-brand-column .footer-brand img{width:190px}
+}
+
+.pwa-install-page{min-height:100vh;background:var(--paper);padding:22px 6% 35px}
+.pwa-install-header{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.pwa-install-header img{display:block;width:min(190px,45vw);height:auto}
+.pwa-back-link,.pwa-install-footer a{color:var(--tan);font-size:11px;font-weight:700;text-decoration:none}
+.pwa-install-card{max-width:700px;margin:54px auto 45px;padding:clamp(24px,5vw,54px);background:var(--surface);border:1px solid var(--line);box-shadow:0 18px 55px rgba(32,35,31,.055)}
+.pwa-install-icon{width:76px;height:76px;display:grid;place-items:center;margin-bottom:28px;border-radius:20px;background:var(--ink)}
+.pwa-install-icon img{width:56px;height:56px}
+.pwa-install-card>.eyebrow{margin:0}
+.pwa-install-card h2{font:normal clamp(37px,6vw,56px)/1.05 Georgia,serif;letter-spacing:-1.5px;margin:13px 0 17px;color:var(--ink)}
+.pwa-install-card h2 em{color:var(--tan);font-weight:400}
+.pwa-install-intro{max-width:520px;color:var(--muted);font-size:13px;line-height:1.9}
+.pwa-install-button{margin-top:18px;min-height:48px;cursor:pointer}
+.pwa-installed-state{display:flex;align-items:center;gap:9px;margin-top:20px;color:#54734a;font-size:12px;font-weight:700}
+.pwa-install-message{padding:12px 14px;background:#f1ede5;color:var(--ink);font-size:11px;line-height:1.7}
+.pwa-help-toggle{display:block;margin-top:19px;padding:0;border:0;border-bottom:1px solid var(--champagne);background:transparent;color:var(--tan);font-size:11px;font-weight:700;cursor:pointer}
+.pwa-install-instructions{display:grid;gap:0;margin-top:16px;border:1px solid var(--line)}
+.pwa-install-instructions article{display:flex;align-items:flex-start;gap:13px;padding:16px;border-bottom:1px solid var(--line);color:var(--tan)}
+.pwa-install-instructions article:last-child{border-bottom:0}
+.pwa-install-instructions article div{flex:1}
+.pwa-install-instructions b{color:var(--ink);font-size:12px}
+.pwa-install-instructions p{margin:6px 0 0;color:var(--muted);font-size:11px;line-height:1.8}
+.pwa-install-note{margin:23px 0 0;color:#8a8378;font-size:9px;line-height:1.8}
+.pwa-install-footer{max-width:1120px;margin:0 auto;color:var(--muted);font-size:10px;text-align:center}
+.pwa-offline-page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;background:var(--paper);text-align:center}
+.pwa-offline-page img{width:min(245px,70vw);height:auto;margin-bottom:34px}
+.pwa-offline-page .eyebrow{justify-content:center}
+.pwa-offline-page h1{font:normal clamp(45px,9vw,74px) Georgia,serif;margin:12px 0}
+.pwa-offline-page h1 em{color:var(--tan);font-weight:400}
+.pwa-offline-page p:not(.eyebrow){max-width:430px;color:var(--muted);font-size:13px;line-height:1.8}
+.pwa-offline-page button{margin-top:20px;padding:13px 22px;border:0;background:var(--ink);color:white;font-weight:700}
+.pwa-offline-page a{margin-top:17px;color:var(--tan);font-size:11px}
+@media(max-width:640px){.pwa-install-card{margin:28px auto;padding:24px 20px}.pwa-install-page{padding:16px 5% 28px}}
