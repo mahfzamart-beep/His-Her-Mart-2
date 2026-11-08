@@ -307,6 +307,31 @@ export default function Home() {
     setCheckoutOpen(true);
   };
 
+  const toggleCompare = (product: Product) => {
+    const id = String(product.id);
+    if (compareIds.includes(id)) {
+      setCompareIds(compareIds.filter(item => item !== id));
+      setCompareNotice("");
+      return;
+    }
+    if (compareIds.length >= 3) {
+      setCompareNotice("You can compare up to 3 products at a time.");
+      return;
+    }
+    setCompareIds([...compareIds, id]);
+    setCompareNotice("");
+  };
+
+  const quickAddToBag = (product: Product) => {
+    if (product.sizeOptions?.length || product.colorOptions?.length) {
+      window.location.assign("/products/" + product.slug);
+      return;
+    }
+    changeQty(makeCartKey(String(product.id)), 1);
+    setQuickViewId(null);
+    setCartOpen(true);
+  };
+
   const changeQty = (key: string, delta: number) => setCart(old => {
     const { productId } = parseCartKey(key);
     const product = products.find(item => String(item.id) === productId);
@@ -408,7 +433,7 @@ export default function Home() {
           <Link href="/wishlist" onClick={() => setMobileMenu(false)}>Wishlist ({wishlist.length})</Link>
         </nav>
         <div className="header-actions">
-          <label className="search-box"><Search size={17} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" /></label>
+          <label className="search-box"><Search size={17} /><input type="search" list="hhm-product-suggestions" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" aria-label="Search products" />{query && <button type="button" className="search-clear" onClick={() => setQuery("")} aria-label="Clear search"><X size={14} /></button>}</label>
           <Link className="icon-btn wishlist-head" href="/wishlist" aria-label={`Wishlist, ${wishlist.length} saved items`}><Heart /><span className="wishlist-count">{wishlist.length}</span></Link>
           <button className="icon-btn bag-btn" aria-label="Shopping bag" onClick={() => setCartOpen(true)}><ShoppingBag /><span>{cartCount}</span></button>
         </div>
@@ -417,6 +442,7 @@ export default function Home() {
         <Search size={17} aria-hidden="true" />
         <input
           type="search"
+          list="hhm-product-suggestions"
           aria-label="Search products"
           value={query}
           onChange={e => setQuery(e.target.value)}
@@ -424,6 +450,7 @@ export default function Home() {
         />
         {query && <button type="button" onClick={() => setQuery("")} aria-label="Clear search"><X size={16}/></button>}
       </div>
+      <datalist id="hhm-product-suggestions">{products.map(product => <option key={product.id} value={product.name} />)}</datalist>
 
       <section className="hero">
         <div className="hero-copy">
@@ -478,12 +505,23 @@ export default function Home() {
             <label className="sort-control">Sort by
               <select value={sortBy} onChange={e => setSortBy(e.target.value)} aria-label="Sort products">
                 <option value="recommended">Recommended</option>
+                <option value="newest">Newest first</option>
                 <option value="price-low">Price: low to high</option>
                 <option value="price-high">Price: high to low</option>
                 <option value="name">Name: A to Z</option>
               </select>
             </label>
+            <label className="price-filter">Price
+              <select value={priceFilter} onChange={e => setPriceFilter(e.target.value)} aria-label="Filter by price">
+                <option value="all">Any price</option>
+                <option value="under500">Under ৳500</option>
+                <option value="500to1000">৳500–৳999</option>
+                <option value="1000to2500">৳1,000–৳2,499</option>
+                <option value="2500plus">৳2,500+</option>
+              </select>
+            </label>
             <label className="stock-filter"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} /> In stock only</label>
+            <label className="stock-filter"><input type="checkbox" checked={discountedOnly} onChange={e => setDiscountedOnly(e.target.checked)} /> Offers only</label>
             <span className="result-count">{visibleProducts.length} ITEMS</span>
           </div>
         </div>
@@ -492,7 +530,10 @@ export default function Home() {
             <div className="product-image-wrap"><Link href={"/products/" + p.slug} aria-label={`View ${p.name}`} className="product-image-link">{p.image ? <img src={p.image} alt={p.name} loading="lazy" decoding="async" /> : <span className="product-image-placeholder">Image coming soon</span>}</Link>
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
+              {p.oldPrice && p.oldPrice > p.price && <span className="product-discount-tag">SAVE {Math.round((1 - p.price / p.oldPrice) * 100)}%</span>}
+              <button className={compareIds.includes(String(p.id)) ? "compare-product active" : "compare-product"} type="button" aria-label={compareIds.includes(String(p.id)) ? "Remove " + p.name + " from comparison" : "Compare " + p.name} aria-pressed={compareIds.includes(String(p.id))} onClick={() => toggleCompare(p)}><ArrowLeftRight size={15} /></button>
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label={wishlist.includes(p.id) ? "Remove " + p.name + " from wishlist" : "Add " + p.name + " to wishlist"} onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
+              <button className="quick-view-trigger" type="button" onClick={() => setQuickViewId(String(p.id))}><Eye size={14} /> Quick view</button>
               <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => (p.sizeOptions?.length || p.colorOptions?.length) ? window.location.assign("/products/" + p.slug) : (cart[makeCartKey(String(p.id))] || 0) > 0 ? setCartOpen(true) : changeQty(makeCartKey(String(p.id)), 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : (cart[makeCartKey(String(p.id))] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[makeCartKey(String(p.id))] || 0) > 0 && !(p.sizeOptions?.length || p.colorOptions?.length) ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>{(p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : "ORDER NOW"} <ArrowRight size={14} /></button></div>
             </div>
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
