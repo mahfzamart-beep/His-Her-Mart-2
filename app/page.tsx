@@ -567,6 +567,13 @@ export default function Home() {
         <div className="footer-bottom"><span>© 2026 His & Hers Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
       </footer>
 
+      {compareProducts.length > 0 && <div className="compare-bar" role="region" aria-label="Product comparison">
+        <div><b>{compareProducts.length} product{compareProducts.length === 1 ? "" : "s"} selected</b><small>Compare up to 3 side by side</small></div>
+        {compareNotice && <span role="status">{compareNotice}</span>}
+        <button type="button" disabled={compareProducts.length < 2} onClick={() => setCompareOpen(true)}>Compare now <ArrowRight size={14} /></button>
+        <button type="button" className="compare-clear" onClick={() => { setCompareIds([]); setCompareNotice(""); }}>Clear</button>
+      </div>}
+
       <nav className="mobile-bottom-nav" aria-label="Quick navigation">
         <a href="#shop" aria-label="Shop products"><Search size={19} /><span>Shop</span></a>
         <Link href="/wishlist" aria-label={`Wishlist, ${wishlist.length} saved items`}><Heart size={19} /><span>Saved</span>{wishlist.length > 0 && <b>{wishlist.length}</b>}</Link>
@@ -575,10 +582,55 @@ export default function Home() {
         <a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer" aria-label="Contact customer support"><MessageCircle size={19} /><span>Help</span></a>
       </nav>
 
+      {quickViewProduct && <div className="quick-view-overlay" role="presentation" onClick={() => setQuickViewId(null)}>
+        <section className="quick-view-dialog" role="dialog" aria-modal="true" aria-labelledby="quick-view-title" onClick={e => e.stopPropagation()}>
+          <button type="button" className="quick-view-close" aria-label="Close quick view" onClick={() => setQuickViewId(null)}><X size={20} /></button>
+          <div className="quick-view-layout">
+            <div className="quick-view-image">{quickViewProduct.image ? <img src={quickViewProduct.image} alt={quickViewProduct.name} /> : <span>Image coming soon</span>}</div>
+            <div className="quick-view-copy">
+              <p className="eyebrow">{quickViewProduct.category}</p>
+              <h2 id="quick-view-title">{quickViewProduct.name}</h2>
+              <div className="quick-view-price">{money(quickViewProduct.price)}{quickViewProduct.oldPrice && quickViewProduct.oldPrice > quickViewProduct.price && <del>{money(quickViewProduct.oldPrice)}</del>}</div>
+              <p className="quick-view-stock">{(quickViewProduct.stockQuantity ?? 0) > 0 ? ((quickViewProduct.stockQuantity ?? 0) < 5 ? "Only " + quickViewProduct.stockQuantity + " left" : "In stock and ready to order") : "Currently unavailable"}</p>
+              <p className="quick-view-description">{quickViewProduct.description?.trim() || "A thoughtfully selected find from His & Hers Mart. Open the product page for more details and available options."}</p>
+              {quickViewProduct.freeShippingEligible && <small className="quick-view-shipping">Selected-product free shipping may apply when 3 eligible quantity units are ordered.</small>}
+              <div className="quick-view-actions">
+                <Link href={"/products/" + quickViewProduct.slug} className="quick-view-details" onClick={() => setQuickViewId(null)}>View details</Link>
+                <button type="button" className="primary-btn" disabled={(quickViewProduct.stockQuantity ?? 0) <= 0} onClick={() => quickAddToBag(quickViewProduct)}>{quickViewProduct.sizeOptions?.length || quickViewProduct.colorOptions?.length ? "Choose options" : "Add to bag"} <ShoppingBag size={15} /></button>
+                <button type="button" className="order-now-btn" disabled={(quickViewProduct.stockQuantity ?? 0) <= 0} onClick={() => { const item = quickViewProduct; setQuickViewId(null); startBuyNow(item); }}>Order now <ArrowRight size={15} /></button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>}
+
+      {compareOpen && compareProducts.length > 0 && <div className="compare-overlay" role="presentation" onClick={() => setCompareOpen(false)}>
+        <section className="compare-dialog" role="dialog" aria-modal="true" aria-labelledby="compare-title" onClick={e => e.stopPropagation()}>
+          <header><div><p className="eyebrow">SHOP WITH CLARITY</p><h2 id="compare-title">Compare your <em>shortlist.</em></h2><small>Side-by-side details from the current product catalogue.</small></div><button type="button" className="icon-btn" aria-label="Close comparison" onClick={() => setCompareOpen(false)}><X /></button></header>
+          <div className="compare-table-wrap"><table className="compare-table">
+            <thead><tr><th scope="col">Details</th>{compareProducts.map(item => <th scope="col" key={item.id}>
+              {item.image && <img src={item.image} alt={item.name} />}
+              <b>{item.name}</b>
+              <Link href={"/products/" + item.slug} onClick={() => setCompareOpen(false)}>View product</Link>
+              <button type="button" onClick={() => setCompareIds(ids => ids.filter(id => id !== String(item.id)))} aria-label={"Remove " + item.name + " from comparison"}>Remove</button>
+            </th>)}</tr></thead>
+            <tbody>{[
+              {label:"Price", value:(item: Product) => money(item.price)},
+              {label:"Previous price", value:(item: Product) => item.oldPrice && item.oldPrice > item.price ? money(item.oldPrice) : "—"},
+              {label:"Category", value:(item: Product) => item.category},
+              {label:"Availability", value:(item: Product) => (item.stockQuantity ?? 0) > 0 ? "In stock" : "Out of stock"},
+              {label:"Available options", value:(item: Product) => [item.sizeOptions?.length ? "Sizes" : "", item.colorOptions?.length ? "Colours" : ""].filter(Boolean).join(" · ") || "Standard"},
+              {label:"Selected free delivery", value:(item: Product) => item.freeShippingEligible ? "Eligible (3 units)" : "Not marked eligible"}
+            ].map(row => <tr key={row.label}><th scope="row">{row.label}</th>{compareProducts.map(item => <td key={item.id}>{row.value(item)}</td>)}</tr>)}</tbody>
+          </table></div>
+          <div className="compare-footer"><span>{compareProducts.length} of 3 products selected</span><button type="button" onClick={() => setCompareOpen(false)}>Continue browsing</button></div>
+        </section>
+      </div>}
+
       {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
         <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
         {cartLines.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
-          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}>{line.product.image ? <img src={line.product.image} alt={line.product.name} /> : <div className="cart-item-placeholder">No image</div>}<div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}{line.color && <small className="cart-selected-size">Colour: {line.color}</small>}<span>{money(line.product.price)}</span><div className="qty"><button onClick={() => changeQty(line.key, -1)}><Minus size={13} /></button>{line.quantity}<button onClick={() => changeQty(line.key, 1)}><Plus size={13} /></button></div></div></div>)}</div>
+          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}>{line.product.image ? <img src={line.product.image} alt={line.product.name} /> : <div className="cart-item-placeholder">No image</div>}<div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}{line.color && <small className="cart-selected-size">Colour: {line.color}</small>}<span>{money(line.product.price)}</span><div className="qty"><button type="button" onClick={() => changeQty(line.key, -1)} aria-label={line.quantity === 1 ? "Remove " + line.product.name + " from bag" : "Decrease quantity of " + line.product.name}>{line.quantity === 1 ? <Trash2 size={13} /> : <Minus size={13} />}</button><span>{line.quantity}</span><button type="button" onClick={() => changeQty(line.key, 1)} disabled={line.quantity >= (line.product.stockQuantity ?? 999)} aria-label={"Increase quantity of " + line.product.name}><Plus size={13} /></button></div></div></div>)}</div>
           <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div>{hasFreeShippingProducts && <div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div>}<small>Delivery is ৳80 inside Dhaka or ৳150 outside Dhaka{hasFreeShippingProducts ? ". Selected eligible products may qualify for free shipping." : "."}</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setBuyNow(null); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
