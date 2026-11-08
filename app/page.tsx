@@ -223,6 +223,20 @@ export default function Home() {
   const recentViewedProducts = useMemo(() => recentViewedIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).filter(product => product.stockQuantity !== undefined).slice(0, 6), [recentViewedIds, products]);
   const compareProducts = useMemo(() => compareIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).slice(0, 3), [compareIds, products]);
   const quickViewProduct = useMemo(() => products.find(product => String(product.id) === quickViewId) || null, [products, quickViewId]);
+
+  useEffect(() => {
+    if (!quickViewId && !compareOpen && !cartOpen && !checkoutOpen && !orderSuccessOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (quickViewId) setQuickViewId(null);
+      else if (compareOpen) setCompareOpen(false);
+      else if (checkoutOpen) { setCheckoutOpen(false); setBuyNow(null); }
+      else if (cartOpen) setCartOpen(false);
+      else if (orderSuccessOpen) setOrderSuccessOpen(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [quickViewId, compareOpen, cartOpen, checkoutOpen, orderSuccessOpen]);
   const clearRecentlyViewed = () => { setRecentViewedIds([]); localStorage.removeItem("hhm-recently-viewed-v1"); };
 
   const browseCategory = (nextCategory: string) => {
