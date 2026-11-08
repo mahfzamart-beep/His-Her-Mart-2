@@ -449,7 +449,7 @@ export default function Home() {
       <div className="announcement"><span>THOUGHTFULLY CHOSEN FINDS</span><i>·</i><span>DELIVERED ACROSS BANGLADESH</span></div>
       <header className="header">
         <button className="icon-btn mobile-toggle" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? <X /> : <Menu />}</button>
-        <a className="brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HERS MART</small></a>
+        <Link className="brand" href="/" aria-label="His & Hers Mart home"><img src="/brand/his-and-hers-logo.png" alt="His & Hers — Shop Smart. Live Better." /></Link>
         <nav className={mobileMenu ? "nav nav-open" : "nav"}>
           <a href="#shop" onClick={() => setMobileMenu(false)}>Shop All</a>
           <a href="#shop" onClick={() => { setCategory("Men's Fashion"); setMobileMenu(false); }}>For Him</a>
@@ -458,6 +458,7 @@ export default function Home() {
           <a href="/track-order" onClick={() => setMobileMenu(false)}>Track Order</a>
           <Link href="/faq" onClick={() => setMobileMenu(false)}>Help & FAQs</Link>
           <Link href="/wishlist" onClick={() => setMobileMenu(false)}>Wishlist ({wishlist.length})</Link>
+          <Link href="/install" className="nav-install-link" onClick={() => setMobileMenu(false)}>Install App</Link>
         </nav>
         <div className="header-actions">
           <label className="search-box"><Search size={17} /><input type="search" list="hhm-product-suggestions" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" aria-label="Search products" />{query && <button type="button" className="search-clear" onClick={() => setQuery("")} aria-label="Clear search"><X size={14} /></button>}</label>
@@ -584,12 +585,12 @@ export default function Home() {
       <footer>
         <div className="footer-main">
           <div className="footer-brand-column">
-            <a className="brand footer-brand" href="#"><span>H<span className="amp">&</span>H</span><small>HIS & HERS MART</small></a>
+            <Link className="brand footer-brand" href="/" aria-label="His & Hers Mart home"><img src="/brand/his-and-hers-logo.png" alt="His & Hers — Shop Smart. Live Better." /></Link>
             <p>Thoughtfully chosen finds for every side of life. A more considered way to shop for him, her and home.</p>
           </div>
           <div className="footer-column"><b>EXPLORE</b><a href="#shop">Shop all</a><a href="#shop" onClick={() => setCategory("Men's Fashion")}>For him</a><a href="#shop" onClick={() => setCategory("Women's Fashion")}>For her</a><a href="#story">Our story</a></div>
           <div className="footer-column"><b>HELP</b><a href="/track-order">Track an order</a><a href="/wishlist">Wishlist</a><a href="/shipping">Shipping information</a><a href="/returns">Product checks & exchanges</a><a href="/faq">Help & FAQs</a><a href="/contact">Contact us</a></div>
-          <div className="footer-column footer-contact"><b>GET IN TOUCH</b><span>Customer care</span><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp · +880 1969-419302</a><span>Cash on delivery available</span></div>
+          <div className="footer-column footer-contact"><b>GET IN TOUCH</b><span>Customer care</span><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp · +880 1969-419302</a><span>Cash on delivery available</span><Link href="/install">Install our app</Link></div>
         </div>
         <div className="footer-bottom"><span>© 2026 His & Hers Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
       </footer>
