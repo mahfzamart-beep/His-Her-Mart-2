@@ -60,6 +60,11 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
       if (!error && data) {
         const item = data as unknown as Product;
         setProduct(item);
+        try {
+          const previous = JSON.parse(localStorage.getItem("hhm-recently-viewed-v1") || "[]");
+          const ids = Array.isArray(previous) ? previous.filter((id): id is string => typeof id === "string" && id !== item.id) : [];
+          localStorage.setItem("hhm-recently-viewed-v1", JSON.stringify([item.id, ...ids].slice(0, 8)));
+        } catch { /* Browsing history is optional when browser storage is unavailable. */ }
         const gallery = Array.from(new Set([item.image_url, ...(Array.isArray(item.images) ? item.images : [])].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)))).slice(0, 12);
         setSelectedImage(gallery[0] || "");
       }
@@ -189,5 +194,6 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
         <div className="detail-delivery-card"><div className="detail-delivery-title"><Truck size={18} /><span><b>Delivery across Bangladesh</b><small>Inside Dhaka ৳80 · Outside Dhaka ৳150</small></span></div><p>Selected eligible products qualify for free delivery when your order includes at least 3 eligible quantity units.</p><div><Link href="/shipping">Shipping information</Link><Link href="/returns">Returns & exchange policy</Link></div></div>
       </section>
     </div>
+    {imageZoomOpen && selectedImage && <div className="detail-image-lightbox" role="dialog" aria-modal="true" aria-label="Product image preview" onClick={() => setImageZoomOpen(false)}><button type="button" aria-label="Close image preview" onClick={() => setImageZoomOpen(false)}><X size={22} /></button><img src={selectedImage} alt={product.name + " enlarged"} onClick={event => event.stopPropagation()} /></div>}
   </main>;
 }
