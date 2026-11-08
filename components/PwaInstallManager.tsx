@@ -30,9 +30,11 @@ export default function PwaInstallManager() {
     window.addEventListener("beforeinstallprompt", onInstallPrompt);
     window.addEventListener("appinstalled", onInstalled);
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch((error) => {
-        console.warn("His & Hers app worker registration failed:", error);
-      });
+      navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
+        .then((registration) => registration.update().catch(() => undefined))
+        .catch((error) => {
+          console.warn("His & Hers app worker registration failed:", error);
+        });
     }
     return () => {
       window.removeEventListener("beforeinstallprompt", onInstallPrompt);

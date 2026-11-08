@@ -1,8 +1,10 @@
-const CACHE_NAME = "hhm-shell-v1";
+const CACHE_NAME = "hhm-shell-v2";
 const SHELL_FILES = [
   "/offline",
   "/icon.svg",
-  "/brand/his-and-hers-logo.png"
+  "/brand/his-and-hers-logo.png",
+  "/app-icons/hhm-pwa-192-v2.jpg",
+  "/app-icons/hhm-pwa-512-v2.jpg"
 ];
 
 self.addEventListener("install", (event) => {
@@ -37,7 +39,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (url.pathname === "/brand/his-and-hers-logo.png" || url.pathname === "/icon.svg") {
+  if (
+    url.pathname === "/brand/his-and-hers-logo.png" ||
+    url.pathname === "/icon.svg" ||
+    url.pathname === "/app-icons/hhm-pwa-192-v2.jpg" ||
+    url.pathname === "/app-icons/hhm-pwa-512-v2.jpg"
+  ) {
     event.respondWith(
       caches.match(request).then((cached) => cached || fetch(request).then((response) => {
         if (response.ok) {
