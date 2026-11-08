@@ -41,7 +41,8 @@ export default function Home() {
   const [catalogReady, setCatalogReady] = useState(false);
   const [category, setCategory] = useState("All");
   const [sortBy, setSortBy] = useState("recommended");
-  const [inStockOnly, setInStockOnly] = useState(false);\n  const [recentViewedIds, setRecentViewedIds] = useState<string[]>([]);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [recentViewedIds, setRecentViewedIds] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,7 +121,14 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [wishlist, setWishlist] = useState<(string | number)[]>([]);
-  const [storageReady, setStorageReady] = useState(false);\n\n  useEffect(() => {\n    try {\n      const saved = JSON.parse(localStorage.getItem("hhm-recently-viewed-v1") || "[]");\n      setRecentViewedIds(Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string").slice(0, 8) : []);\n    } catch { setRecentViewedIds([]); }\n  }, []);
+  const [storageReady, setStorageReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("hhm-recently-viewed-v1") || "[]");
+      setRecentViewedIds(Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string").slice(0, 8) : []);
+    } catch { setRecentViewedIds([]); }
+  }, []);
 
   useEffect(() => {
     try {
@@ -184,7 +192,10 @@ export default function Home() {
     return filtered;
   }, [products, category, query, sortBy, inStockOnly]);
 
-  const recentViewedProducts = useMemo(() => recentViewedIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).filter(product => product.stockQuantity !== undefined).slice(0, 6), [recentViewedIds, products]);\n  const clearRecentlyViewed = () => { setRecentViewedIds([]); localStorage.removeItem("hhm-recently-viewed-v1"); };\n\n  const browseCategory = (nextCategory: string) => {
+  const recentViewedProducts = useMemo(() => recentViewedIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).filter(product => product.stockQuantity !== undefined).slice(0, 6), [recentViewedIds, products]);
+  const clearRecentlyViewed = () => { setRecentViewedIds([]); localStorage.removeItem("hhm-recently-viewed-v1"); };
+
+  const browseCategory = (nextCategory: string) => {
     setCategory(nextCategory);
     setQuery("");
     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -417,7 +428,12 @@ export default function Home() {
         <a className="service-item service-help" href="https://wa.me/8801969419302" target="_blank" rel="noreferrer"><span className="service-icon"><MessageCircle size={19} /></span><span><b>Here to help</b><small>Chat with us on WhatsApp</small></span><ArrowRight size={15} /></a>
       </section>
 
-      {recentViewedProducts.length > 0 && <section className="recently-viewed-section" aria-labelledby="recently-viewed-title">\n        <div className="recently-viewed-heading"><div><p className="eyebrow"><Clock size={13} /> YOUR BROWSING HISTORY</p><h2 id="recently-viewed-title">Recently <em>viewed.</em></h2></div><button type="button" onClick={clearRecentlyViewed}>Clear history</button></div>\n        <div className="recently-viewed-grid">{recentViewedProducts.map(product => <Link className="recently-viewed-card" href={"/products/" + product.slug} key={product.id}><span className="recently-viewed-image">{product.image ? <img src={product.image} alt={product.name} loading="lazy" /> : <span>No image</span>}</span><span className="recently-viewed-meta"><small>{product.category}</small><b>{product.name}</b><strong>{money(product.price)}</strong></span></Link>)}</div>\n      </section>}\n\n      <section className="shop-section" id="shop">
+      {recentViewedProducts.length > 0 && <section className="recently-viewed-section" aria-labelledby="recently-viewed-title">
+        <div className="recently-viewed-heading"><div><p className="eyebrow"><Clock size={13} /> YOUR BROWSING HISTORY</p><h2 id="recently-viewed-title">Recently <em>viewed.</em></h2></div><button type="button" onClick={clearRecentlyViewed}>Clear history</button></div>
+        <div className="recently-viewed-grid">{recentViewedProducts.map(product => <Link className="recently-viewed-card" href={"/products/" + product.slug} key={product.id}><span className="recently-viewed-image">{product.image ? <img src={product.image} alt={product.name} loading="lazy" /> : <span>No image</span>}</span><span className="recently-viewed-meta"><small>{product.category}</small><b>{product.name}</b><strong>{money(product.price)}</strong></span></Link>)}</div>
+      </section>}
+
+      <section className="shop-section" id="shop">
         <div className="section-heading">
           <div><p className="eyebrow">THE COLLECTION</p><h2>Find your <em>favourites.</em></h2></div>
           <p>Style, essentials and everyday discoveries.<br />A thoughtful edit for him, her and home.</p>
