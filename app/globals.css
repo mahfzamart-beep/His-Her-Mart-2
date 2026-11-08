@@ -1639,3 +1639,11 @@ footer p{color:var(--champagne)}
 .pwa-offline-page button{margin-top:20px;padding:13px 22px;border:0;background:var(--ink);color:white;font-weight:700}
 .pwa-offline-page a{margin-top:17px;color:var(--tan);font-size:11px}
 @media(max-width:640px){.pwa-install-card{margin:28px auto;padding:24px 20px}.pwa-install-page{padding:16px 5% 28px}}
+
+/* Brand accent touch-up: only the two collection highlights requested */
+.section-heading h2 em {
+  color: #F27808 !important;
+}
+.category-filters .filter.active {
+  color: #F27808 !important;
+}
