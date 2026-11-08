@@ -5,9 +5,9 @@ import Link from "next/link";
 import type { FormEvent } from "react";
 import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
-import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck, Clock } from "lucide-react";
+import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, ArrowLeftRight, Eye, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck, Clock, Trash2 } from "lucide-react";
 
-type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number; sizeOptions?: string[]; colorOptions?: string[] };
+type Product = { id: string | number; slug: string; name: string; description?: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number; sizeOptions?: string[]; colorOptions?: string[] };
 type CartLine = { key: string; productId: string; size: string | null; color: string | null; quantity: number; product: Product };
 const makeCartKey = (productId: string, size?: string | null, color?: string | null) => size || color ? productId + "::" + encodeURIComponent(size || "") + "::" + encodeURIComponent(color || "") : productId;
 const decodeCartPart = (value: string) => { try { return decodeURIComponent(value); } catch { return value; } };
@@ -68,7 +68,7 @@ export default function Home() {
       try {
         const { data, error } = await supabase!
           .from("products")
-          .select("id,category_id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,size_options,size_type,color_options")
+          .select("id,category_id,slug,name,description,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,size_options,size_type,color_options")
           .eq("is_active", true)
           .order("created_at", { ascending: false });
         if (cancelled) return;
@@ -93,6 +93,7 @@ export default function Home() {
           id: row.id,
           slug: row.slug,
           name: row.name,
+          description: typeof row.description === "string" ? row.description : "",
           category: categoryById.get(row.category_id) || "All",
           price: Number(row.price),
           oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
@@ -119,6 +120,13 @@ export default function Home() {
     };
   }, []);
   const [query, setQuery] = useState("");
+  const [priceFilter, setPriceFilter] = useState("all");
+  const [discountedOnly, setDiscountedOnly] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareReady, setCompareReady] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareNotice, setCompareNotice] = useState("");
+  const [quickViewId, setQuickViewId] = useState<string | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [wishlist, setWishlist] = useState<(string | number)[]>([]);
   const [storageReady, setStorageReady] = useState(false);
@@ -129,6 +137,19 @@ export default function Home() {
       setRecentViewedIds(Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string").slice(0, 8) : []);
     } catch { setRecentViewedIds([]); }
   }, []);
+
+  useEffect(() => {
+    try {
+      const savedCompare = JSON.parse(localStorage.getItem("hhm-compare-v1") || "[]");
+      setCompareIds(Array.isArray(savedCompare) ? savedCompare.filter((id): id is string => typeof id === "string").slice(0, 3) : []);
+    } catch { setCompareIds([]); }
+    setCompareReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!compareReady) return;
+    localStorage.setItem("hhm-compare-v1", JSON.stringify(compareIds));
+  }, [compareIds, compareReady]);
 
   useEffect(() => {
     try {
@@ -183,16 +204,25 @@ export default function Home() {
     const filtered = products.filter(p =>
       (category === "All" || p.category === category) &&
       (!inStockOnly || Number(p.stockQuantity ?? 0) > 0) &&
+      (!discountedOnly || Boolean(p.oldPrice && p.oldPrice > p.price)) &&
+      (priceFilter === "all" ||
+        (priceFilter === "under500" && p.price < 500) ||
+        (priceFilter === "500to1000" && p.price >= 500 && p.price < 1000) ||
+        (priceFilter === "1000to2500" && p.price >= 1000 && p.price < 2500) ||
+        (priceFilter === "2500plus" && p.price >= 2500)) &&
       `${p.name} ${p.category}`.toLowerCase().includes(query.trim().toLowerCase())
     );
+    if (sortBy === "newest") filtered.sort((a, b) => products.indexOf(a) - products.indexOf(b));
     if (sortBy === "price-low") filtered.sort((a, b) => a.price - b.price);
     if (sortBy === "price-high") filtered.sort((a, b) => b.price - a.price);
     if (sortBy === "name") filtered.sort((a, b) => a.name.localeCompare(b.name));
     if (sortBy === "recommended") filtered.sort((a, b) => Number(Boolean(b.tag)) - Number(Boolean(a.tag)));
     return filtered;
-  }, [products, category, query, sortBy, inStockOnly]);
+  }, [products, category, query, sortBy, inStockOnly, priceFilter, discountedOnly]);
 
   const recentViewedProducts = useMemo(() => recentViewedIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).filter(product => product.stockQuantity !== undefined).slice(0, 6), [recentViewedIds, products]);
+  const compareProducts = useMemo(() => compareIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).slice(0, 3), [compareIds, products]);
+  const quickViewProduct = useMemo(() => products.find(product => String(product.id) === quickViewId) || null, [products, quickViewId]);
   const clearRecentlyViewed = () => { setRecentViewedIds([]); localStorage.removeItem("hhm-recently-viewed-v1"); };
 
   const browseCategory = (nextCategory: string) => {
@@ -204,6 +234,8 @@ export default function Home() {
     setCategory("All");
     setQuery("");
     setInStockOnly(false);
+    setPriceFilter("all");
+    setDiscountedOnly(false);
     setSortBy("recommended");
   };
 
