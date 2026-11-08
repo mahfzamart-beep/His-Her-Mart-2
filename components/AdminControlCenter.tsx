@@ -568,7 +568,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
             </div>
             {order.order_status === "delivered" && order.payment_status === "pending" && <p className="admin-control-note"><AlertTriangle size={16}/><span>Delivered order with payment still marked pending. Verify cash / COD collection before changing payment status to PAID.</span></p>}
              <div className="admin-control-order-meta"><span>Subtotal <b>{money(order.subtotal)}</b></span><span>Delivery <b>{money(order.delivery_charge)}</b></span><span>Total <b>{money(order.total)}</b></span><span>Handed over <b>{order.handed_over_at ? fullDate(order.handed_over_at) : "Not recorded"}</b></span><span>Delivered <b>{order.delivered_at ? fullDate(order.delivered_at) : "Not recorded"}</b></span></div>
-            <div className="admin-control-actions"><button type="button" onClick={() => void saveCourier()} disabled={saving}><Check size={15}/> Save fulfilment</button><button type="button" className="secondary" onClick={() => printInvoice(order)}><FileText size={15}/> Print invoice</button></div>
+            <div className="admin-control-actions"><button type="button" onClick={() => void saveCourier()} disabled={saving}><Check size={15}/> Save order & payment</button><button type="button" className="secondary" onClick={() => printInvoice(order)}><FileText size={15}/> Print invoice</button></div>
             <p className="admin-control-hint">Courier status is recorded manually. No courier API or live tracking connection is configured.</p>
           </section>;
         })()}
