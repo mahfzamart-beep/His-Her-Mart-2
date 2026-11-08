@@ -419,6 +419,17 @@ export default function Home() {
 
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "OnlineStore",
+        name: "His & Hers Mart",
+        url: "https://his-and-her-mart.vercel.app",
+        description: "Thoughtfully selected fashion, beauty, shoes, accessories and everyday essentials for him and her in Bangladesh.",
+        telephone: "+8801969419302",
+        areaServed: { "@type": "Country", name: "Bangladesh" },
+        currenciesAccepted: "BDT",
+        paymentAccepted: "Cash on Delivery"
+      }).replace(/</g, "\\u003c") }} />
       <div className="announcement"><span>THOUGHTFULLY CHOSEN FINDS</span><i>·</i><span>DELIVERED ACROSS BANGLADESH</span></div>
       <header className="header">
         <button className="icon-btn mobile-toggle" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? <X /> : <Menu />}</button>
