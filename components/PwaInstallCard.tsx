@@ -64,7 +64,7 @@ export default function PwaInstallCard() {
 
   return (
     <section className="pwa-install-card">
-      <div className="pwa-install-icon"><img src="/icon.svg" alt="" /></div>
+      <div className="pwa-install-icon"><img src="/app-icon-v3.svg?v=4" alt="" /></div>
       <p className="eyebrow">SHOP SMART. LIVE BETTER.</p>
       <h2>Take the store <em>with you.</em></h2>
       <p className="pwa-install-intro">Add His & Hers Mart to your phone’s home screen for a clean, app-like shopping experience. Your existing website account and order services remain on the same secure store.</p>

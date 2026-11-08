@@ -1,10 +1,10 @@
-const CACHE_NAME = "hhm-shell-v3";
+const CACHE_NAME = "hhm-shell-v4";
 const SHELL_FILES = [
   "/offline",
-  "/icon.svg",
   "/brand/his-and-hers-logo.png",
-  "/app-icon-v3.svg?v=3",
-  "/app-icon-v3.svg?v=3"
+  "/app-icon-v3.svg",
+  "/app-icons/icon-192.png",
+  "/app-icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -18,7 +18,9 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key.startsWith("hhm-shell-") && key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(
+        keys.filter((key) => key.startsWith("hhm-shell-") && key !== CACHE_NAME).map((key) => caches.delete(key))
+      ))
       .then(() => self.clients.claim())
   );
 });
@@ -33,18 +35,23 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request).catch(async () => {
         const offline = await caches.match("/offline");
-        return offline || new Response("You are offline.", { status: 503, headers: { "Content-Type": "text/plain" } });
+        return offline || new Response("You are offline.", {
+          status: 503,
+          headers: { "Content-Type": "text/plain" }
+        });
       })
     );
     return;
   }
 
-  if (
-    url.pathname === "/brand/his-and-hers-logo.png" ||
-    url.pathname === "/icon.svg" ||
-    url.pathname === "/app-icon-v3.svg?v=3" ||
-    url.pathname === "/app-icon-v3.svg?v=3"
-  ) {
+  const shouldCache = [
+    "/brand/his-and-hers-logo.png",
+    "/app-icon-v3.svg",
+    "/app-icons/icon-192.png",
+    "/app-icons/icon-512.png"
+  ].includes(url.pathname);
+
+  if (shouldCache) {
     event.respondWith(
       caches.match(request).then((cached) => cached || fetch(request).then((response) => {
         if (response.ok) {

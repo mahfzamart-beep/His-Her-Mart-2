@@ -18,13 +18,13 @@ export const metadata: Metadata = {
   openGraph: { title: "His & Hers Mart", description: "Modern Shopping · For Him & Her", url: "https://his-and-her-mart.vercel.app", siteName: "His & Hers Mart", locale: "en_BD", type: "website" },
   icons: {
     icon: [
-      { url: "/app-icon-v3.svg?v=3", type: "image/svg+xml" },
-      { url: "/app-icon-v3.svg?v=3", sizes: "any", type: "image/svg+xml" },
-      { url: "/app-icon-v3.svg?v=3", sizes: "any", type: "image/svg+xml" }
+      { url: "/app-icon-v3.svg?v=4", sizes: "any", type: "image/svg+xml" },
+      { url: "/app-icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/app-icons/icon-512.png", sizes: "512x512", type: "image/png" }
     ],
-    apple: [{ url: "/app-icon-v3.svg?v=3", sizes: "any", type: "image/svg+xml" }]
+    apple: [{ url: "/app-icons/icon-192.png", sizes: "192x192", type: "image/png" }]
   },
-  robots: { index: true, follow: true },
+  robots: { index: true, follow: true }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
