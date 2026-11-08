@@ -5,9 +5,9 @@ import Link from "next/link";
 import type { FormEvent } from "react";
 import UnboxingNotice from "../components/UnboxingNotice";
 import { supabase } from "../lib/supabase";
-import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck, Clock } from "lucide-react";
+import { Search, ShoppingBag, Heart, Menu, X, ArrowRight, ArrowLeftRight, Eye, Plus, Minus, Sparkles, Truck, MessageCircle, ShieldCheck, Clock, Trash2 } from "lucide-react";
 
-type Product = { id: string | number; slug: string; name: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number; sizeOptions?: string[]; colorOptions?: string[] };
+type Product = { id: string | number; slug: string; name: string; description?: string; category: string; price: number; oldPrice?: number; image: string; tag?: string; freeShippingEligible?: boolean; stockQuantity?: number; sizeOptions?: string[]; colorOptions?: string[] };
 type CartLine = { key: string; productId: string; size: string | null; color: string | null; quantity: number; product: Product };
 const makeCartKey = (productId: string, size?: string | null, color?: string | null) => size || color ? productId + "::" + encodeURIComponent(size || "") + "::" + encodeURIComponent(color || "") : productId;
 const decodeCartPart = (value: string) => { try { return decodeURIComponent(value); } catch { return value; } };
@@ -68,7 +68,7 @@ export default function Home() {
       try {
         const { data, error } = await supabase!
           .from("products")
-          .select("id,category_id,slug,name,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,size_options,size_type,color_options")
+          .select("id,category_id,slug,name,description,price,compare_at_price,image_url,is_featured,free_shipping_eligible,stock_quantity,size_options,size_type,color_options")
           .eq("is_active", true)
           .order("created_at", { ascending: false });
         if (cancelled) return;
@@ -93,6 +93,7 @@ export default function Home() {
           id: row.id,
           slug: row.slug,
           name: row.name,
+          description: typeof row.description === "string" ? row.description : "",
           category: categoryById.get(row.category_id) || "All",
           price: Number(row.price),
           oldPrice: row.compare_at_price ? Number(row.compare_at_price) : undefined,
@@ -119,6 +120,13 @@ export default function Home() {
     };
   }, []);
   const [query, setQuery] = useState("");
+  const [priceFilter, setPriceFilter] = useState("all");
+  const [discountedOnly, setDiscountedOnly] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareReady, setCompareReady] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareNotice, setCompareNotice] = useState("");
+  const [quickViewId, setQuickViewId] = useState<string | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [wishlist, setWishlist] = useState<(string | number)[]>([]);
   const [storageReady, setStorageReady] = useState(false);
@@ -129,6 +137,19 @@ export default function Home() {
       setRecentViewedIds(Array.isArray(saved) ? saved.filter((id): id is string => typeof id === "string").slice(0, 8) : []);
     } catch { setRecentViewedIds([]); }
   }, []);
+
+  useEffect(() => {
+    try {
+      const savedCompare = JSON.parse(localStorage.getItem("hhm-compare-v1") || "[]");
+      setCompareIds(Array.isArray(savedCompare) ? savedCompare.filter((id): id is string => typeof id === "string").slice(0, 3) : []);
+    } catch { setCompareIds([]); }
+    setCompareReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!compareReady) return;
+    localStorage.setItem("hhm-compare-v1", JSON.stringify(compareIds));
+  }, [compareIds, compareReady]);
 
   useEffect(() => {
     try {
@@ -167,6 +188,7 @@ export default function Home() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [buyNow, setBuyNow] = useState<{ productId: string; quantity: number; size: string | null; color: string | null } | null>(null);
   const [orderSuccessOpen, setOrderSuccessOpen] = useState(false);
+  const [orderCopied, setOrderCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [policyAccepted, setPolicyAccepted] = useState(false);
@@ -183,16 +205,39 @@ export default function Home() {
     const filtered = products.filter(p =>
       (category === "All" || p.category === category) &&
       (!inStockOnly || Number(p.stockQuantity ?? 0) > 0) &&
-      `${p.name} ${p.category}`.toLowerCase().includes(query.trim().toLowerCase())
+      (!discountedOnly || Boolean(p.oldPrice && p.oldPrice > p.price)) &&
+      (priceFilter === "all" ||
+        (priceFilter === "under500" && p.price < 500) ||
+        (priceFilter === "500to1000" && p.price >= 500 && p.price < 1000) ||
+        (priceFilter === "1000to2500" && p.price >= 1000 && p.price < 2500) ||
+        (priceFilter === "2500plus" && p.price >= 2500)) &&
+      `${p.name} ${p.category} ${p.description || ""}`.toLowerCase().includes(query.trim().toLowerCase())
     );
+    if (sortBy === "newest") filtered.sort((a, b) => products.indexOf(a) - products.indexOf(b));
     if (sortBy === "price-low") filtered.sort((a, b) => a.price - b.price);
     if (sortBy === "price-high") filtered.sort((a, b) => b.price - a.price);
     if (sortBy === "name") filtered.sort((a, b) => a.name.localeCompare(b.name));
     if (sortBy === "recommended") filtered.sort((a, b) => Number(Boolean(b.tag)) - Number(Boolean(a.tag)));
     return filtered;
-  }, [products, category, query, sortBy, inStockOnly]);
+  }, [products, category, query, sortBy, inStockOnly, priceFilter, discountedOnly]);
 
   const recentViewedProducts = useMemo(() => recentViewedIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).filter(product => product.stockQuantity !== undefined).slice(0, 6), [recentViewedIds, products]);
+  const compareProducts = useMemo(() => compareIds.map(id => products.find(product => String(product.id) === id)).filter((product): product is Product => Boolean(product)).slice(0, 3), [compareIds, products]);
+  const quickViewProduct = useMemo(() => products.find(product => String(product.id) === quickViewId) || null, [products, quickViewId]);
+
+  useEffect(() => {
+    if (!quickViewId && !compareOpen && !cartOpen && !checkoutOpen && !orderSuccessOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (quickViewId) setQuickViewId(null);
+      else if (compareOpen) setCompareOpen(false);
+      else if (checkoutOpen) { setCheckoutOpen(false); setBuyNow(null); }
+      else if (cartOpen) setCartOpen(false);
+      else if (orderSuccessOpen) setOrderSuccessOpen(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [quickViewId, compareOpen, cartOpen, checkoutOpen, orderSuccessOpen]);
   const clearRecentlyViewed = () => { setRecentViewedIds([]); localStorage.removeItem("hhm-recently-viewed-v1"); };
 
   const browseCategory = (nextCategory: string) => {
@@ -204,6 +249,8 @@ export default function Home() {
     setCategory("All");
     setQuery("");
     setInStockOnly(false);
+    setPriceFilter("all");
+    setDiscountedOnly(false);
     setSortBy("recommended");
   };
 
@@ -275,6 +322,21 @@ export default function Home() {
     setCheckoutOpen(true);
   };
 
+  const toggleCompare = (product: Product) => {
+    const id = String(product.id);
+    if (compareIds.includes(id)) {
+      setCompareIds(compareIds.filter(item => item !== id));
+      setCompareNotice("");
+      return;
+    }
+    if (compareIds.length >= 3) {
+      setCompareNotice("You can compare up to 3 products at a time.");
+      return;
+    }
+    setCompareIds([...compareIds, id]);
+    setCompareNotice("");
+  };
+
   const changeQty = (key: string, delta: number) => setCart(old => {
     const { productId } = parseCartKey(key);
     const product = products.find(item => String(item.id) === productId);
@@ -289,6 +351,16 @@ export default function Home() {
     else delete next[key];
     return next;
   });
+
+  const quickAddToBag = (product: Product) => {
+    if (product.sizeOptions?.length || product.colorOptions?.length) {
+      window.location.assign("/products/" + product.slug);
+      return;
+    }
+    changeQty(makeCartKey(String(product.id)), 1);
+    setQuickViewId(null);
+    setCartOpen(true);
+  };
 
   const handlePlaceOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -342,6 +414,7 @@ export default function Home() {
       if (!confirmation?.order_number) {
         throw new Error("The order response could not be verified. Please contact the store before trying again.");
       }
+      setOrderCopied(false);
       setOrderResult({
         ...confirmation,
         subtotal: Number(confirmation.subtotal),
@@ -362,6 +435,17 @@ export default function Home() {
 
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "OnlineStore",
+        name: "His & Hers Mart",
+        url: "https://his-and-her-mart.vercel.app",
+        description: "Thoughtfully selected fashion, beauty, shoes, accessories and everyday essentials for him and her in Bangladesh.",
+        telephone: "+8801969419302",
+        areaServed: { "@type": "Country", name: "Bangladesh" },
+        currenciesAccepted: "BDT",
+        paymentAccepted: "Cash on Delivery"
+      }).replace(/</g, "\\u003c") }} />
       <div className="announcement"><span>THOUGHTFULLY CHOSEN FINDS</span><i>·</i><span>DELIVERED ACROSS BANGLADESH</span></div>
       <header className="header">
         <button className="icon-btn mobile-toggle" aria-label="Open menu" onClick={() => setMobileMenu(!mobileMenu)}>{mobileMenu ? <X /> : <Menu />}</button>
@@ -376,7 +460,7 @@ export default function Home() {
           <Link href="/wishlist" onClick={() => setMobileMenu(false)}>Wishlist ({wishlist.length})</Link>
         </nav>
         <div className="header-actions">
-          <label className="search-box"><Search size={17} /><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" /></label>
+          <label className="search-box"><Search size={17} /><input type="search" list="hhm-product-suggestions" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search products" aria-label="Search products" />{query && <button type="button" className="search-clear" onClick={() => setQuery("")} aria-label="Clear search"><X size={14} /></button>}</label>
           <Link className="icon-btn wishlist-head" href="/wishlist" aria-label={`Wishlist, ${wishlist.length} saved items`}><Heart /><span className="wishlist-count">{wishlist.length}</span></Link>
           <button className="icon-btn bag-btn" aria-label="Shopping bag" onClick={() => setCartOpen(true)}><ShoppingBag /><span>{cartCount}</span></button>
         </div>
@@ -385,6 +469,7 @@ export default function Home() {
         <Search size={17} aria-hidden="true" />
         <input
           type="search"
+          list="hhm-product-suggestions"
           aria-label="Search products"
           value={query}
           onChange={e => setQuery(e.target.value)}
@@ -392,6 +477,7 @@ export default function Home() {
         />
         {query && <button type="button" onClick={() => setQuery("")} aria-label="Clear search"><X size={16}/></button>}
       </div>
+      <datalist id="hhm-product-suggestions">{products.map(product => <option key={product.id} value={product.name} />)}</datalist>
 
       <section className="hero">
         <div className="hero-copy">
@@ -446,12 +532,23 @@ export default function Home() {
             <label className="sort-control">Sort by
               <select value={sortBy} onChange={e => setSortBy(e.target.value)} aria-label="Sort products">
                 <option value="recommended">Recommended</option>
+                <option value="newest">Newest first</option>
                 <option value="price-low">Price: low to high</option>
                 <option value="price-high">Price: high to low</option>
                 <option value="name">Name: A to Z</option>
               </select>
             </label>
+            <label className="price-filter">Price
+              <select value={priceFilter} onChange={e => setPriceFilter(e.target.value)} aria-label="Filter by price">
+                <option value="all">Any price</option>
+                <option value="under500">Under ৳500</option>
+                <option value="500to1000">৳500–৳999</option>
+                <option value="1000to2500">৳1,000–৳2,499</option>
+                <option value="2500plus">৳2,500+</option>
+              </select>
+            </label>
             <label className="stock-filter"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} /> In stock only</label>
+            <label className="stock-filter"><input type="checkbox" checked={discountedOnly} onChange={e => setDiscountedOnly(e.target.checked)} /> Offers only</label>
             <span className="result-count">{visibleProducts.length} ITEMS</span>
           </div>
         </div>
@@ -460,7 +557,10 @@ export default function Home() {
             <div className="product-image-wrap"><Link href={"/products/" + p.slug} aria-label={`View ${p.name}`} className="product-image-link">{p.image ? <img src={p.image} alt={p.name} loading="lazy" decoding="async" /> : <span className="product-image-placeholder">Image coming soon</span>}</Link>
               {p.tag && <span className="product-tag">{p.tag}</span>}
               {p.freeShippingEligible && <span className="free-shipping-product-tag">FREE SHIPPING</span>}
+              {p.oldPrice && p.oldPrice > p.price && <span className="product-discount-tag">SAVE {Math.round((1 - p.price / p.oldPrice) * 100)}%</span>}
+              <button className={compareIds.includes(String(p.id)) ? "compare-product active" : "compare-product"} type="button" aria-label={compareIds.includes(String(p.id)) ? "Remove " + p.name + " from comparison" : "Compare " + p.name} aria-pressed={compareIds.includes(String(p.id))} onClick={() => toggleCompare(p)}><ArrowLeftRight size={15} /></button>
               <button className={wishlist.includes(p.id) ? "wish active" : "wish"} aria-label={wishlist.includes(p.id) ? "Remove " + p.name + " from wishlist" : "Add " + p.name + " to wishlist"} onClick={() => setWishlist(w => w.includes(p.id) ? w.filter(x => x !== p.id) : [...w, p.id])}><Heart size={18} fill={wishlist.includes(p.id) ? "currentColor" : "none"} /></button>
+              <button className="quick-view-trigger" type="button" onClick={() => setQuickViewId(String(p.id))}><Eye size={14} /> Quick view</button>
               <div className="product-card-actions"><button className="quick-add" disabled={(p.stockQuantity ?? 999) <= 0} onClick={() => (p.sizeOptions?.length || p.colorOptions?.length) ? window.location.assign("/products/" + p.slug) : (cart[makeCartKey(String(p.id))] || 0) > 0 ? setCartOpen(true) : changeQty(makeCartKey(String(p.id)), 1)}>{(p.stockQuantity ?? 999) <= 0 ? "OUT OF STOCK" : (p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : (cart[makeCartKey(String(p.id))] || 0) > 0 ? "VIEW IN BAG" : "ADD TO BAG"} {(cart[makeCartKey(String(p.id))] || 0) > 0 && !(p.sizeOptions?.length || p.colorOptions?.length) ? <ShoppingBag size={14} /> : <Plus size={14} />}</button><button className="quick-order" disabled={(p.stockQuantity ?? 999) <= 0 || typeof p.id !== "string" || !/^[0-9a-f-]{36}$/i.test(p.id)} onClick={() => startBuyNow(p)}>{(p.sizeOptions?.length || p.colorOptions?.length) ? "CHOOSE OPTIONS" : "ORDER NOW"} <ArrowRight size={14} /></button></div>
             </div>
             <div className="product-info"><div><p className="product-category">{p.category}</p><h3><Link href={"/products/" + p.slug} className="product-name-link">{p.name}</Link></h3><small className="stock-note">{(p.stockQuantity ?? 999) <= 0 ? "Out of stock" : (p.stockQuantity ?? 999) < 5 ? `Only ${p.stockQuantity} left` : "In stock"}</small></div><div className="price">{money(p.price)}{p.oldPrice && <del>{money(p.oldPrice)}</del>}</div></div>
@@ -494,6 +594,13 @@ export default function Home() {
         <div className="footer-bottom"><span>© 2026 His & Hers Mart. All rights reserved.</span><span>MODERN SHOPPING · FOR HIM & HER</span></div>
       </footer>
 
+      {compareProducts.length > 0 && <div className="compare-bar" role="region" aria-label="Product comparison">
+        <div><b>{compareProducts.length} product{compareProducts.length === 1 ? "" : "s"} selected</b><small>Compare up to 3 side by side</small></div>
+        {compareNotice && <span role="status">{compareNotice}</span>}
+        <button type="button" disabled={compareProducts.length < 2} onClick={() => setCompareOpen(true)}>Compare now <ArrowRight size={14} /></button>
+        <button type="button" className="compare-clear" onClick={() => { setCompareIds([]); setCompareNotice(""); }}>Clear</button>
+      </div>}
+
       <nav className="mobile-bottom-nav" aria-label="Quick navigation">
         <a href="#shop" aria-label="Shop products"><Search size={19} /><span>Shop</span></a>
         <Link href="/wishlist" aria-label={`Wishlist, ${wishlist.length} saved items`}><Heart size={19} /><span>Saved</span>{wishlist.length > 0 && <b>{wishlist.length}</b>}</Link>
@@ -502,10 +609,55 @@ export default function Home() {
         <a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer" aria-label="Contact customer support"><MessageCircle size={19} /><span>Help</span></a>
       </nav>
 
-      {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" onClick={e => e.stopPropagation()}>
-        <div className="cart-title"><h2>Your bag <span>({cartCount})</span></h2><button className="icon-btn" onClick={() => setCartOpen(false)}><X /></button></div>
+      {quickViewProduct && <div className="quick-view-overlay" role="presentation" onClick={() => setQuickViewId(null)}>
+        <section className="quick-view-dialog" role="dialog" aria-modal="true" aria-labelledby="quick-view-title" onClick={e => e.stopPropagation()}>
+          <button type="button" className="quick-view-close" aria-label="Close quick view" onClick={() => setQuickViewId(null)}><X size={20} /></button>
+          <div className="quick-view-layout">
+            <div className="quick-view-image">{quickViewProduct.image ? <img src={quickViewProduct.image} alt={quickViewProduct.name} /> : <span>Image coming soon</span>}</div>
+            <div className="quick-view-copy">
+              <p className="eyebrow">{quickViewProduct.category}</p>
+              <h2 id="quick-view-title">{quickViewProduct.name}</h2>
+              <div className="quick-view-price">{money(quickViewProduct.price)}{quickViewProduct.oldPrice && quickViewProduct.oldPrice > quickViewProduct.price && <del>{money(quickViewProduct.oldPrice)}</del>}</div>
+              <p className="quick-view-stock">{(quickViewProduct.stockQuantity ?? 0) > 0 ? ((quickViewProduct.stockQuantity ?? 0) < 5 ? "Only " + quickViewProduct.stockQuantity + " left" : "In stock and ready to order") : "Currently unavailable"}</p>
+              <p className="quick-view-description">{quickViewProduct.description?.trim() || "A thoughtfully selected find from His & Hers Mart. Open the product page for more details and available options."}</p>
+              {quickViewProduct.freeShippingEligible && <small className="quick-view-shipping">Selected-product free shipping may apply when 3 eligible quantity units are ordered.</small>}
+              <div className="quick-view-actions">
+                <Link href={"/products/" + quickViewProduct.slug} className="quick-view-details" onClick={() => setQuickViewId(null)}>View details</Link>
+                <button type="button" className="primary-btn" disabled={(quickViewProduct.stockQuantity ?? 0) <= 0} onClick={() => quickAddToBag(quickViewProduct)}>{quickViewProduct.sizeOptions?.length || quickViewProduct.colorOptions?.length ? "Choose options" : "Add to bag"} <ShoppingBag size={15} /></button>
+                <button type="button" className="order-now-btn" disabled={(quickViewProduct.stockQuantity ?? 0) <= 0} onClick={() => { const item = quickViewProduct; setQuickViewId(null); startBuyNow(item); }}>Order now <ArrowRight size={15} /></button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>}
+
+      {compareOpen && compareProducts.length > 0 && <div className="compare-overlay" role="presentation" onClick={() => setCompareOpen(false)}>
+        <section className="compare-dialog" role="dialog" aria-modal="true" aria-labelledby="compare-title" onClick={e => e.stopPropagation()}>
+          <header><div><p className="eyebrow">SHOP WITH CLARITY</p><h2 id="compare-title">Compare your <em>shortlist.</em></h2><small>Side-by-side details from the current product catalogue.</small></div><button type="button" className="icon-btn" aria-label="Close comparison" onClick={() => setCompareOpen(false)}><X /></button></header>
+          <div className="compare-table-wrap"><table className="compare-table">
+            <thead><tr><th scope="col">Details</th>{compareProducts.map(item => <th scope="col" key={item.id}>
+              {item.image && <img src={item.image} alt={item.name} />}
+              <b>{item.name}</b>
+              <Link href={"/products/" + item.slug} onClick={() => setCompareOpen(false)}>View product</Link>
+              <button type="button" onClick={() => setCompareIds(ids => ids.filter(id => id !== String(item.id)))} aria-label={"Remove " + item.name + " from comparison"}>Remove</button>
+            </th>)}</tr></thead>
+            <tbody>{[
+              {label:"Price", value:(item: Product) => money(item.price)},
+              {label:"Previous price", value:(item: Product) => item.oldPrice && item.oldPrice > item.price ? money(item.oldPrice) : "—"},
+              {label:"Category", value:(item: Product) => item.category},
+              {label:"Availability", value:(item: Product) => (item.stockQuantity ?? 0) > 0 ? "In stock" : "Out of stock"},
+              {label:"Available options", value:(item: Product) => [item.sizeOptions?.length ? "Sizes" : "", item.colorOptions?.length ? "Colours" : ""].filter(Boolean).join(" · ") || "Standard"},
+              {label:"Selected free delivery", value:(item: Product) => item.freeShippingEligible ? "Eligible (3 units)" : "Not marked eligible"}
+            ].map(row => <tr key={row.label}><th scope="row">{row.label}</th>{compareProducts.map(item => <td key={item.id}>{row.value(item)}</td>)}</tr>)}</tbody>
+          </table></div>
+          <div className="compare-footer"><span>{compareProducts.length} of 3 products selected</span><button type="button" onClick={() => setCompareOpen(false)}>Continue browsing</button></div>
+        </section>
+      </div>}
+
+      {cartOpen && <div className="overlay" onClick={() => setCartOpen(false)}><aside className="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" onClick={e => e.stopPropagation()}>
+        <div className="cart-title"><h2 id="cart-drawer-title">Your bag <span>({cartCount})</span></h2><button className="icon-btn" type="button" aria-label="Close shopping bag" onClick={() => setCartOpen(false)}><X /></button></div>
         {cartLines.length === 0 ? <div className="empty-cart"><ShoppingBag size={34} /><p>Your bag is waiting for something lovely.</p><button className="primary-btn" onClick={() => setCartOpen(false)}>Continue shopping</button></div> : <>
-          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}>{line.product.image ? <img src={line.product.image} alt={line.product.name} /> : <div className="cart-item-placeholder">No image</div>}<div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}{line.color && <small className="cart-selected-size">Colour: {line.color}</small>}<span>{money(line.product.price)}</span><div className="qty"><button onClick={() => changeQty(line.key, -1)}><Minus size={13} /></button>{line.quantity}<button onClick={() => changeQty(line.key, 1)}><Plus size={13} /></button></div></div></div>)}</div>
+          <div className="cart-list">{cartLines.map(line => <div className="cart-item" key={line.key}>{line.product.image ? <img src={line.product.image} alt={line.product.name} /> : <div className="cart-item-placeholder">No image</div>}<div className="cart-item-info"><b>{line.product.name}</b>{line.size && <small className="cart-selected-size">Size: {line.size}</small>}{line.color && <small className="cart-selected-size">Colour: {line.color}</small>}<span>{money(line.product.price)}</span><div className="qty"><button type="button" onClick={() => changeQty(line.key, -1)} aria-label={line.quantity === 1 ? "Remove " + line.product.name + " from bag" : "Decrease quantity of " + line.product.name}>{line.quantity === 1 ? <Trash2 size={13} /> : <Minus size={13} />}</button><span>{line.quantity}</span><button type="button" onClick={() => changeQty(line.key, 1)} disabled={line.quantity >= (line.product.stockQuantity ?? 999)} aria-label={"Increase quantity of " + line.product.name}><Plus size={13} /></button></div><button type="button" className="cart-save-for-later" onClick={() => { setWishlist(current => current.includes(line.product.id) ? current : [...current, line.product.id]); changeQty(line.key, -line.quantity); }}><Heart size={12} /> Save for later</button></div></div>)}</div>
           <div className="cart-bottom"><div><span>Subtotal</span><b>{money(subtotal)}</b></div>{hasFreeShippingProducts && <div className={freeShippingUnlocked ? "free-shipping-progress unlocked" : "free-shipping-progress"}><b>{freeShippingUnlocked ? "Free shipping unlocked!" : "Selected-product free shipping"}</b><span>{freeShippingUnlocked ? "Your order qualifies for free delivery." : `Add ${Math.max(0, 3 - freeShippingEligibleCount)} more eligible item${3 - freeShippingEligibleCount === 1 ? "" : "s"} to unlock free shipping.`}</span></div>}<small>Delivery is ৳80 inside Dhaka or ৳150 outside Dhaka{hasFreeShippingProducts ? ". Selected eligible products may qualify for free shipping." : "."}</small><button className="primary-btn checkout" onClick={() => { setOrderError(""); setBuyNow(null); setCheckoutOpen(true); }}>Continue to checkout <ArrowRight size={16} /></button></div>
         </>}
       </aside></div>}
@@ -566,6 +718,10 @@ export default function Home() {
           <div className="order-reference">
             <span>YOUR ORDER NUMBER</span>
             <strong>{orderResult.order_number}</strong>
+            <button type="button" className="copy-order-number" onClick={async () => {
+              try { await navigator.clipboard.writeText(orderResult.order_number); setOrderCopied(true); }
+              catch { setOrderCopied(false); }
+            }}>{orderCopied ? "Copied" : "Copy order number"}</button>
             <div><span>Order status</span><b>Awaiting store confirmation</b></div>
             <div><span>Payment</span><b>Cash on Delivery</b></div>
             <div><span>Product subtotal</span><b>{money(orderResult.subtotal)}</b></div>
@@ -574,7 +730,10 @@ export default function Home() {
             <small>{orderResult.free_shipping_applied ? `Free shipping applied to ${orderResult.free_shipping_eligible_quantity} eligible item(s).` : `Delivery charge applied: ${orderResult.delivery_charge === 80 ? "Inside Dhaka ৳80" : "Outside Dhaka ৳150"}.`}</small>
           </div>
           <UnboxingNotice showConsent={false} />
-          <button className="primary-btn success-close" onClick={() => setOrderSuccessOpen(false)}>Continue shopping <ArrowRight size={16} /></button>
+          <div className="success-actions">
+            <Link className="success-track-link" href="/track-order" onClick={() => setOrderSuccessOpen(false)}>Track your order</Link>
+            <button className="primary-btn success-close" onClick={() => setOrderSuccessOpen(false)}>Continue shopping <ArrowRight size={16} /></button>
+          </div>
         </section>
       </div>}
     </main>

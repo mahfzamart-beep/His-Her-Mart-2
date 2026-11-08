@@ -4,7 +4,9 @@ A premium minimalist shopping storefront for Bangladesh, built with Next.js and 
 
 ## Current application features
 
-- Responsive storefront with product categories, search, product cards and BDT prices.
+- Responsive storefront with product categories, product search suggestions, price bands, in-stock and offer filters, sorting and BDT prices.
+- Product-card quick view, side-by-side comparison for up to three products, wishlist, recently viewed items and a persistent browser-local comparison list.
+- Mobile product purchase bar, product-image zoom and gallery, size/colour selection, and clear stock/delivery information.
 - Product detail pages with inventory availability, descriptions and product-specific SEO metadata.
 - Persistent cart and browser-local wishlist.
 - Guest Cash on Delivery checkout through the `create-guest-order` Supabase Edge Function.
@@ -20,18 +22,18 @@ A premium minimalist shopping storefront for Bangladesh, built with Next.js and 
 - Manual fulfilment mapping for own stock, ShopBase BD and DropshippingBD. Supplier orders and stock are not automatically synced.
 - Selected-product free shipping: at least 3 quantity units from products explicitly marked eligible qualify.
 - Customer Help & FAQs page for ordering, COD, selected-product free shipping, delivery charges, order tracking and browser-saved items.
-- Store icon, sitemap, robots.txt, canonical product URLs, Open Graph metadata and noindex rules for private/customer utility pages.
+- Store icon, web app manifest, sitemap, robots.txt, canonical product URLs, Open Graph metadata and structured data for the store and product pages.
 
 ## Important implementation notes
 
 - Cart and wishlist are saved in the current browser's local storage. They do not sync across devices or signed-in customer accounts.
-- The newsletter form is a visual preview and does not save email subscriptions yet.
+- The homepage support section links to WhatsApp; it does not collect newsletter subscriptions or store customer marketing preferences.
 - The admin CSV export contains the currently loaded latest 200 orders and respects the active status/search filters.
 - Guest checkout currently supports Cash on Delivery only.
 - Checkout calculates and stores delivery charges atomically with order creation: ৳80 inside Dhaka and ৳150 outside Dhaka. Selected products can qualify for free shipping when at least 3 quantity units are marked eligible.
-- The catalogue currently contains 8 sample products and 8 categories. Replace them with real, verified product descriptions, photos, prices and stock before selling.
+- The storefront reads active products and categories from Supabase. Publish only products with supplier-verified descriptions, photos, pricing and stock; stock is not automatically synced from suppliers.
 - Supplier assignment is manual because API access has not been provided by the suppliers.
-- SMS/email order notifications, customer registration and account/order-history screens, reviews, coupons, return/refund workflow, and a WhatsApp support integration are not implemented.
+- Customer accounts and cross-device cart/wishlist sync, SMS/email order notifications, verified customer reviews, coupon/discount-code redemption, a full returns/refunds workflow, and automated WhatsApp messaging are not implemented. WhatsApp support links open a chat but do not connect an automated provider API.
 
 ## Store operations
 
