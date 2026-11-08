@@ -387,7 +387,8 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
   };
 
   const bulkUpdateOrders = async () => {
-    if (!supabase || selectedOrderIds.length === 0) return;
+    const client = supabase;
+    if (!client || selectedOrderIds.length === 0) return;
     if (!window.confirm("Update " + selectedOrderIds.length + " selected order(s) to " + bulkStatus.toUpperCase() + "?")) return;
     setSaving(true); setError(""); setNotice("");
     const now = new Date().toISOString();
@@ -396,7 +397,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       const payload: Record<string, unknown> = { order_status: bulkStatus, updated_at: now };
       if (bulkStatus === "shipped" && !order.handed_over_at) payload.handed_over_at = now;
       if (bulkStatus === "delivered" && !order.delivered_at) payload.delivered_at = now;
-      return supabase.from("orders").update(payload).eq("id", order.id);
+      return client.from("orders").update(payload).eq("id", order.id);
     }));
     const failures = results.filter(result => result.error);
     if (failures.length) {
