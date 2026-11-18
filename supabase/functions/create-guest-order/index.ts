@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-function allowedOrigin(origin:string|null){if(!origin)return false;try{const u=new URL(origin);return u.protocol==="https:"&&/^his-and-her-mart(?:-[a-z0-9-]+)?\.vercel\.app$/.test(u.hostname)}catch{return false}}
+function allowedOrigin(origin:string|null){if(!origin)return false;try{const u=new URL(origin);return u.protocol==="https:"&&/^(?:cloudmomos|his-and-her-mart)(?:-[a-z0-9-]+)?\.vercel\.app$/.test(u.hostname)}catch{return false}}
 function cors(origin:string|null){return {"Access-Control-Allow-Origin":allowedOrigin(origin)?origin:"null","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"}}
 function json(data:unknown,status:number,origin:string|null){return new Response(JSON.stringify(data),{status,headers:{...cors(origin),"Content-Type":"application/json"}})}
 Deno.serve(async(req:Request)=>{
