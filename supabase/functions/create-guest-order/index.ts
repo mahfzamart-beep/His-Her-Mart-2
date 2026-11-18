@@ -14,6 +14,7 @@ Deno.serve(async(req:Request)=>{
  const phone=typeof body.customer_phone==="string"?body.customer_phone.trim():"";
  const email=typeof body.customer_email==="string"?body.customer_email.trim():null;
  const a=body.shipping_address as Record<string,unknown>|null;const items=body.items;
+ const normalizedPhone=phone.replace(/[\s()-]/g,"");
  if(name.length<2||name.length>100)return json({error:"Please enter a valid customer name."},400,origin);
  if(!/^(?:\+?88)?01[3-9][0-9]{8}$/.test(normalizedPhone))return json({error:"Please enter a valid Bangladesh mobile number."},400,origin);
  if(email&&(email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)))return json({error:"Please enter a valid email address."},400,origin);
