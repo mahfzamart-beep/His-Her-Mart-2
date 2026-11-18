@@ -399,7 +399,7 @@ export default function AdminPage() {
 
   return <main className="admin-shell">
     <header className="admin-topbar">
-      <a className="admin-brand" href="/"><img className="admin-brand-icon" src="/app-icon-v3.svg" alt="" /><b>CLOUD MOMOS</b><small>KITCHEN CONTROL</small></a>
+      <a className="admin-brand" href="/"><img className="admin-brand-icon" src="/cloud-momos-app-icon.svg" alt="" /><b>CLOUD MOMOS</b><small>KITCHEN CONTROL</small></a>
       <div className="admin-top-actions"><span>{session.user.email}</span><button onClick={refresh} aria-label="Refresh orders"><RefreshCw size={16}/></button><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </header>
     <nav className="admin-quick-nav" aria-label="Admin section shortcuts">
