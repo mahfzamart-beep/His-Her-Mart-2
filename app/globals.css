@@ -828,3 +828,21 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
   .teacher-smile,.teacher-concern{animation:none}
   .teacher-smile{opacity:1}.teacher-concern{opacity:0}
 }
+
+
+/* Cloud Momos food-pack video guidance */
+.notice-teacher .notice-food-icon{
+  display:grid;place-items:center;width:92px;height:92px;border-radius:28px;
+  background:linear-gradient(145deg,#f6e8cc,#fffaf1);border:1px solid rgba(23,63,48,.1);
+  box-shadow:0 12px 24px rgba(23,63,48,.08);font-size:49px;
+}
+.notice-food-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.notice-food-steps span{display:flex;align-items:center;gap:7px;padding:9px 10px;border:1px solid rgba(23,63,48,.1);border-radius:11px;background:rgba(255,250,241,.78);color:#536354;font-size:9px;font-weight:700;line-height:1.45}
+.notice-food-steps b{display:grid;place-items:center;flex:0 0 21px;width:21px;height:21px;border-radius:7px;background:#e8f0e5;color:#173f30;font-size:8px}
+.notice-support-link{display:inline-flex;align-items:center;gap:6px;margin-top:3px;color:#d96e2b;font-size:10px;font-weight:900;text-decoration:none}
+.notice-support-link:hover{text-decoration:underline}
+@media(max-width:680px){
+  .notice-teacher .notice-food-icon{width:60px;height:60px;border-radius:18px;font-size:33px}
+  .notice-food-steps{grid-template-columns:1fr;gap:6px;margin:10px 0}
+  .notice-food-steps span{padding:8px 9px;font-size:9px}
+}
