@@ -9,6 +9,6 @@ export const metadata: Metadata={
  applicationName:"Cloud Momos",
  description:"Freshly cooked and frozen momos delivered in selected areas of Sylhet City.",
  openGraph:{title:"Cloud Momos",description:"Little clouds. Big comfort. Fresh momos in Sylhet.",siteName:"Cloud Momos",locale:"en_BD",type:"website"},
- icons:{icon:"/icon.svg"},robots:{index:true,follow:true}
+ icons:{icon:"/cloud-momos-app-icon.svg"},robots:{index:true,follow:true}
 };
 export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><PwaInstallManager/>{children}</body></html>}
