@@ -34,9 +34,9 @@ export default function AdminProductImport({ categories, onImported }: Props) {
   const [report, setReport] = useState("");
 
   function downloadTemplate() {
-    const csv = "name,sku,category_slug,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured,fulfillment_source,supplier_product_code,supplier_product_url,free_shipping_eligible";
+    const csv = "name,sku,category_slug,description,price,compare_at_price,stock_quantity,image_url,is_active,is_featured";
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const a = document.createElement("a"); a.href = url; a.download = "his-her-mart-products-template.csv"; a.click(); URL.revokeObjectURL(url);
+    const a = document.createElement("a"); a.href = url; a.download = "cloud-momos-menu-template.csv"; a.click(); URL.revokeObjectURL(url);
   }
 
   async function importFile(file: File) {
@@ -65,9 +65,7 @@ export default function AdminProductImport({ categories, onImported }: Props) {
       if (name.length < 2 || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0 || (compare !== null && (!Number.isFinite(compare) || compare < price))) {
         issues.push("Row " + (i + 1) + ": invalid name, price, stock or compare-at price."); continue;
       }
-      const source = get(r, "fulfillment_source") || "own_stock";
-      if (!["own_stock", "shopbase_bd", "dropshippingbd"].includes(source)) { issues.push("Row " + (i + 1) + ": invalid fulfillment source."); continue; }
-      const categoryText = get(r, "category_slug").toLowerCase();
+            const categoryText = get(r, "category_slug").toLowerCase();
       const categoryId = categoryText ? categoryMap.get(categoryText) : null;
       if (categoryText && !categoryId) { issues.push("Row " + (i + 1) + ": category name or slug was not found."); continue; }
       const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "product";
@@ -78,9 +76,8 @@ export default function AdminProductImport({ categories, onImported }: Props) {
         image_url: get(r, "image_url") || null,
         is_active: get(r, "is_active") === "" ? true : get(r, "is_active").toLowerCase() === "true",
         is_featured: get(r, "is_featured").toLowerCase() === "true",
-        fulfillment_source: source, supplier_product_code: get(r, "supplier_product_code") || null,
-        supplier_product_url: get(r, "supplier_product_url") || null,
-        free_shipping_eligible: get(r, "free_shipping_eligible").toLowerCase() === "true"
+        fulfillment_source: "own_stock", supplier_product_code: null, supplier_product_url: null,
+        free_shipping_eligible: false
       });
     }
 
@@ -98,9 +95,9 @@ export default function AdminProductImport({ categories, onImported }: Props) {
   }
 
   return <div className="admin-product-import">
-    <button type="button" onClick={downloadTemplate}>Download CSV template</button>
-    <label>Import products CSV<input type="file" accept=".csv,text/csv" disabled={busy} onChange={e => { const file = e.target.files?.[0]; if (file) void importFile(file); e.currentTarget.value = ""; }} /></label>
-    <small>Up to 500 products per file. Add one verified product per row. Use an existing category name or slug; fulfillment_source must be own_stock, shopbase_bd or dropshippingbd. Duplicate SKUs are rejected by the database.</small>
+    <button type="button" onClick={downloadTemplate}>Download momo menu CSV template</button>
+    <label>Import momo menu CSV<input type="file" accept=".csv,text/csv" disabled={busy} onChange={e => { const file = e.target.files?.[0]; if (file) void importFile(file); e.currentTarget.value = ""; }} /></label>
+    <small>Up to 500 products per file. Add one verified product per row. Use an existing category name or slug; Use an existing menu category name or slug. Stock is entered in boxes; each box contains 6 pieces. Duplicate SKUs are rejected by the database.</small>
     {busy && <small>Importing products…</small>}
     {report && <div className="admin-import-report" role="status">{report}</div>}
   </div>;
