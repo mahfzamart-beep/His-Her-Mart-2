@@ -13,62 +13,39 @@ export default function UnboxingNotice({
 }: UnboxingNoticeProps) {
   return (
     <section className="unboxing-notice" aria-labelledby="unboxing-notice-title">
-      <div className="notice-teacher" aria-label="Animated Bangladeshi teacher character">
-        <svg viewBox="0 0 180 190" role="img" aria-labelledby="teacher-title">
-          <title id="teacher-title">A friendly Bangladeshi teacher</title>
-          <ellipse cx="90" cy="178" rx="57" ry="8" fill="#e9dfcf" />
-          <path d="M35 184c3-35 23-52 55-52s52 17 55 52" fill="#e97834" />
-          <path d="M65 139l25 24 25-24 17 45H48z" fill="#f7e9d4" />
-          <path d="M55 144c13 8 23 14 35 14s22-6 35-14l9 40H46z" fill="#d9651e" />
-          <path d="M76 120h28v28c-8 8-20 8-28 0z" fill="#bd805e" />
-          <path d="M47 57c0-27 17-44 43-44 29 0 45 19 43 49l-4 41c-3 22-21 38-39 38-23 0-39-18-42-39z" fill="#28211e" />
-          <circle cx="42" cy="83" r="10" fill="#bd805e" />
-          <circle cx="138" cy="83" r="10" fill="#bd805e" />
-          <path d="M52 65c0-25 16-42 39-42 24 0 39 17 39 43v31c0 25-17 43-39 43S52 121 52 97z" fill="#d99a75" />
-          <path d="M50 72c1-33 16-53 43-53 22 0 41 15 43 48-10-5-17-13-22-24-12 14-34 21-64 20z" fill="#28211e" />
-          <path d="M55 48c-4-13 7-29 24-34 22-7 45 1 55 18 4 8 4 18 1 26-10-5-18-13-22-22-13 12-33 18-58 18z" fill="#28211e" />
-          <path d="M130 38c18-3 22 14 10 27-5 5-11 7-16 6" fill="none" stroke="#28211e" strokeWidth="7" strokeLinecap="round" />
-          <path d="M62 77c7-5 14-5 21-1M99 76c7-4 14-4 20 1" fill="none" stroke="#432b25" strokeWidth="3.5" strokeLinecap="round" />
-          <g className="teacher-eyes">
-            <ellipse cx="73" cy="88" rx="4.6" ry="6.3" fill="#2b211e" />
-            <ellipse cx="109" cy="88" rx="4.6" ry="6.3" fill="#2b211e" />
-            <circle cx="74.5" cy="86" r="1.5" fill="#fff" />
-            <circle cx="110.5" cy="86" r="1.5" fill="#fff" />
-          </g>
-          <path d="M60 80c9-8 19-8 28-1M96 79c9-7 19-7 28 1" fill="none" stroke="#3a2925" strokeWidth="2.4" strokeLinecap="round" />
-          <path d="M89 91c-1 7-4 12-2 14 2 2 6 2 9 0" fill="none" stroke="#a96852" strokeWidth="2" strokeLinecap="round" />
-          <path className="teacher-smile" d="M76 116c8 8 21 8 29 0" fill="none" stroke="#87473f" strokeWidth="3" strokeLinecap="round" />
-          <path className="teacher-concern" d="M77 120c8-7 20-7 28 0" fill="none" stroke="#87473f" strokeWidth="3" strokeLinecap="round" />
-          <path d="M55 75c-1 9-1 18 0 25M125 75c1 9 1 18 0 25" fill="none" stroke="#bd805e" strokeWidth="1" opacity=".45" />
-          <circle cx="53" cy="108" r="4" fill="#e9a18b" opacity=".55" />
-          <circle cx="127" cy="108" r="4" fill="#e9a18b" opacity=".55" />
-          <path d="M62 140c-8 10-11 22-12 38M118 140c8 10 11 22 12 38" fill="none" stroke="#f3d4b8" strokeWidth="3" opacity=".9" />
-        </svg>
-        <span className="teacher-label">একটু খেয়াল রাখবেন!</span>
+      <div className="notice-teacher" aria-label="Momo order care tip">
+        <div className="notice-food-icon" aria-hidden="true">🥟</div>
+        <span className="teacher-label">A little care, please!</span>
       </div>
 
       <div className="unboxing-copy">
-        <p className="eyebrow">IMPORTANT · PLEASE READ</p>
-        <h3 id="unboxing-notice-title">Unboxing video notice</h3>
+        <p className="eyebrow">YOUR ORDER · QUICK CHECK</p>
+        <h3 id="unboxing-notice-title">A quick video helps us help you.</h3>
         <p className="notice-english">
-          To help us verify damage, defects or missing items, please start recording <strong>before opening the parcel</strong>.
-          Keep one continuous video showing the sealed parcel and shipping label, the full opening process, and the product as first revealed.
-          A video started only after unboxing may not be sufficient evidence for a standard defect claim.
+          When your momo order arrives, use your phone camera to start one continuous video
+          <strong> before opening the food pack</strong>. Show the sealed pack and order label,
+          then the opening and the items inside. This helps our team review reports of a damaged,
+          incorrect or missing item.
         </p>
         <p className="notice-bangla" lang="bn">
-          পণ্যের ক্ষতি, ত্রুটি বা কোনো অংশ missing থাকলে যাচাই সহজ করতে <strong>পার্সেল খোলার আগেই ভিডিও রেকর্ডিং শুরু করুন</strong>।
-          একটি টানা ভিডিওতে সিল করা পার্সেল ও শিপিং লেবেল, প্যাকেট খোলার সম্পূর্ণ প্রক্রিয়া এবং প্রথমবার পণ্য বের করার পরের অবস্থা স্পষ্টভাবে দেখান।
-          আনবক্সিং শেষ হওয়ার পর শুরু করা ভিডিও সাধারণ defect claim যাচাইয়ের জন্য যথেষ্ট নাও হতে পারে।
+          আপনার Cloud Momos অর্ডার হাতে পেলে ফোনের ক্যামেরা দিয়ে
+          <strong> খাবারের প্যাকেট খোলার আগেই</strong> একটানা ভিডিও রেকর্ড করুন।
+          ভিডিওতে সিল করা প্যাকেট ও অর্ডার লেবেল, প্যাকেট খোলা এবং ভেতরের খাবার দেখান।
+          অর্ডারে কোনো খাবার কম, ভুল বা নষ্ট অবস্থায় এলে বিষয়টি যাচাই করতে ভিডিওটি আমাদের সাহায্য করবে।
         </p>
-        <p className="notice-legal">
-          We review every complaint in line with applicable consumer-protection law. This evidence guideline does not remove your statutory rights.
-          <span lang="bn"> প্রতিটি অভিযোগ প্রযোজ্য ভোক্তা-অধিকার আইন মেনে বিবেচনা করা হবে; এই নির্দেশনা আপনার আইনগত অধিকার বাতিল করে না।</span>
-        </p>
-        <div className="notice-bangla">
-          <strong>এক্সচেঞ্জ নীতি — ডেলিভারি ম্যান চলে যাওয়ার আগেই পণ্য পরীক্ষা করুন।</strong>
-          ডেলিভারি ম্যান সামনে থাকা অবস্থায় পণ্যটি ভালোভাবে দেখে নিন। তখন কোনো ত্রুটি পাওয়া গেলে আমাদের WhatsApp-এ জানান; আমরা নিজেদের খরচে নতুন পণ্য পাঠাব। ডেলিভারি ম্যান চলে যাওয়ার পর এক্সচেঞ্জ চাইলে পুনরায় ডেলিভারি চার্জ দিতে হবে।
+        <div className="notice-food-steps">
+          <span><b>01</b> Keep the pack sealed</span>
+          <span><b>02</b> Record while opening</span>
+          <span><b>03</b> Contact support if there’s an issue</span>
         </div>
-
+        <p className="notice-legal">
+          This website does not record or upload video from your camera. Keep the video on your phone
+          and share it with our support team on WhatsApp if you need help.
+          <span lang="bn"> ওয়েবসাইট নিজে ভিডিও রেকর্ড বা আপলোড করে না। প্রয়োজন হলে ফোনে রাখা ভিডিওটি WhatsApp-এ আমাদের সাপোর্ট টিমকে পাঠান।</span>
+        </p>
+        <a className="notice-support-link" href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">
+          WhatsApp Cloud Momos support · +8801969419302
+        </a>
         {showConsent && (
           <label className="policy-consent">
             <input
@@ -77,8 +54,8 @@ export default function UnboxingNotice({
               onChange={(event) => onCheckedChange?.(event.target.checked)}
             />
             <span>
-              I have read the unboxing and doorstep-check / exchange policy.
-              <span lang="bn"> আমি আনবক্সিং ও ডেলিভারির সময় পণ্য পরীক্ষা এবং এক্সচেঞ্জ নীতিটি পড়েছি।</span>
+              I have read the food-pack video-check instructions.
+              <span lang="bn"> খাবারের প্যাকেট খোলার ভিডিও নির্দেশনাটি পড়েছি।</span>
             </span>
           </label>
         )}
