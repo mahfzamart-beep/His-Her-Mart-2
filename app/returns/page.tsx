@@ -25,8 +25,8 @@ export default function ReturnsPage() {
           <p>While the delivery person is present, check that you have received the correct food packs and the expected number of boxes. Tell the delivery person and contact Cloud Momos support straight away if something is damaged, incorrect or missing.</p>
         </section>
         <section className="policy-section">
-          <h2>Record the opening</h2>
-          <p>For an easier review, use your phone camera to record one continuous video from before opening the sealed pack through to showing the food inside. The website does not record or upload video. Keep the clip on your phone and share it with our support team if there is an issue.</p>
+          <h2>Report a problem</h2>
+          <p>If something is missing, incorrect or damaged, contact Cloud Momos promptly with your order number. Clear photos of the food pack can help our team review the issue, but recording a video is not required to place an order.</p>
         </section>
         <section className="policy-section">
           <h2>Need assistance?</h2>
