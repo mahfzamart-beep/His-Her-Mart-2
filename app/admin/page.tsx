@@ -399,7 +399,7 @@ export default function AdminPage() {
 
   return <main className="admin-shell">
     <header className="admin-topbar">
-      <a className="admin-brand" href="/"><img className="admin-brand-icon" src="/app-icon-v3.svg" alt="" /><b>CLOUD MOMOS</b><small>KITCHEN</small></a>
+      <a className="admin-brand" href="/"><img className="admin-brand-icon" src="/app-icon-v3.svg" alt="" /><b>CLOUD MOMOS</b><small>KITCHEN CONTROL</small></a>
       <div className="admin-top-actions"><span>{session.user.email}</span><button onClick={refresh} aria-label="Refresh orders"><RefreshCw size={16}/></button><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </header>
     <nav className="admin-quick-nav" aria-label="Admin section shortcuts">
@@ -412,7 +412,7 @@ export default function AdminPage() {
     <div className="admin-content">
       <AdminControlCenter actorId={session.user.id} />
       <CloudMomosAdmin />
-      <div className="admin-heading"><div><p className="eyebrow">CLOUD MOMOS · KITCHEN OPERATIONS</p><h1>Kitchen & order dashboard</h1><p>Manage momo orders, kitchen stock, menu items and customer deliveries.</p></div><button className="admin-refresh" onClick={refresh}><RefreshCw size={15}/> Refresh</button></div>
+      <div className="admin-heading"><div><p className="eyebrow">CLOUD MOMOS · KITCHEN OPERATIONS</p><h1>The kitchen, in control.</h1><p>Manage today’s momo orders, menu items, kitchen stock, Sylhet delivery and customer care.</p></div><button className="admin-refresh" onClick={refresh}><RefreshCw size={15}/> Refresh</button></div>
       {error && <div className="admin-alert"><ShieldAlert size={17}/>{error}</div>}
       <section className="admin-stats">
         <article><ClipboardList/><span>Total orders</span><strong>{counts.total}</strong></article>
