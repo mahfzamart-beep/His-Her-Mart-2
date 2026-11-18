@@ -21,7 +21,7 @@ export default function ContactPage() {
     <main className="policy-shell">
       <header className="policy-top">
         <Link href="/" className="tracking-back"><ArrowLeft size={16}/> Back to store</Link>
-        <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HERS MART</small></Link>
+        <Link href="/" className="tracking-brand">Cloud<span>Momos</span><small>MADE WITH LOVE IN SYLHET</small></Link>
       </header>
       <article className="policy-card">
         <div className="tracking-icon"><MessageCircle size={24}/></div>
