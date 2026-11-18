@@ -471,5 +471,6 @@ export default function AdminPage() {
       <label className="admin-note-field">Update order status<select value={selected.order_status} onChange={e=>void updateOrder(selected,e.target.value)} disabled={busy}>{statuses.map(status=><option key={status} value={status}>{status.toUpperCase()}</option>)}</select></label>
       <p className="admin-private-hint">Status changes are saved to the protected order record. The customer-facing store confirmation is not sent automatically yet.</p>
     </section></div>}
+    </div>
   </main>;
 }
