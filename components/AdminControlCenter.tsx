@@ -458,8 +458,8 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     <div className="admin-control-heading">
       <div>
         <p className="eyebrow">CLOUD MOMOS · KITCHEN OPERATIONS</p>
-        <h2>Cloud Momos Kitchen Desk</h2>
-        <p>Run daily momo orders, kitchen stock, ingredient suppliers, customer insights and operating costs from one place.</p>
+        <h2>The kitchen, in control.</h2>
+        <p>One place for momo orders, menu availability, ingredient stock, local delivery, customer care and daily kitchen costs.</p>
       </div>
       <div className="admin-control-heading-actions">
         <span><ShieldCheck size={14}/> Owner workspace</span>
