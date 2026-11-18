@@ -63,9 +63,9 @@ export default function Home(){
  })();return()=>{cancelled=true}},[]);
  useEffect(()=>{try{setCart(JSON.parse(localStorage.getItem("cloud-momos-box-v1")||"{}"))}catch{setCart({})}},[]);
  useEffect(()=>{localStorage.setItem("cloud-momos-box-v1",JSON.stringify(cart))},[cart]);
- const cookedProducts=products.filter(p=>/ready[\\s-]*to[\\s-]*eat|cooked/i.test(p.category?.name||""));
+ const cookedProducts=products.filter(p=>/ready[\s-]*to[\s-]*eat|cooked/i.test(p.category?.name||""));
  const frozenProducts=products.filter(p=>/frozen/i.test(p.category?.name||""));
- const otherProducts=products.filter(p=>!(/ready[\\s-]*to[\\s-]*eat|cooked|frozen/i.test(p.category?.name||"")));
+ const otherProducts=products.filter(p=>!(/ready[\s-]*to[\s-]*eat|cooked|frozen/i.test(p.category?.name||"")));
  const lines:Line[]=Object.entries(cart).flatMap(([id,quantity])=>{const product=products.find(p=>p.id===id);return product&&quantity>0?[{product,quantity}]:[]});
  const count=lines.reduce((s,l)=>s+l.quantity,0);
  const subtotal=lines.reduce((s,l)=>s+l.quantity*Number(l.product.price),0);
