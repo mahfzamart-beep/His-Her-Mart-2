@@ -129,7 +129,7 @@ export default function CloudMomosAdmin() {
   const toggleAd = async (ad: Ad) => {if(!supabase)return;const {error:e}=await supabase.from("advertisements").update({is_active:!ad.is_active,updated_at:new Date().toISOString()}).eq("id",ad.id);if(e)setError(e.message);else await refresh();};
   const deleteAd = async (ad: Ad) => {if(!supabase||!window.confirm("Delete advertisement “"+ad.title+"”?"))return;const {error:e}=await supabase.from("advertisements").delete().eq("id",ad.id);if(e)setError(e.message);else await refresh();};
 
-  return <section className="admin-orders-card admin-products-card" style={{marginTop:24}}>
+  return <section className="admin-orders-card admin-products-card" id="delivery-and-ads" style={{marginTop:24}}>
     <div className="admin-orders-toolbar"><div><p className="eyebrow">CLOUD MOMOS OPERATIONS</p><h2>Delivery areas & advertisements</h2><p>Start with selected Sylhet areas and expand whenever you are ready.</p></div><button className="admin-refresh" onClick={()=>void refresh()}><RefreshCw size={15}/> Refresh</button></div>
     {error&&<p className="admin-error" role="alert">{error}</p>}{notice&&<p className="admin-product-success" role="status">{notice}</p>}
     <div className="admin-product-form-grid" style={{alignItems:"start"}}>
