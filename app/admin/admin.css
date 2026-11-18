@@ -364,23 +364,7 @@
 .admin-login-form{display:grid;gap:13px}
 .admin-login-form button.primary-btn{width:100%;min-height:48px;margin-top:4px}
 .admin-login-card>small{display:block;margin-top:19px;color:#889185;font-size:10px;line-height:1.6}
-.admin-size-quick-add{display:grid;gap:8px}
-.admin-size-quick-add>span,.admin-size-profile-note b{color:#536354;font-size:11px;font-weight:900}
-.admin-size-quick-add>div{display:flex;flex-wrap:wrap;gap:7px}
-.admin-size-chip{min-height:34px;padding:7px 10px;border:1px solid var(--adm-line);border-radius:999px;background:#fff;color:#607160;font-size:10px;font-weight:800}
-.admin-size-chip.selected{border-color:var(--adm-forest);background:#edf4eb;color:var(--adm-forest)}
-.admin-size-profile-note{display:grid;gap:5px;padding:12px;border-radius:12px;background:#f7f5ee}
-.admin-size-profile-note small{color:#849082;font-size:10px;line-height:1.55}
-.admin-product-size-settings,.admin-product-color-settings{display:grid;gap:11px;padding:14px;border:1px solid var(--adm-line);border-radius:14px;background:#fbfaf5}
-.admin-color-settings-heading{display:grid;gap:5px}
-.admin-color-settings-heading b{color:#536354;font-size:12px}
-.admin-color-settings-heading small{color:#879185;font-size:10px;line-height:1.5}
-.admin-color-option-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
-.admin-color-option{display:flex;align-items:center;gap:7px;min-width:0;padding:8px;border:1px solid var(--adm-line);border-radius:11px;background:#fff;color:#566456;font-size:10px;font-weight:700}
-.admin-color-option.selected{border-color:#7ba382;background:#f0f7ef}
-.admin-color-swatch{flex:0 0 16px;width:16px;height:16px;border:1px solid rgba(0,0,0,.12);border-radius:50%}
-.admin-color-option>b{margin-left:auto;color:#3c804c}
-.admin-color-selected-count{color:#879185;font-size:10px}
+
 
 /* Cloud Momos area and campaign management */
 .admin-product-form[style]{background:#fff}
@@ -535,3 +519,81 @@
 .admin-food-product-note{display:grid;gap:5px;padding:13px 14px;border:1px solid #dce8d7;border-radius:14px;background:#f1f7ef}
 .admin-food-product-note b{color:var(--adm-forest);font-size:12px}
 .admin-food-product-note small{color:#71806e;font-size:10px;line-height:1.6}
+
+
+/* Cloud Momos — kitchen-first operations identity */
+.admin-topbar{
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse at 88% -40%,rgba(239,135,61,.30),transparent 35%),
+    linear-gradient(115deg,#102f25 0%,#173f30 56%,#245740 100%);
+}
+.admin-topbar::after{
+  content:"";position:absolute;right:9%;top:-70px;width:210px;height:210px;
+  border:1px solid rgba(244,201,141,.17);border-radius:50%;
+  box-shadow:0 0 0 22px rgba(244,201,141,.035),0 0 0 45px rgba(244,201,141,.025);
+  pointer-events:none;
+}
+.admin-brand,.admin-top-actions{position:relative;z-index:1}
+.admin-brand-icon{border:2px solid rgba(244,201,141,.65);border-radius:15px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.admin-brand>b{letter-spacing:1.25px}
+.admin-brand>small{border-color:rgba(244,201,141,.42);background:rgba(244,201,141,.12);color:#f4c98d}
+.admin-quick-nav{border-bottom-color:#e4d9c7;background:rgba(247,241,229,.97)}
+.admin-quick-nav a{border-radius:12px}
+.admin-quick-nav a:first-child{background:#edf1e7;color:#315c46}
+.admin-content{gap:24px}
+.admin-control-center{
+  overflow:hidden;border-color:rgba(23,63,48,.13);
+  background:
+    radial-gradient(ellipse at 100% 0%,rgba(244,201,141,.19),transparent 28%),
+    #fffdf8;
+  box-shadow:0 22px 55px rgba(23,63,48,.09);
+}
+.admin-control-heading{
+  position:relative;overflow:hidden;align-items:center;
+  margin:-1px -1px 0;padding:24px clamp(18px,3vw,32px);
+  border-radius:17px;
+  background:
+    radial-gradient(ellipse at 91% 0%,rgba(239,135,61,.27),transparent 34%),
+    linear-gradient(120deg,#102f25 0%,#173f30 65%,#285740 100%);
+  color:#fffaf1;
+}
+.admin-control-heading::after{
+  content:"";position:absolute;right:6%;top:-86px;width:205px;height:205px;
+  border:1px solid rgba(244,201,141,.22);border-radius:50%;
+  box-shadow:0 0 0 24px rgba(244,201,141,.04),0 0 0 48px rgba(244,201,141,.025);
+  pointer-events:none;
+}
+.admin-control-heading>div,.admin-control-heading-actions{position:relative;z-index:1}
+.admin-control-heading .eyebrow{color:#f4c98d}
+.admin-control-heading h2{color:#fffaf1}
+.admin-control-heading p:not(.eyebrow){color:#d8e4d8}
+.admin-control-heading-actions>span{border-color:rgba(244,201,141,.27);background:rgba(255,255,255,.1);color:#f4c98d}
+.admin-control-heading-actions button{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fffaf1}
+.admin-control-heading-actions button:hover{background:rgba(255,255,255,.18)}
+.admin-control-nav{margin-top:0}
+.admin-control-nav button{border-radius:12px;background:#f1efe6}
+.admin-control-nav button.active{border-color:#173f30;background:#173f30;box-shadow:0 8px 18px rgba(23,63,48,.16)}
+.admin-control-metrics article{
+  border-color:#e8dece;background:linear-gradient(155deg,#fffdf8,#f8f3e8);
+  box-shadow:0 8px 18px rgba(23,63,48,.035);
+}
+.admin-heading{
+  padding:20px 22px;border:1px solid rgba(23,63,48,.11);border-radius:19px;
+  background:
+    radial-gradient(ellipse at 95% -20%,rgba(239,135,61,.14),transparent 32%),
+    linear-gradient(120deg,#fffaf1,#f0f1e5);
+}
+.admin-heading h1{color:#173f30}
+.admin-orders-card{border-color:rgba(23,63,48,.11);box-shadow:0 15px 36px rgba(23,63,48,.055)}
+.admin-orders-toolbar h2{color:#173f30}
+.admin-product-form{border-color:#e5dac7;background:#fffaf1}
+.admin-product-import{border-color:#e8dcc9;background:#f8f2e6}
+@media(max-width:760px){
+  .admin-topbar{background:
+    radial-gradient(ellipse at 100% 0%,rgba(239,135,61,.24),transparent 34%),
+    linear-gradient(120deg,#102f25,#173f30)}
+  .admin-control-heading{padding:20px 16px;border-radius:14px}
+  .admin-control-heading::after{right:-55px;top:-72px}
+  .admin-heading{padding:16px;border-radius:16px}
+}
