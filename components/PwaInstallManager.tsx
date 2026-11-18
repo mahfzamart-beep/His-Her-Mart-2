@@ -10,8 +10,8 @@ type DeferredInstallPrompt = Event & {
 
 declare global {
   interface Window {
-    __hhmInstallPrompt?: DeferredInstallPrompt;
-    __hhmPwaInstalled?: boolean;
+    __cloudMomosInstallPrompt?: DeferredInstallPrompt;
+    __cloudMomosPwaInstalled?: boolean;
   }
 }
 
@@ -19,13 +19,13 @@ export default function PwaInstallManager() {
   useEffect(() => {
     const onInstallPrompt = (event: Event) => {
       event.preventDefault();
-      window.__hhmInstallPrompt = event as DeferredInstallPrompt;
-      window.dispatchEvent(new Event("hhm-install-available"));
+      window.__cloudMomosInstallPrompt = event as DeferredInstallPrompt;
+      window.dispatchEvent(new Event("cloud-momos-install-available"));
     };
     const onInstalled = () => {
-      window.__hhmPwaInstalled = true;
-      window.__hhmInstallPrompt = undefined;
-      window.dispatchEvent(new Event("hhm-app-installed"));
+      window.__cloudMomosPwaInstalled = true;
+      window.__cloudMomosInstallPrompt = undefined;
+      window.dispatchEvent(new Event("cloud-momos-app-installed"));
     };
     window.addEventListener("beforeinstallprompt", onInstallPrompt);
     window.addEventListener("appinstalled", onInstalled);
@@ -33,7 +33,7 @@ export default function PwaInstallManager() {
       navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
         .then((registration) => registration.update().catch(() => undefined))
         .catch((error) => {
-          console.warn("His & Hers app worker registration failed:", error);
+          console.warn("Cloud Momos app worker registration failed:", error);
         });
     }
     return () => {
