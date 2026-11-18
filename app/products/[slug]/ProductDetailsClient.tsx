@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Heart, ShoppingBag, Plus, Minus, Check, Share2, ZoomIn, X, Truck, MessageCircle } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
-import { getColorHex } from "../../../lib/color-options";
 
 type Product = {
   id: string;
@@ -14,26 +13,12 @@ type Product = {
   compare_at_price: number | null;
   image_url: string | null;
   images: string[] | null;
-  size_type: string | null;
-  size_options: string[] | null;
-  color_options: string[] | null;
   stock_quantity: number;
   category?: { name: string } | null;
   free_shipping_eligible?: boolean;
 };
 const money = (n: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(n);
-const makeCartKey = (productId: string, size?: string | null, color?: string | null) => size || color ? productId + "::" + encodeURIComponent(size || "") + "::" + encodeURIComponent(color || "") : productId;
 const getCartProductId = (key: string) => key.split("::", 1)[0];
-const sizeHeading = (sizeType: string | null) => {
-  if (sizeType === "apparel_alpha") return "Choose your clothing size · Alphanumeric";
-  if (sizeType === "apparel_numeric") return "Choose your clothing size · Numeric";
-  if (sizeType === "shoe_eu") return "Choose your shoe size · EU";
-  if (sizeType === "shoe_uk") return "Choose your shoe size · UK";
-  if (sizeType === "shoe_us") return "Choose your shoe size · US";
-  if (sizeType === "letter") return "Choose your clothing size";
-  if (sizeType === "numeric") return "Choose your numeric size";
-  return "Choose your size";
-};
 
 export default function ProductDetailsPage({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -42,8 +27,6 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
   const [added, setAdded] = useState(false);
   const [inBagQty, setInBagQty] = useState(0);
   const [saved, setSaved] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState("");
   const [sizeError, setSizeError] = useState("");
   const [shareMessage, setShareMessage] = useState("");
@@ -54,7 +37,7 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
     async function load() {
       if (!supabase || !slug) { setBusy(false); return; }
       const { data, error } = await supabase.from("products")
-        .select("id,slug,name,description,price,compare_at_price,image_url,images,size_type,size_options,color_options,stock_quantity,free_shipping_eligible,category:categories(name)")
+        .select("id,slug,name,description,price,compare_at_price,image_url,images,stock_quantity,free_shipping_eligible,category:categories(name)")
         .eq("slug", slug).eq("is_active", true).maybeSingle();
       if (!active) return;
       if (!error && data) {
@@ -74,9 +57,7 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
     return () => { active = false; };
   }, [slug]);
 
-  const requiredSizes = Array.isArray(product?.size_options) ? product.size_options.filter(Boolean) : [];
-  const requiredColors = Array.isArray(product?.color_options) ? product.color_options.filter(Boolean) : [];
-  const selectedCartKey = product ? makeCartKey(product.id, selectedSize, selectedColor) : "";
+  const selectedCartKey = product?.id || "";
 
   useEffect(() => {
     if (!product) return;
@@ -92,14 +73,6 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
 
   function addToBag() {
     if (!product) return;
-    if (requiredSizes.length && (!selectedSize || !requiredSizes.includes(selectedSize))) {
-      setSizeError("Please choose an available size before adding this item to your bag.");
-      return;
-    }
-    if (requiredColors.length && (!selectedColor || !requiredColors.includes(selectedColor))) {
-      setSizeError("Please choose an available colour before adding this item to your bag.");
-      return;
-    }
     let cart: Record<string, number> = {};
     try { cart = JSON.parse(localStorage.getItem("hhm-cart-v1") || "{}"); } catch { cart = {}; }
     const otherSizeQuantity = Object.entries(cart).reduce((sum, [key, value]) => {
@@ -134,18 +107,8 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
 
   function orderNow() {
     if (!product || Number(product.stock_quantity) <= 0) return;
-    if (requiredSizes.length && (!selectedSize || !requiredSizes.includes(selectedSize))) {
-      setSizeError("Please choose an available size before ordering.");
-      return;
-    }
-    if (requiredColors.length && (!selectedColor || !requiredColors.includes(selectedColor))) {
-      setSizeError("Please choose an available colour before ordering.");
-      return;
-    }
     const requested = Math.max(1, Math.min(10, Number(product.stock_quantity), qty));
-    const sizeQuery = selectedSize ? "&size=" + encodeURIComponent(selectedSize) : "";
-    const colorQuery = selectedColor ? "&color=" + encodeURIComponent(selectedColor) : "";
-    window.location.assign("/?buyNow=" + encodeURIComponent(product.id) + "&qty=" + requested + sizeQuery + colorQuery);
+    window.location.assign("/?buyNow=" + encodeURIComponent(product.id) + "&qty=" + requested);
   }
 
   function toggleSaved() {
@@ -163,8 +126,6 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
 
   const stock = Number(product.stock_quantity || 0);
   const gallery = Array.from(new Set([product.image_url, ...(Array.isArray(product.images) ? product.images : [])].filter((url): url is string => typeof url === "string" && /^https?:\/\//i.test(url)))).slice(0, 12);
-  const sizeRequired = requiredSizes.length > 0;
-  const missingOptions = (sizeRequired && !selectedSize) || (requiredColors.length > 0 && !selectedColor);
   const productStructuredData = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -195,18 +156,9 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
         <div className="detail-price">{money(Number(product.price))}{product.compare_at_price && Number(product.compare_at_price) > Number(product.price) && <del>{money(Number(product.compare_at_price))}</del>}</div>
         <p className="detail-stock">{stock > 0 ? (stock < 5 ? "Only " + stock + " left in stock" : "In stock and ready to order") : "Currently out of stock"}</p>
         <p className="detail-description">{product.description || "A thoughtfully selected find from His & Her Mart. Contact our team if you need more product information before ordering."}</p>
-        {requiredColors.length > 0 && <div className="detail-size-selector detail-color-selector">
-          <div className="detail-size-heading"><b>Choose your colour</b><small>{selectedColor ? "Selected: " + selectedColor : "Select one available colour"}</small></div>
-          <div className="detail-color-options">{requiredColors.map(color => <button type="button" key={color} className={selectedColor === color ? "detail-color-option selected" : "detail-color-option"} aria-pressed={selectedColor === color} onClick={() => { setSelectedColor(color); setSizeError(""); setAdded(false); }}><span className="detail-color-swatch" style={{ background: getColorHex(color) }} />{color}</button>)}</div>
-        </div>}
-        {sizeRequired && <div className="detail-size-selector">
-          <div className="detail-size-heading"><b>{sizeHeading(product.size_type)}</b><small>{selectedSize ? "Selected: " + selectedSize : "Select one available option"}</small></div>
-          <div className="detail-size-options">{requiredSizes.map(size => <button type="button" key={size} className={selectedSize === size ? "detail-size-option selected" : "detail-size-option"} aria-pressed={selectedSize === size} onClick={() => { setSelectedSize(size); setSizeError(""); setAdded(false); }}>{size}</button>)}</div>
-          <small className="detail-size-stock-note">{product.size_type?.startsWith("shoe_") ? "Choose from the available shoe sizes listed by the store." : "Choose from the available clothing sizes listed by the store."} Product stock is shared across the listed sizes.</small>
-        </div>}
         <div className="detail-quantity"><span>Quantity</span><div><button onClick={() => setQty(v => Math.max(1, v - 1))} disabled={qty <= 1}><Minus size={14} /></button><b>{qty}</b><button onClick={() => setQty(v => Math.min(stock, 10, v + 1))} disabled={qty >= stock || qty >= 10}><Plus size={14} /></button></div></div>
         {sizeError && <p className="detail-size-error" role="alert">{sizeError}</p>}
-        <div className="detail-actions"><button className="primary-btn" onClick={inBagQty > 0 ? openBag : addToBag} disabled={stock <= 0 || (sizeRequired && !selectedSize) || (requiredColors.length > 0 && !selectedColor)}>{inBagQty > 0 ? "View in bag (" + inBagQty + ")" : "Add to bag"} {inBagQty > 0 ? <ShoppingBag size={16} /> : <Plus size={16} />}</button><button className="order-now-btn" onClick={orderNow} disabled={stock <= 0 || (sizeRequired && !selectedSize) || (requiredColors.length > 0 && !selectedColor)}>Order now <ArrowRight size={16} /></button><button className={saved ? "detail-save saved" : "detail-save"} onClick={toggleSaved}><Heart size={17} fill={saved ? "currentColor" : "none"} />{saved ? "Saved" : "Save item"}</button></div>
+        <div className="detail-actions"><button className="primary-btn" onClick={inBagQty > 0 ? openBag : addToBag} disabled={stock <= 0}>{inBagQty > 0 ? "View in bag (" + inBagQty + ")" : "Add to bag"} {inBagQty > 0 ? <ShoppingBag size={16} /> : <Plus size={16} />}</button><button className="order-now-btn" onClick={orderNow} disabled={stock <= 0}>Order now <ArrowRight size={16} /></button><button className={saved ? "detail-save saved" : "detail-save"} onClick={toggleSaved}><Heart size={17} fill={saved ? "currentColor" : "none"} />{saved ? "Saved" : "Save item"}</button></div>
         {added && <p className="detail-added"><Check size={15} /> Added to your bag. <Link href="/?openBag=1">View your bag</Link></p>}
         {shareMessage && <p className="detail-share-message" role="status">{shareMessage}</p>}
         <a className="product-whatsapp-help" href={"https://wa.me/8801969419302?text=" + encodeURIComponent("Hello His & Hers Mart, I have a question about " + product.name + ": https://his-and-her-mart.vercel.app/products/" + product.slug)} target="_blank" rel="noreferrer"><MessageCircle size={15} /> Ask about this product on WhatsApp</a>
@@ -217,19 +169,8 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
     <div className="mobile-sticky-purchase" aria-label="Quick purchase">
       <div className="mobile-sticky-price"><small>{stock > 0 ? (stock < 5 ? "LIMITED STOCK" : "READY TO ORDER") : "OUT OF STOCK"}</small><b>{money(Number(product.price))}</b></div>
       <div className="mobile-sticky-actions">
-        <button type="button" className="mobile-sticky-add" disabled={stock <= 0} onClick={() => {
-          if (missingOptions) {
-            setSizeError("Please choose the available size and colour options above.");
-            document.querySelector(".detail-size-selector")?.scrollIntoView({ behavior: "smooth", block: "center" });
-          } else if (inBagQty > 0) openBag();
-          else addToBag();
-        }}>{missingOptions ? "Choose options" : inBagQty > 0 ? "View bag" : "Add to bag"}</button>
-        <button type="button" className="mobile-sticky-order" disabled={stock <= 0} onClick={() => {
-          if (missingOptions) {
-            setSizeError("Please choose the available size and colour options above.");
-            document.querySelector(".detail-size-selector")?.scrollIntoView({ behavior: "smooth", block: "center" });
-          } else orderNow();
-        }}>{missingOptions ? "Select options" : "Order now"}</button>
+        <button type="button" className="mobile-sticky-add" disabled={stock <= 0} onClick={() => inBagQty > 0 ? openBag() : addToBag()}>{inBagQty > 0 ? "View bag" : "Add to bag"}</button>
+        <button type="button" className="mobile-sticky-order" disabled={stock <= 0} onClick={orderNow}>Order now</button>
       </div>
     </div>
     {imageZoomOpen && selectedImage && <div className="detail-image-lightbox" role="dialog" aria-modal="true" aria-label="Product image preview" onClick={() => setImageZoomOpen(false)}><button type="button" aria-label="Close image preview" onClick={() => setImageZoomOpen(false)}><X size={22} /></button><img src={selectedImage} alt={product.name + " enlarged"} onClick={event => event.stopPropagation()} /></div>}
