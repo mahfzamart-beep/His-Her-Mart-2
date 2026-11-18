@@ -1,10 +1,7 @@
-const CACHE_NAME = "hhm-shell-v4";
+const CACHE_NAME = "cloud-momos-shell-v1";
 const SHELL_FILES = [
   "/offline",
-  "/brand/his-and-hers-logo.png",
   "/app-icon-v3.svg",
-  "/app-icons/icon-192.png",
-  "/app-icons/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -19,7 +16,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
-        keys.filter((key) => key.startsWith("hhm-shell-") && key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => ((key.startsWith("hhm-shell-") || key.startsWith("cloud-momos-shell-")) && key !== CACHE_NAME)).map((key) => caches.delete(key))
       ))
       .then(() => self.clients.claim())
   );
@@ -45,10 +42,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   const shouldCache = [
-    "/brand/his-and-hers-logo.png",
-    "/app-icon-v3.svg",
-    "/app-icons/icon-192.png",
-    "/app-icons/icon-512.png"
+      "/app-icon-v3.svg",
   ].includes(url.pathname);
 
   if (shouldCache) {
