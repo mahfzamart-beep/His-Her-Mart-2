@@ -491,3 +491,72 @@ button{cursor:pointer}
   html{scroll-behavior:auto}
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* Cloud Momos — mascot-led, blended brand palette refinement */
+:root{
+  --cm-forest:#173f30;
+  --cm-forest-deep:#102f25;
+  --cm-forest-soft:#315c46;
+  --cm-orange:#ef873d;
+  --cm-orange-deep:#d96e2b;
+  --cm-amber:#f4c98d;
+  --cm-cream:#f7f1e5;
+  --cm-paper:#fffaf1;
+  --cm-sand:#eadcc5;
+  --cm-ink:#26352c;
+  --cm-muted:#7c8378;
+  --cm-line:#e7ddca;
+  --cm-shadow:0 18px 48px rgba(34,55,41,.09);
+}
+body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
+.cm-top{background:#173f30}
+.cm-header{background:rgba(247,241,229,.94);border-bottom-color:rgba(23,63,48,.11)}
+.cm-hero{
+  background:
+    radial-gradient(ellipse at 83% 18%,rgba(244,201,141,.34),transparent 32%),
+    radial-gradient(ellipse at 8% 92%,rgba(239,135,61,.13),transparent 30%),
+    linear-gradient(125deg,#fbf6eb 0%,#f4eedf 52%,#e9eadb 100%);
+}
+.cm-hero-art{
+  background:
+    radial-gradient(ellipse at 72% 20%,rgba(244,201,141,.2),transparent 40%),
+    linear-gradient(145deg,#315c46 0%,#173f30 58%,#102f25 100%);
+  border:1px solid rgba(255,250,241,.28);
+  box-shadow:0 28px 55px rgba(16,47,37,.18),inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.cm-hero-mascot{background:transparent}
+.cm-category-banners{background:#f0e7d6}
+.cm-category-banners a{background:#fffaf1;border-color:rgba(23,63,48,.1)}
+.cm-menu{background:linear-gradient(180deg,#f7f1e5 0%,#f4ecdc 100%)}
+.cm-card{background:#fffaf1;border-color:#e7ddca}
+.cm-food-photo{
+  background:
+    radial-gradient(circle at 50% 55%,#fff2d9 0%,#f2dfbd 48%,transparent 74%),
+    linear-gradient(140deg,#f8efdf,#e9ddc6);
+}
+.cm-tabs button{border-color:#e2d5c0;background:rgba(255,250,241,.82)}
+.cm-tabs button.active{background:#173f30;border-color:#173f30}
+.cm-ads{
+  background:
+    radial-gradient(ellipse at 12% 0%,rgba(239,135,61,.1),transparent 36%),
+    linear-gradient(135deg,#e8eddf 0%,#edf0e5 55%,#f3e7d3 100%);
+}
+.cm-ad-card{background:#fffaf1;border-color:rgba(23,63,48,.1)}
+.cm-about{
+  background:
+    radial-gradient(ellipse at 88% 10%,rgba(244,201,141,.16),transparent 36%),
+    linear-gradient(125deg,#173f30 0%,#285740 62%,#123526 100%);
+}
+.cm-faq{background:#fbf7ed}
+.cm-footer{background:#102f25}
+.cm-checkout,.cm-drawer{background:#fffaf1}
+.cm-checkout input,.cm-checkout select,.cm-checkout textarea{
+  border-color:#e4d9c6;background:#fffdf8;color:#26352c;
+}
+@media(max-width:680px){
+  .cm-hero{background:
+    radial-gradient(ellipse at 88% 38%,rgba(244,201,141,.28),transparent 38%),
+    linear-gradient(145deg,#fbf6eb 0%,#f0eadb 100%)}
+  .cm-hero-art{border-radius:27px 27px 76px 27px}
+  .cm-menu{background:linear-gradient(180deg,#f7f1e5,#f2eadb)}
+}
