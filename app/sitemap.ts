@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
 
-const SITE_URL = "https://his-and-her-mart.vercel.app";
+const SITE_URL = "https://cloudmomos.vercel.app";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
