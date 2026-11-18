@@ -268,7 +268,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     const stock = Number(draft?.stock);
     const cost = draft?.cost.trim() ? Number(draft.cost) : null;
     if (!Number.isInteger(stock) || stock < 0 || stock > 1000000 || (cost != null && (!Number.isFinite(cost) || cost < 0 || cost > 10000000))) {
-      setError("Enter valid stock and supplier cost values for " + product.name + ".");
+      setError("Enter valid kitchen stock and ingredient cost values for " + product.name + ".");
       return;
     }
     setSaving(true); setError(""); setNotice("");
@@ -279,7 +279,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     else {
       setInventoryDrafts(current => ({ ...current, [product.id]: { stock: String(stock), cost: cost == null ? "" : String(cost), supplier: draft.supplier || "" } }));
       await log("inventory_updated", "product", product.id, "Updated inventory and unit cost for " + product.name, { stock_quantity: stock, supplier_cost_price: cost });
-      setNotice("Inventory saved for " + product.name + ".");
+      setNotice("Kitchen stock saved for " + product.name + ".");
       await refresh();
     }
     setSaving(false);
@@ -435,12 +435,12 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       order.subtotal, order.discount, order.delivery_charge, order.total, order.payment_method, order.payment_status,
       order.order_status, order.courier_partner, order.courier_tracking_number
     ]);
-    downloadCsv("his-her-mart-orders.csv", [headers, ...rows]);
+    downloadCsv("cloud-momos-orders.csv", [headers, ...rows]);
   };
 
   const exportCustomers = () => {
     const headers = ["Customer", "Phone", "Email", "Total Orders", "Delivered Orders", "Delivered Spend", "Last Order"];
-    downloadCsv("his-her-mart-customers.csv", [headers, ...filteredCustomers.map(customer => [customer.name, customer.phone, customer.email, customer.count, customer.delivered, customer.total, customer.last])]);
+    downloadCsv("cloud-momos-customers.csv", [headers, ...filteredCustomers.map(customer => [customer.name, customer.phone, customer.email, customer.count, customer.delivered, customer.total, customer.last])]);
   };
 
   function downloadCsv(filename: string, rows: unknown[][]) {
@@ -460,26 +460,26 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     const invoiceWindow = window.open("", "_blank", "width=850,height=900");
     if (!invoiceWindow) { setError("Allow pop-ups to print the invoice."); return; }
     const itemRows = (order.order_items || []).map(item => "<tr><td>" + escapeHtml(item.product_name) + "</td><td>" + Number(item.quantity) + "</td><td>" + money(Number(item.unit_price)) + "</td><td>" + money(Number(item.line_total)) + "</td></tr>").join("");
-    invoiceWindow.document.write("<!doctype html><html><head><title>Invoice " + escapeHtml(order.order_number) + "</title><meta name='viewport' content='width=device-width,initial-scale=1'><style>body{font:14px Arial,sans-serif;color:#222;margin:40px}header{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:18px}h1{font-family:Georgia,serif;font-size:30px}table{width:100%;border-collapse:collapse;margin-top:30px}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.total{margin:25px 0 0 auto;width:260px}.total p{display:flex;justify-content:space-between}@media print{button{display:none}}</style></head><body><header><div><h1>HIS &amp; HERS MART</h1><p>Order invoice / Cash on Delivery</p></div><div><b>" + escapeHtml(order.order_number) + "</b><p>" + escapeHtml(fullDate(order.created_at)) + "</p></div></header><h3>Customer</h3><p>" + escapeHtml(order.customer_name) + "<br>" + escapeHtml(order.customer_phone) + "<br>" + escapeHtml(order.shipping_address?.address_line) + ", " + escapeHtml(order.shipping_address?.area) + ", " + escapeHtml(order.shipping_address?.district) + "</p><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr></thead><tbody>" + itemRows + "</tbody></table><div class='total'><p><span>Subtotal</span><b>" + money(Number(order.subtotal)) + "</b></p><p><span>Discount</span><b>− " + money(Number(order.discount || 0)) + "</b></p><p><span>Delivery</span><b>" + money(Number(order.delivery_charge)) + "</b></p><p><span>Total</span><b>" + money(Number(order.total)) + "</b></p></div><script>window.onload=()=>window.print()</script></body></html>");
+    invoiceWindow.document.write("<!doctype html><html><head><title>Invoice " + escapeHtml(order.order_number) + "</title><meta name='viewport' content='width=device-width,initial-scale=1'><style>body{font:14px Arial,sans-serif;color:#222;margin:40px}header{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:18px}h1{font-family:Georgia,serif;font-size:30px}table{width:100%;border-collapse:collapse;margin-top:30px}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.total{margin:25px 0 0 auto;width:260px}.total p{display:flex;justify-content:space-between}@media print{button{display:none}}</style></head><body><header><div><h1>CLOUD MOMOS</h1><p>Momo order invoice / Cash on Delivery</p></div><div><b>" + escapeHtml(order.order_number) + "</b><p>" + escapeHtml(fullDate(order.created_at)) + "</p></div></header><h3>Customer</h3><p>" + escapeHtml(order.customer_name) + "<br>" + escapeHtml(order.customer_phone) + "<br>" + escapeHtml(order.shipping_address?.address_line) + ", " + escapeHtml(order.shipping_address?.area) + ", " + escapeHtml(order.shipping_address?.district) + "</p><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr></thead><tbody>" + itemRows + "</tbody></table><div class='total'><p><span>Subtotal</span><b>" + money(Number(order.subtotal)) + "</b></p><p><span>Discount</span><b>− " + money(Number(order.discount || 0)) + "</b></p><p><span>Delivery</span><b>" + money(Number(order.delivery_charge)) + "</b></p><p><span>Total</span><b>" + money(Number(order.total)) + "</b></p></div><script>window.onload=()=>window.print()</script></body></html>");
     invoiceWindow.document.close();
   };
 
   const nav: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "orders", label: "Orders & delivery", icon: ClipboardList },
-    { id: "inventory", label: "Inventory", icon: Warehouse },
-    { id: "suppliers", label: "Suppliers", icon: Truck },
+    { id: "inventory", label: "Kitchen stock", icon: Warehouse },
+    { id: "suppliers", label: "Ingredient suppliers", icon: Truck },
     { id: "customers", label: "Customers", icon: Users },
-    { id: "finance", label: "Finance", icon: Wallet },
+    { id: "finance", label: "Costs & sales", icon: Wallet },
     { id: "activity", label: "Activity log", icon: Activity }
   ];
 
   return <section className="admin-control-center" id="business-operations">
     <div className="admin-control-heading">
       <div>
-        <p className="eyebrow">BUSINESS OPERATIONS</p>
-        <h2>Admin Control Centre</h2>
-        <p>Orders, inventory, suppliers, customer insights and business finance in one place.</p>
+        <p className="eyebrow">CLOUD MOMOS · KITCHEN OPERATIONS</p>
+        <h2>Cloud Momos Kitchen Desk</h2>
+        <p>Run daily momo orders, kitchen stock, ingredient suppliers, customer insights and operating costs from one place.</p>
       </div>
       <div className="admin-control-heading-actions">
         <span><ShieldCheck size={14}/> Owner workspace</span>
@@ -500,7 +500,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     {loading ? <div className="admin-control-loading"><RefreshCw size={18} className="spin"/> Loading business data securely…</div> : <>
       {tab === "overview" && <>
         <div className="admin-control-toolbar">
-          <div><b>Business snapshot</b><small>Calculated from the latest 500 orders and current catalogue records.</small></div>
+          <div><b>Kitchen snapshot</b><small>Calculated from recent momo orders and current menu records.</small></div>
           <select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")} aria-label="Dashboard reporting period"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select>
         </div>
         <div className="admin-control-metrics">
@@ -520,19 +520,19 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
             <div className="admin-control-card-head"><div><b>Stock attention</b><small>Change the alert threshold as your catalogue grows</small></div><AlertTriangle size={18}/></div>
             <label className="admin-control-inline-label">Low stock threshold <input type="number" min="0" max="10000" value={stockThreshold} onChange={event => setStockThreshold(event.target.value)}/></label>
             {lowStockProducts.length === 0 ? <p className="admin-control-empty-line"><CheckCircle2 size={16}/> No active products need a stock alert.</p> :
-              <div className="admin-control-compact-list">{lowStockProducts.slice(0, 6).map(product => <div key={product.id}><span>{product.name}<small>{product.sku || "No SKU"}</small></span><b className={product.stock_quantity <= 0 ? "danger" : "warning"}>{product.stock_quantity <= 0 ? "Out of stock" : product.stock_quantity + " left"}</b></div>)}</div>}
+              <div className="admin-control-compact-list">{lowStockProducts.slice(0, 6).map(product => <div key={product.id}><span>{product.name}<small>{product.sku || "No menu code"}</small></span><b className={product.stock_quantity <= 0 ? "danger" : "warning"}>{product.stock_quantity <= 0 ? "Out of stock" : product.stock_quantity + " left"}</b></div>)}</div>}
             <button type="button" className="admin-control-text-btn" onClick={() => setTab("inventory")}>Open inventory <ChevronDown size={14}/></button>
           </section>
         </div>
         <div className="admin-control-two-col">
           <section className="admin-control-card">
-            <div className="admin-control-card-head"><div><b>Top delivered products</b><small>Ranked by units in the selected period</small></div><ShoppingBag size={18}/></div>
+            <div className="admin-control-card-head"><div><b>Top-selling momos</b><small>Ranked by units in the selected period</small></div><ShoppingBag size={18}/></div>
             {topProducts.length === 0 ? <p className="admin-control-empty-line">No delivered product sales in this period yet.</p> : <div className="admin-control-compact-list">{topProducts.map((product, index) => <div key={product.name}><span><i>{index + 1}</i>{product.name}</span><b>{product.quantity} units · {money(product.sales)}</b></div>)}</div>}
           </section>
           <section className="admin-control-card">
             <div className="admin-control-card-head"><div><b>Finance confidence</b><small>Based on cost records for delivered items</small></div><IndianRupee size={18}/></div>
             {profitData.missingLines === 0 ? <><strong className="admin-control-finance-value">{money(profitData.netEstimate || 0)}</strong><p className="admin-control-muted">Estimated result after recorded expenses. Product costs use order snapshots or current supplier cost.</p></> :
-              <><strong className="admin-control-finance-value">Incomplete</strong><p className="admin-control-muted">{profitData.missingLines} delivered order item line(s) have no recorded cost. Add missing supplier costs before using profit figures.</p></>}
+              <><strong className="admin-control-finance-value">Incomplete</strong><p className="admin-control-muted">{profitData.missingLines} delivered order item line(s) have no recorded cost. Add missing ingredient costs before using profit figures.</p></>}
             <button type="button" className="admin-control-text-btn" onClick={() => setTab("finance")}>Review finance <ChevronDown size={14}/></button>
           </section>
         </div>
@@ -546,7 +546,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "orders" && <>
-        <div className="admin-control-toolbar"><div><b>Order operations & delivery desk</b><small>Manage courier references, status, bulk updates, supplier fulfilment and invoice printing.</small></div><button type="button" className="admin-control-outline-btn" onClick={exportOrders}><Download size={15}/> Export filtered orders</button></div>
+        <div className="admin-control-toolbar"><div><b>Order & delivery desk</b><small>Manage momo orders, delivery partner references, order status, bulk updates and invoice printing.</small></div><button type="button" className="admin-control-outline-btn" onClick={exportOrders}><Download size={15}/> Export filtered orders</button></div>
         <div className="admin-control-search"><Search size={16}/><input value={orderSearch} onChange={event => setOrderSearch(event.target.value)} placeholder="Search order number, customer or phone"/></div>
         <div className="admin-control-bulk"><label><input type="checkbox" checked={filteredOrders.length > 0 && filteredOrders.every(order => selectedOrderIds.includes(order.id))} onChange={event => setSelectedOrderIds(event.target.checked ? Array.from(new Set([...selectedOrderIds, ...filteredOrders.map(order => order.id)])) : selectedOrderIds.filter(id => !filteredOrders.some(order => order.id === id)))}/> Select visible orders</label><select value={bulkStatus} onChange={event => setBulkStatus(event.target.value)}>{ORDER_STATUSES.map(status => <option key={status} value={status}>{status.toUpperCase()}</option>)}</select><button type="button" onClick={() => void bulkUpdateOrders()} disabled={!selectedOrderIds.length || saving}>Update {selectedOrderIds.length || ""} selected</button></div>
         <section className="admin-control-card">
@@ -574,7 +574,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
           </section>;
         })()}
         <section className="admin-control-card">
-          <div className="admin-control-card-head"><div><b>Supplier fulfilment queue</b><small>Manage each supplier item separately after manual availability confirmation.</small></div><Truck size={18}/></div>
+          <div className="admin-control-card-head"><div><b>Ingredient purchase follow-up</b><small>Keep manual supplier references for any menu items fulfilled through a partner.</small></div><Truck size={18}/></div>
           <div className="admin-control-fulfilment-list">
             {orders.flatMap(order => (order.order_items || []).filter(item => item.fulfillment_source !== "own_stock").map(item => ({ order, item }))).slice(0, 80).map(({ order, item }) => <SupplierLine key={item.id} order={order} item={item} suppliers={suppliers} saving={saving} onSave={updateSupplierLine}/>)}
             {orders.every(order => (order.order_items || []).every(item => item.fulfillment_source === "own_stock")) && <p className="admin-control-empty-line">No supplier-fulfilled order items in the loaded order history.</p>}
@@ -583,10 +583,10 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "inventory" && <>
-        <div className="admin-control-toolbar"><div><b>Inventory & cost control</b><small>Update stock, supplier mapping and cost price. Changes affect the live product catalogue.</small></div><span className="admin-control-count">{lowStockProducts.length} stock alerts</span></div>
-        <div className="admin-control-search"><Search size={16}/><input value={inventorySearch} onChange={event => setInventorySearch(event.target.value)} placeholder="Search product, SKU or source"/></div>
+        <div className="admin-control-toolbar"><div><b>Kitchen stock & ingredient cost</b><small>Update momo box stock, ingredient cost estimates and supplier mapping.</small></div><span className="admin-control-count">{lowStockProducts.length} stock alerts</span></div>
+        <div className="admin-control-search"><Search size={16}/><input value={inventorySearch} onChange={event => setInventorySearch(event.target.value)} placeholder="Search momo menu item or SKU"/></div>
         <section className="admin-control-card">
-          <div className="admin-control-table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Stock quantity</th><th>Supplier cost (BDT)</th><th>Supplier</th><th></th></tr></thead><tbody>
+          <div className="admin-control-table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Boxes in stock</th><th>Unit cost estimate (BDT)</th><th>Ingredient supplier</th><th></th></tr></thead><tbody>
             {filteredProducts.map(product => <tr key={product.id}>
               <td><b>{product.name}</b><small>{product.sku || "No SKU"} · {product.is_active ? "Published" : "Hidden"}</small></td>
               <td>{money(product.price)}</td>
@@ -598,11 +598,11 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
             {filteredProducts.length === 0 && <tr><td colSpan={6}>No matching products.</td></tr>}
           </tbody></table></div>
         </section>
-        <div className="admin-control-note"><AlertTriangle size={16}/><span>Supplier stock and price are not automatically synced. Verify with ShopBase BD / DropshippingBD before confirming a supplier order. Cost changes apply to future order cost snapshots; older orders use current cost only as an estimate.</span></div>
+        <div className="admin-control-note"><AlertTriangle size={16}/><span>Stock and ingredient costs are updated manually. Keep supplier costs current; older orders without a cost snapshot may use today’s cost as an estimate.</span></div>
       </>}
 
       {tab === "suppliers" && <>
-        <div className="admin-control-toolbar"><div><b>Supplier directory</b><small>Manage manual supplier relationships and keep item references in one place.</small></div><span className="admin-control-count">{suppliers.filter(item => item.is_active).length} active suppliers</span></div>
+        <div className="admin-control-toolbar"><div><b>Ingredient supplier directory</b><small>Manage local ingredient, packaging and kitchen supply contacts.</small></div><span className="admin-control-count">{suppliers.filter(item => item.is_active).length} active suppliers</span></div>
         <div className="admin-control-supplier-grid">
           {suppliers.map(supplier => <article className="admin-control-card admin-control-supplier-card" key={supplier.id}>
             <div className="admin-control-card-head"><div><b>{supplier.name}</b><small>{supplier.platform_code || "Manual supplier"}</small></div><span className={supplier.is_active ? "admin-control-live" : "admin-control-paused"}>{supplier.is_active ? "Active" : "Paused"}</span></div>
@@ -614,10 +614,10 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
           </article>)}
         </div>
         <section className="admin-control-card">
-          <div className="admin-control-card-head"><div><b>Add a supplier</b><small>Contact details are optional; never enter supplier passwords or API secrets here.</small></div><Plus size={18}/></div>
+          <div className="admin-control-card-head"><div><b>Add an ingredient supplier</b><small>Save a wholesaler or local food-supply contact for kitchen operations.</small></div><Plus size={18}/></div>
           <form className="admin-control-form-grid" onSubmit={addSupplier}>
-            <label>Supplier name<input required minLength={2} maxLength={120} value={supplierDraft.name} onChange={event => setSupplierDraft(current => ({ ...current, name: event.target.value }))} placeholder="Supplier / wholesaler name"/></label>
-            <label>Platform code<input maxLength={64} value={supplierDraft.platform_code} onChange={event => setSupplierDraft(current => ({ ...current, platform_code: event.target.value }))} placeholder="Optional internal code"/></label>
+            <label>Supplier name<input required minLength={2} maxLength={120} value={supplierDraft.name} onChange={event => setSupplierDraft(current => ({ ...current, name: event.target.value }))} placeholder="e.g. Local chicken wholesaler"/></label>
+            <label>Platform code<input maxLength={64} value={supplierDraft.platform_code} onChange={event => setSupplierDraft(current => ({ ...current, platform_code: event.target.value }))} placeholder="Optional supplier reference"/></label>
             <label>Contact person<input value={supplierDraft.contact_person} onChange={event => setSupplierDraft(current => ({ ...current, contact_person: event.target.value }))}/></label>
             <label>Phone<input value={supplierDraft.phone} onChange={event => setSupplierDraft(current => ({ ...current, phone: event.target.value }))}/></label>
             <label>Email<input type="email" value={supplierDraft.email} onChange={event => setSupplierDraft(current => ({ ...current, email: event.target.value }))}/></label>
@@ -645,7 +645,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "finance" && <>
-        <div className="admin-control-toolbar"><div><b>Finance & profit tracker</b><small>Delivered sales, known product costs and recorded operating expenses.</small></div><select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select></div>
+        <div className="admin-control-toolbar"><div><b>Sales & kitchen cost tracker</b><small>Delivered momo sales, known ingredient costs and recorded operating expenses.</small></div><select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select></div>
         <div className="admin-control-metrics compact">
           <article><span><Wallet size={16}/> Delivered sales</span><strong>{money(profitData.revenue)}</strong><small>Product subtotal, not all placed orders</small></article>
           <article><span><Boxes size={16}/> Known product cost</span><strong>{money(profitData.knownCost)}</strong><small>{profitData.knownLines} item lines with cost</small></article>
@@ -655,7 +655,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
         <div className="admin-control-note"><AlertTriangle size={16}/><span>{profitData.missingLines > 0 ? "Profit cannot be finalised: some delivered items have no cost record. Add supplier cost in Inventory. Historical orders without a snapshot use today's product cost as an estimate. " : "All delivered item costs in this period are present. " }This is a management estimate before unrecorded COD, tax, packaging, refund and other business costs; only expenses entered below are deducted.</span></div>
         {profitData.netEstimate != null && <section className="admin-control-card admin-control-finance-breakdown"><div><span>Delivered product revenue</span><b>{money(profitData.revenue)}</b></div><div><span>Recorded item cost</span><b>− {money(profitData.knownCost)}</b></div><div><span>Recorded operating expenses</span><b>− {money(profitData.expenseTotal)}</b></div><div className="grand"><span>Estimated result</span><b>{money(profitData.netEstimate)}</b></div></section>}
         <section className="admin-control-card">
-          <div className="admin-control-card-head"><div><b>Record an operating expense</b><small>Keep packaging, marketing, courier, supplier and other costs in one ledger.</small></div><Plus size={18}/></div>
+          <div className="admin-control-card-head"><div><b>Record an operating expense</b><small>Track food ingredients, packaging, kitchen operations, courier, marketing and other costs in one ledger.</small></div><Plus size={18}/></div>
           <form className="admin-control-form-grid" onSubmit={addExpense}>
             <label>Category<select value={expenseDraft.category} onChange={event => setExpenseDraft(current => ({ ...current, category: event.target.value }))}>{EXPENSE_CATEGORIES.map(category => <option key={category} value={category}>{category.toUpperCase()}</option>)}</select></label>
             <label>Amount (BDT)<input type="number" min="0.01" step="0.01" required value={expenseDraft.amount} onChange={event => setExpenseDraft(current => ({ ...current, amount: event.target.value }))} placeholder="0.00"/></label>
