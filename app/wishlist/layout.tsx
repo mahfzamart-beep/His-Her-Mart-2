@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Wishlist",
+  title: "Cloud Momos Menu",
   robots: { index: false, follow: false },
 };
 
