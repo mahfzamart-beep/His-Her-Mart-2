@@ -474,7 +474,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     { id: "activity", label: "Activity log", icon: Activity }
   ];
 
-  return <section className="admin-control-center">
+  return <section className="admin-control-center" id="business-operations">
     <div className="admin-control-heading">
       <div>
         <p className="eyebrow">BUSINESS OPERATIONS</p>
