@@ -64,7 +64,7 @@ export default function PwaInstallCard() {
 
   return (
     <section className="pwa-install-card">
-      <div className="pwa-install-icon"><img src="/app-icon-v3.svg?v=5" alt="" /></div>
+      <div className="pwa-install-icon"><img src="/cloud-momos-app-icon.svg?v=1" alt="" /></div>
       <p className="eyebrow">CLOUD MOMOS · MADE FOR YOUR CRAVING</p>
       <h2>Your momo favourites,<br/><em>one tap away.</em></h2>
       <p className="pwa-install-intro">Install Cloud Momos for one-tap access to the Cooked and Frozen momo menus, Sylhet delivery updates and order tracking.</p>
