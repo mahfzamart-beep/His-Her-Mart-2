@@ -380,7 +380,7 @@ export default function AdminPage() {
   if (!session || !authorized) return <main className="admin-shell admin-login-shell">
     <a className="admin-back" href="/"><ArrowLeft size={15} /> Back to menu</a>
     <section className="admin-login-card">
-      <img className="admin-brand-mark" src="/app-icon-v3.svg" alt="Cloud Momos" />
+      <img className="admin-brand-mark" src="/cloud-momos-app-icon.svg" alt="Cloud Momos" />
       <p className="eyebrow">CLOUD MOMOS · OWNER ACCESS</p>
       <h1>Admin sign in</h1>
       <p className="admin-muted">Secure access for authorised store administrators only.</p>
