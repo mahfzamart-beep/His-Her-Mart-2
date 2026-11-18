@@ -93,10 +93,7 @@ export default function CloudMomosAdmin() {
             onProgress:(uploaded,total)=>setUploadProgress(Math.round(uploaded/total*100)),
             onSuccess:()=>resolve()
           });
-          upload.findPreviousUploads().then(previous=>{
-            if(previous.length)upload.resumeFromPreviousUpload(previous[0]);
-            upload.start();
-          }).catch(reject);
+          upload.start();
         });
       }else{
         const {error:uploadError}=await supabase.storage.from("product-images").upload(path,file,{cacheControl:"3600",contentType:file.type,upsert:false});
