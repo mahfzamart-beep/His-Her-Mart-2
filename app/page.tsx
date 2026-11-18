@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "../lib/supabase";
 import { ShoppingBag, MapPin, X, Plus, Minus, ArrowRight, Megaphone } from "lucide-react";
 
@@ -10,12 +10,19 @@ type Ad={id:string;title:string;description:string|null;image_url:string;media_t
 type Line={product:Product;quantity:number};
 const money=(n:number)=>"৳"+Number(n||0).toLocaleString("en-BD");
 
+function MenuProductCard({product,onAdd}:{product:Product;onAdd:(id:string,delta:number)=>void}){
+ const frozen=/frozen/i.test(product.category?.name||"");
+ return <article className="cm-card" key={product.id}>
+  <div className="cm-food-photo"><img src={product.image_url?.replace(/\\.webp$/,"-2x.jpg")||"/images/placeholder.svg"} alt={product.name} loading="lazy"/><small>{frozen?"RAW · FROZEN":"COOKED · READY TO EAT"}</small><em className="cm-demo-tag">DEMO</em></div>
+  <div className="cm-card-body"><h3>{product.name}</h3><p>{product.description||"A tasty Cloud Momos favourite."}</p><div className="cm-card-foot"><b>{product.price>0?money(product.price):"Demo · price pending"}</b><span>6 pcs / box</span></div><button disabled={product.price<=0||product.stock_quantity<=0} onClick={()=>onAdd(product.id,1)}>{product.price>0&&product.stock_quantity>0?"Add to Box":"Demo Preview"} <Plus size={15}/></button></div>
+ </article>;
+}
+
 export default function Home(){
  const [products,setProducts]=useState<Product[]>([]);
  const [areas,setAreas]=useState<Area[]>([]);
  const [ads,setAds]=useState<Ad[]>([]);
  const [loading,setLoading]=useState(true);
- const [category,setCategory]=useState("All");
  const [cart,setCart]=useState<Record<string,number>>({});
  const [cartOpen,setCartOpen]=useState(false);
  const [checkout,setCheckout]=useState(false);
@@ -56,8 +63,9 @@ export default function Home(){
  })();return()=>{cancelled=true}},[]);
  useEffect(()=>{try{setCart(JSON.parse(localStorage.getItem("cloud-momos-box-v1")||"{}"))}catch{setCart({})}},[]);
  useEffect(()=>{localStorage.setItem("cloud-momos-box-v1",JSON.stringify(cart))},[cart]);
- const categories=useMemo(()=>["All",...Array.from(new Set(products.map(p=>p.category?.name).filter(Boolean) as string[]))],[products]);
- const shown=products.filter(p=>category==="All"||p.category?.name===category);
+ const cookedProducts=products.filter(p=>/ready[\\s-]*to[\\s-]*eat|cooked/i.test(p.category?.name||""));
+ const frozenProducts=products.filter(p=>/frozen/i.test(p.category?.name||""));
+ const otherProducts=products.filter(p=>!(/ready[\\s-]*to[\\s-]*eat|cooked|frozen/i.test(p.category?.name||"")));
  const lines:Line[]=Object.entries(cart).flatMap(([id,quantity])=>{const product=products.find(p=>p.id===id);return product&&quantity>0?[{product,quantity}]:[]});
  const count=lines.reduce((s,l)=>s+l.quantity,0);
  const subtotal=lines.reduce((s,l)=>s+l.quantity*Number(l.product.price),0);
@@ -85,8 +93,19 @@ export default function Home(){
   <div className="cm-top">LITTLE CLOUDS. BIG COMFORT. <span>DELIVERY IN SELECTED SYLHET AREAS</span></div>
   <header className="cm-header"><a className="cm-logo" href="#"><span>Cloud</span><b>Momos</b></a><nav><a href="#home">Home</a><a href="#menu">Our Menu</a><a href="#about">About</a><a href="#offers">Offers</a><a href="#faq">FAQ</a></nav><button className="cm-icon" onClick={()=>setCartOpen(true)} aria-label="Open box"><ShoppingBag/> <i>{count}</i></button></header>
   <section className="cm-hero" id="home"><div className="cm-hero-copy"><span className="cm-kicker">FRESHLY MADE WITH LOVE</span><h1>Cloud<br/><em>Momos</em></h1><p>Little clouds. Big comfort. Delicious momos, made fresh and delivered with care across selected areas of Sylhet.</p><div className="cm-location"><MapPin size={17}/> Only in Sylhet City</div><a className="cm-btn" href="#menu">Order Now <ArrowRight size={17}/></a></div><div className="cm-hero-art"><img className="cm-hero-mascot" src="/images/brand/hero-mascot-2x.jpg" alt="Cloud Momos smiling momo mascot with a bamboo steamer" fetchPriority="high"/></div></section>
-  <section className="cm-category-banners"><a href="#menu" aria-label="Browse Ready to Eat momos" onClick={()=>setCategory("Ready to Eat")}><img src="/images/brand/banner-ready-to-eat-2x.jpg" alt="Ready to Eat freshly cooked Cloud Momos"/></a><a href="#menu" aria-label="Browse Frozen Momos" onClick={()=>setCategory("Frozen Momos")}><img src="/images/brand/banner-frozen-momos-2x.jpg" alt="Frozen Momos packed to store and cook anytime"/></a></section>
-  <section className="cm-menu" id="menu"><div className="cm-section-title"><span>MADE FRESH, JUST FOR YOU</span><h2>Our <em>Menu</em></h2><p>12 demo favourites · every box includes 6 pieces. Prices and availability will be confirmed before orders open.</p></div><div className="cm-tabs">{categories.map(c=><button key={c} className={category===c?"active":""} onClick={()=>setCategory(c)}>{c}</button>)}</div>{loading?<p className="cm-empty">Preparing our menu…</p>:shown.length===0?<div className="cm-menu-empty"><span>🥟</span><h3>Our menu is getting ready.</h3><p>We’re preparing the first batches. Check back soon for fresh and frozen favourites.</p></div>:<div className="cm-grid">{shown.map(p=><article className="cm-card" key={p.id}><div className="cm-food-photo"><img src={p.image_url?.replace(/\\.webp$/,"-2x.jpg")||"/images/placeholder.svg"} alt={p.name} loading="lazy"/><small>{p.category?.name==="Frozen Momos"?"RAW · FROZEN":"COOKED · READY TO EAT"}</small><em className="cm-demo-tag">DEMO</em></div><div className="cm-card-body"><h3>{p.name}</h3><p>{p.description||"A tasty Cloud Momos favourite."}</p><div className="cm-card-foot"><b>{p.price>0?money(p.price):"Demo · price pending"}</b><span>6 pcs / box</span></div><button disabled={p.price<=0||p.stock_quantity<=0} onClick={()=>update(p.id,1)}>{p.price>0&&p.stock_quantity>0?"Add to Box":"Demo Preview"} <Plus size={15}/></button></div></article>)}</div>}</section>
+  <section className="cm-category-banners"><a href="#cooked-menu" aria-label="Browse Cooked and Ready to Eat momos"><img src="/images/brand/banner-ready-to-eat-2x.jpg" alt="Ready to Eat freshly cooked Cloud Momos"/></a><a href="#frozen-menu" aria-label="Browse Frozen Momos"><img src="/images/brand/banner-frozen-momos-2x.jpg" alt="Frozen Momos packed to store and cook anytime"/></a></section>
+  <section className="cm-menu" id="menu">
+  <div className="cm-section-title"><span>MADE FRESH, JUST FOR YOU</span><h2>Our <em>Menu</em></h2><p>Choose freshly cooked momos to enjoy now, or frozen packs to prepare whenever you like. Every box includes 6 pieces.</p></div>
+  <div className="cm-menu-category cm-cooked" id="cooked-menu">
+   <div className="cm-menu-category-head"><div><span>COOKED · READY TO ENJOY</span><h3>Cooked Momos</h3><p>Freshly cooked and ready to enjoy when they arrive.</p></div><small>{cookedProducts.length} {cookedProducts.length===1?"variety":"varieties"}</small></div>
+   {loading?<p className="cm-empty">Preparing cooked momos…</p>:cookedProducts.length===0?<div className="cm-menu-empty"><span>🥟</span><h3>Cooked momos are getting ready.</h3><p>Freshly cooked favourites will appear here soon.</p></div>:<div className="cm-grid">{cookedProducts.map(p=><MenuProductCard key={p.id} product={p} onAdd={update}/>)}</div>}
+  </div>
+  <div className="cm-menu-category cm-frozen" id="frozen-menu">
+   <div className="cm-menu-category-head"><div><span>RAW · FROZEN · COOK AT HOME</span><h3>Frozen Momos</h3><p>Carefully packed frozen momos, ready for your freezer and your next craving.</p></div><small>{frozenProducts.length} {frozenProducts.length===1?"variety":"varieties"}</small></div>
+   {loading?<p className="cm-empty">Preparing frozen momos…</p>:frozenProducts.length===0?<div className="cm-menu-empty"><span>❄️</span><h3>Frozen momos are getting ready.</h3><p>Our frozen packs will appear here soon.</p></div>:<div className="cm-grid">{frozenProducts.map(p=><MenuProductCard key={p.id} product={p} onAdd={update}/>)}</div>}
+  </div>
+  {!loading&&otherProducts.length>0&&<div className="cm-menu-category cm-other"><div className="cm-menu-category-head"><div><span>MORE TO LOVE</span><h3>More Momo Favourites</h3><p>Explore other favourites from the Cloud Momos kitchen.</p></div><small>{otherProducts.length} {otherProducts.length===1?"variety":"varieties"}</small></div><div className="cm-grid">{otherProducts.map(p=><MenuProductCard key={p.id} product={p} onAdd={update}/>)}</div></div>}
+ </section>
   <section className="cm-ads" id="offers"><div className="cm-section-title"><span><Megaphone size={15}/> LOCAL AVAILABILITY & PROMOTIONS</span><h2>Find Cloud Momos <em>Around You</em></h2><p>Check where we deliver and watch our latest offers, campaigns and food videos.</p></div><div className="cm-service-areas"><div className="cm-service-head"><span>NOW DELIVERING IN SYLHET</span><b>{areas.length} active {areas.length===1?"area":"areas"}</b></div><div className="cm-area-chips"><button type="button" className={!adArea?"active":""} onClick={()=>setAdArea("")}>All available areas</button>{areas.map(area=><button type="button" key={area.id} className={adArea===area.id?"active":""} onClick={()=>setAdArea(area.id)}><span><MapPin size={13}/>{area.name}</span><small>Delivery {money(area.delivery_charge)}</small></button>)}</div>{areas.length===0&&<p className="cm-empty">Delivery locations will appear here as soon as service areas are enabled.</p>}</div><div className="cm-promo-heading"><span>{adArea?"Promotions for "+(areas.find(area=>area.id===adArea)?.name||"your area"):"Latest promotions & videos"}</span><small>Updated by Cloud Momos</small></div><div className="cm-ad-grid">{ads.filter(ad=>!adArea||ad.areaIds.includes(adArea)).map(ad=><article className="cm-ad-card" key={ad.id}>{ad.media_type==="video"?<video className="cm-ad-media" src={ad.image_url} controls playsInline preload="metadata" aria-label={ad.title}/>:<img className="cm-ad-media" src={ad.image_url} alt={ad.title}/>}<div><b>{ad.title}</b>{ad.description&&<p>{ad.description}</p>}<a className="cm-ad-cta" href={ad.target_url||"#menu"}>{ad.button_text} <ArrowRight size={14}/></a></div></article>)}</div>{ads.filter(ad=>!adArea||ad.areaIds.includes(adArea)).length===0&&<p className="cm-empty">No promotions are currently available in this area yet.</p>}</section>
   <section className="cm-about" id="about"><div className="cm-about-badge">☁️</div><div><span className="cm-kicker">WHY CLOUD MOMOS</span><h2>Good food.<br/><em>Happy clouds.</em></h2><p>Freshly prepared momos, carefully packed frozen favourites, and a little happiness in every box. Serving selected areas of Sylhet as we grow.</p></div><ul><li>🥟 Freshly made with love</li><li>❄️ Carefully packed frozen momos</li><li>🛵 Delivery in selected Sylhet areas</li></ul></section>
   <section className="cm-faq" id="faq"><h2>Good to <em>Know</em></h2><p><b>Ready to Eat:</b> Cooked before delivery and served ready to enjoy.</p><p><b>Frozen Momos:</b> Raw and frozen when packed. Cook thoroughly before eating.</p><p><b>Box size:</b> Every box contains 6 pieces.</p><p><b>Delivery:</b> Currently available only in selected areas of Sylhet City.</p></section>
