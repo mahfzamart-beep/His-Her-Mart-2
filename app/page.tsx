@@ -25,8 +25,10 @@ export default function Home(){
  const [ads,setAds]=useState<Ad[]>([]);
  const [loading,setLoading]=useState(true);
  const [cart,setCart]=useState<Record<string,number>>({});
+ const [cartReady,setCartReady]=useState(false);
  const [cartOpen,setCartOpen]=useState(false);
  const [buyNowProductId,setBuyNowProductId]=useState<string|null>(null);
+ const [buyNowQuantity,setBuyNowQuantity]=useState(1);
  const [checkout,setCheckout]=useState(false);
  const [areaId,setAreaId]=useState("");
  const [customerName,setCustomerName]=useState("");
@@ -48,7 +50,19 @@ export default function Home(){
   ]);
   if(cancelled)return;
   if(p.error)setError("Could not load the momo menu. Please refresh.");
-  setProducts((p.data||[]).map((x:any)=>({...x,category:Array.isArray(x.categories)?x.categories[0]:x.categories})));
+  const loadedProducts=(p.data||[]).map((x:any)=>({...x,category:Array.isArray(x.categories)?x.categories[0]:x.categories}));
+   setProducts(loadedProducts);
+   const params=new URLSearchParams(window.location.search);
+   const requestedProduct=params.get("buyNow");
+   if(requestedProduct){
+    const found=loadedProducts.find((x:Product)=>x.id===requestedProduct);
+    if(found&&Number(found.price)>0&&Number(found.stock_quantity)>0){
+     const requestedQty=Math.max(1,Math.min(10,Number(found.stock_quantity),Number(params.get("qty")||1)));
+     setBuyNowProductId(found.id);setBuyNowQuantity(requestedQty);setCheckout(true);
+    }
+   }
+   if(params.get("openBox")==="1")setCartOpen(true);
+   if(params.has("buyNow")||params.has("openBox"))window.history.replaceState(null,"",window.location.pathname);
   setAreas(a.data||[]);
   const activeAds=b.data||[];
   if(activeAds.length){
@@ -63,18 +77,18 @@ export default function Home(){
   }
   setLoading(false);
  })();return()=>{cancelled=true}},[]);
- useEffect(()=>{try{setCart(JSON.parse(localStorage.getItem("cloud-momos-box-v1")||"{}"))}catch{setCart({})}},[]);
- useEffect(()=>{localStorage.setItem("cloud-momos-box-v1",JSON.stringify(cart))},[cart]);
+ useEffect(()=>{try{setCart(JSON.parse(localStorage.getItem("cloud-momos-box-v1")||"{}"))}catch{setCart({})}setCartReady(true)},[]);
+ useEffect(()=>{if(cartReady)localStorage.setItem("cloud-momos-box-v1",JSON.stringify(cart))},[cart,cartReady]);
  const cookedProducts=products.filter(p=>/ready[\s-]*to[\s-]*eat|cooked/i.test(p.category?.name||""));
  const frozenProducts=products.filter(p=>/frozen/i.test(p.category?.name||""));
  const otherProducts=products.filter(p=>!(/ready[\s-]*to[\s-]*eat|cooked|frozen/i.test(p.category?.name||"")));
- const lines:Line[]=buyNowProductId?products.filter(p=>p.id===buyNowProductId).map(product=>({product,quantity:1})):Object.entries(cart).flatMap(([id,quantity])=>{const product=products.find(p=>p.id===id);return product&&quantity>0?[{product,quantity}]:[]});
+ const lines:Line[]=buyNowProductId?products.filter(p=>p.id===buyNowProductId).map(product=>({product,quantity:buyNowQuantity})):Object.entries(cart).flatMap(([id,quantity])=>{const product=products.find(p=>p.id===id);return product&&quantity>0?[{product,quantity}]:[]});
  const count=lines.reduce((s,l)=>s+l.quantity,0);
  const subtotal=lines.reduce((s,l)=>s+l.quantity*Number(l.product.price),0);
  const chosenArea=areas.find(a=>a.id===areaId);
  const total=subtotal+Number(chosenArea?.delivery_charge||0);
  const update=(id:string,delta:number)=>setCart(old=>{const next={...old};const q=(next[id]||0)+delta;if(q<=0)delete next[id];else next[id]=Math.min(10,q);return next});
- const buyNow=(id:string)=>{setBuyNowProductId(id);setCartOpen(false);setError("");setCheckout(true)};
+ const buyNow=(id:string)=>{setBuyNowProductId(id);setBuyNowQuantity(1);setCartOpen(false);setError("");setCheckout(true)};
  const placeOrder=async(e:FormEvent)=>{
   e.preventDefault();setError("");
   if(!supabase||!chosenArea||!lines.length||!accepted)return;
@@ -90,7 +104,7 @@ export default function Home(){
   const order=data?.order;
   if(!order?.order_number){setError("Order confirmation could not be verified. Please contact Cloud Momos before trying again.");return}
   setSuccess("Your order "+order.order_number+" has been received. Total: "+money(order.total));
-  if(buyNowProductId===null)setCart({});setCheckout(false);setCartOpen(false);setBuyNowProductId(null);
+  if(buyNowProductId===null)setCart({});setCheckout(false);setCartOpen(false);setBuyNowProductId(null);setBuyNowQuantity(1);
  };
  return <main className="cm">
   <div className="cm-top">LITTLE CLOUDS. BIG COMFORT. <span>DELIVERY IN SELECTED SYLHET AREAS</span></div>
@@ -129,7 +143,7 @@ export default function Home(){
   <div className="cm-mobile-dock"><a href="#menu">Explore Menu <ArrowRight size={16}/></a><button onClick={()=>setCartOpen(true)}><ShoppingBag size={17}/> Your Box <b>{count}</b></button></div>
   <footer className="cm-footer"><a className="cm-logo" href="#"><span>Cloud</span><b>Momos</b></a><p>Little clouds. Big comfort. ☁️</p><small>© {new Date().getFullYear()} Cloud Momos. Made with love in Sylhet.</small></footer>
   {cartOpen&&<div className="cm-overlay" onClick={()=>setCartOpen(false)}><aside className="cm-drawer" onClick={e=>e.stopPropagation()}><div className="cm-drawer-head"><h2>Your Box ({count})</h2><button onClick={()=>setCartOpen(false)}><X/></button></div>{!lines.length?<p className="cm-empty">Your box is waiting for momos.</p>:<>{lines.map(l=><div className="cm-line" key={l.product.id}><div><b>{l.product.name}</b><small>{l.quantity} box · {money(l.product.price*l.quantity)}</small></div><div className="cm-qty"><button onClick={()=>update(l.product.id,-1)}><Minus/></button>{l.quantity}<button onClick={()=>update(l.product.id,1)}><Plus/></button></div></div>)}<div className="cm-total"><span>Subtotal</span><b>{money(subtotal)}</b></div><button className="cm-btn cm-wide" onClick={()=>{setCartOpen(false);setCheckout(true)}}>Checkout <ArrowRight/></button></>}</aside></div>}
-  {checkout&&<div className="cm-overlay"><form className="cm-checkout" onSubmit={placeOrder}><div className="cm-drawer-head"><h2>Delivery Details</h2><button type="button" onClick={()=>{setCheckout(false);setBuyNowProductId(null)}}><X/></button></div><p>We currently deliver only in selected Sylhet areas.</p><label>Full name<input required value={customerName} onChange={e=>setCustomerName(e.target.value)}/></label><label>Phone number<input required value={phone} onChange={e=>setPhone(e.target.value)} placeholder="01XXXXXXXXX"/></label><label>Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Delivery area<select required value={areaId} onChange={e=>setAreaId(e.target.value)}><option value="">Choose an active area</option>{areas.map(a=><option key={a.id} value={a.id}>{a.name} — {money(a.delivery_charge)}</option>)}</select></label><label>Full address<textarea required minLength={5} value={address} onChange={e=>setAddress(e.target.value)}/></label><div className="cm-total"><span>Subtotal</span><b>{money(subtotal)}</b></div><div className="cm-total"><span>Delivery</span><b>{chosenArea?money(chosenArea.delivery_charge):"Select area"}</b></div><div className="cm-total"><span>Total</span><b>{money(total)}</b></div><UnboxingNotice checked={accepted} onCheckedChange={setAccepted} />{error&&<p className="cm-error">{error}</p>}<button className="cm-btn cm-wide" disabled={busy||!chosenArea||!accepted}>{busy?"Placing order…":"Place Order · "+money(total)}</button></form></div>}
+  {checkout&&<div className="cm-overlay"><form className="cm-checkout" onSubmit={placeOrder}><div className="cm-drawer-head"><h2>Delivery Details</h2><button type="button" onClick={()=>{setCheckout(false);setBuyNowProductId(null);setBuyNowQuantity(1)}}><X/></button></div><p>We currently deliver only in selected Sylhet areas.</p><label>Full name<input required value={customerName} onChange={e=>setCustomerName(e.target.value)}/></label><label>Phone number<input required value={phone} onChange={e=>setPhone(e.target.value)} placeholder="01XXXXXXXXX"/></label><label>Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Delivery area<select required value={areaId} onChange={e=>setAreaId(e.target.value)}><option value="">Choose an active area</option>{areas.map(a=><option key={a.id} value={a.id}>{a.name} — {money(a.delivery_charge)}</option>)}</select></label><label>Full address<textarea required minLength={5} value={address} onChange={e=>setAddress(e.target.value)}/></label><div className="cm-total"><span>Subtotal</span><b>{money(subtotal)}</b></div><div className="cm-total"><span>Delivery</span><b>{chosenArea?money(chosenArea.delivery_charge):"Select area"}</b></div><div className="cm-total"><span>Total</span><b>{money(total)}</b></div><UnboxingNotice checked={accepted} onCheckedChange={setAccepted} />{error&&<p className="cm-error">{error}</p>}<button className="cm-btn cm-wide" disabled={busy||!chosenArea||!accepted}>{busy?"Placing order…":"Place Order · "+money(total)}</button></form></div>}
   {success&&<div className="cm-overlay"><div className="cm-checkout"><div className="cm-drawer-head"><h2>Order Received!</h2><button onClick={()=>setSuccess("")}><X/></button></div><p>{success}</p><button className="cm-btn cm-wide" onClick={()=>setSuccess("")}>Continue Shopping</button></div></div>}
  </main>
 }
