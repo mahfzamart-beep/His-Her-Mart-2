@@ -3,19 +3,17 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "His & Hers Mart",
-    short_name: "H&H Mart",
-    description: "Thoughtfully selected shopping for him and her across Bangladesh.",
+    name: "Cloud Momos",
+    short_name: "Cloud Momos",
+    description: "Freshly cooked and frozen momos delivered in selected areas of Sylhet City.",
     start_url: "/",
     display: "standalone",
     display_override: ["standalone", "minimal-ui"],
-    background_color: "#F7F4EE",
-    theme_color: "#F7F4EE",
-    categories: ["shopping", "lifestyle"],
+    background_color: "#f7f1e5",
+    theme_color: "#173f30",
+    categories: ["food", "food-and-drink"],
     icons: [
-      { src: "/app-icon-v3.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/app-icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/app-icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" }
+      { src: "/app-icon-v3.svg", sizes: "any", type: "image/svg+xml", purpose: "any maskable" }
     ]
   };
 }
