@@ -14,19 +14,17 @@ Deno.serve(async(req:Request)=>{
  const phone=typeof body.customer_phone==="string"?body.customer_phone.trim():"";
  const email=typeof body.customer_email==="string"?body.customer_email.trim():null;
  const a=body.shipping_address as Record<string,unknown>|null;const items=body.items;
- const accepted=body.accept_unboxing_policy===true;const normalizedPhone=phone.replace(/[\s()-]/g,"");
  if(name.length<2||name.length>100)return json({error:"Please enter a valid customer name."},400,origin);
  if(!/^(?:\+?88)?01[3-9][0-9]{8}$/.test(normalizedPhone))return json({error:"Please enter a valid Bangladesh mobile number."},400,origin);
  if(email&&(email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)))return json({error:"Please enter a valid email address."},400,origin);
  if(!a||typeof a!=="object"||Array.isArray(a)||typeof a.delivery_area_id!=="string"||!/^[0-9a-f-]{36}$/i.test(a.delivery_area_id)||typeof a.address_line!=="string"||a.address_line.trim().length<5)return json({error:"Please select an active Sylhet delivery area and enter your full address."},400,origin);
  if(!Array.isArray(items)||items.length<1||items.length>15)return json({error:"Your box is empty or contains too many products."},400,origin);
  if(!items.every(item=>{if(!item||typeof item!=="object")return false;const l=item as Record<string,unknown>;return typeof l.product_id==="string"&&/^[0-9a-f-]{36}$/i.test(l.product_id)&&Number.isInteger(l.quantity)&&Number(l.quantity)>=1&&Number(l.quantity)<=10}))return json({error:"Your box contains an invalid product or quantity."},400,origin);
- if(!accepted)return json({error:"Please accept the unboxing video notice."},400,origin);
  const url=Deno.env.get("SUPABASE_URL");let key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");const keys=Deno.env.get("SUPABASE_SECRET_KEYS");
  if(keys){try{key=JSON.parse(keys).default||key}catch{}}
  if(!url||!key)return json({error:"Secure order processing is temporarily unavailable."},503,origin);
  const admin=createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}});
- const {data,error}=await admin.rpc("create_guest_order",{p_customer_name:name,p_customer_phone:normalizedPhone,p_customer_email:email||null,p_shipping_address:{delivery_area_id:a.delivery_area_id,address_line:a.address_line.trim(),city:"Sylhet"},p_items:items,p_accept_unboxing_policy:true});
+ const {data,error}=await admin.rpc("create_guest_order",{p_customer_name:name,p_customer_phone:normalizedPhone,p_customer_email:email||null,p_shipping_address:{delivery_area_id:a.delivery_area_id,address_line:a.address_line.trim(),city:"Sylhet"},p_items:items,p_accept_unboxing_policy:false});
  if(error)return json({error:error.message},error.message.toLowerCase().includes("too many orders")?429:400,origin);
  const order=data as Record<string,unknown>;
  if(typeof order.order_number!=="string"||!Number.isFinite(Number(order.total)))return json({error:"The order confirmation could not be verified. Please contact Cloud Momos before trying again."},500,origin);
