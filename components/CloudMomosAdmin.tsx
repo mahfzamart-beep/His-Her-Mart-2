@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState, type FormEvent, type ChangeEvent } from "react";
 import { supabase } from "../lib/supabase";
 import { MapPin, Megaphone, Plus, RefreshCw, Upload, Pencil, Power, Trash2 } from "lucide-react";
+import * as tus from "tus-js-client";
 
 type Area = { id: string; name: string; city: string; delivery_charge: number; is_active: boolean; sort_order: number };
-type Ad = { id: string; title: string; description: string | null; image_url: string; button_text: string; target_url: string | null; product_id: string | null; starts_at: string | null; ends_at: string | null; is_active: boolean; display_order: number };
+type Ad = { id: string; title: string; description: string | null; image_url: string; media_type: "image" | "video"; button_text: string; target_url: string | null; product_id: string | null; starts_at: string | null; ends_at: string | null; is_active: boolean; display_order: number };
 type Product = { id: string; name: string };
 const money = (n: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(n || 0));
 
@@ -18,15 +19,16 @@ export default function CloudMomosAdmin() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [areaDraft, setAreaDraft] = useState<{id:string|null;name:string;charge:string;active:boolean;sort:string}>({id:null,name:"",charge:"",active:false,sort:"0"});
-  const [adDraft, setAdDraft] = useState<{id:string|null;title:string;description:string;image_url:string;button_text:string;target_url:string;product_id:string;area_ids:string[];active:boolean;sort:string}>({id:null,title:"",description:"",image_url:"",button_text:"Explore menu",target_url:"",product_id:"",area_ids:[],active:false,sort:"0"});
+  const [adDraft, setAdDraft] = useState<{id:string|null;title:string;description:string;image_url:string;media_type:"image"|"video";button_text:string;target_url:string;product_id:string;area_ids:string[];active:boolean;sort:string}>({id:null,title:"",description:"",image_url:"",media_type:"image",button_text:"Explore menu",target_url:"",product_id:"",area_ids:[],active:false,sort:"0"});
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const refresh = useCallback(async () => {
     if (!supabase) { setError("Supabase is not configured."); setLoading(false); return; }
     setLoading(true); setError("");
     const [a, b, p] = await Promise.all([
       supabase.from("delivery_areas").select("id,name,city,delivery_charge,is_active,sort_order").order("sort_order").order("name"),
-      supabase.from("advertisements").select("id,title,description,image_url,button_text,target_url,product_id,starts_at,ends_at,is_active,display_order").order("display_order"),
+      supabase.from("advertisements").select("id,title,description,image_url,media_type,button_text,target_url,product_id,starts_at,ends_at,is_active,display_order").order("display_order"),
       supabase.from("products").select("id,name").order("name")
     ]);
     if (a.error || b.error || p.error) setError([a.error?.message,b.error?.message,p.error?.message].filter(Boolean).join(" · "));
@@ -55,19 +57,60 @@ export default function CloudMomosAdmin() {
     if (!supabase) return;
     const {data,error:e}=await supabase.from("advertisement_delivery_areas").select("delivery_area_id").eq("advertisement_id",ad.id);
     if(e){setError(e.message);return;}
-    setAdDraft({id:ad.id,title:ad.title,description:ad.description||"",image_url:ad.image_url,button_text:ad.button_text,target_url:ad.target_url||"",product_id:ad.product_id||"",area_ids:(data||[]).map(x=>x.delivery_area_id),active:ad.is_active,sort:String(ad.display_order)});
+    setAdDraft({id:ad.id,title:ad.title,description:ad.description||"",image_url:ad.image_url,media_type:ad.media_type||"image",button_text:ad.button_text,target_url:ad.target_url||"",product_id:ad.product_id||"",area_ids:(data||[]).map(x=>x.delivery_area_id),active:ad.is_active,sort:String(ad.display_order)});
   };
 
-  const uploadAdImage = async (event: ChangeEvent<HTMLInputElement>) => {
+  const uploadAdMedia = async (event: ChangeEvent<HTMLInputElement>) => {
     const file=event.target.files?.[0]; event.target.value="";
     if(!file||!supabase)return;
-    if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>5*1024*1024){setError("Choose a JPG, PNG or WebP image up to 5 MB.");return;}
-    setUploading(true);setError("");
-    const ext=file.type==="image/jpeg"?"jpg":file.type==="image/png"?"png":"webp";
-    const path="advertisements/"+crypto.randomUUID()+"."+ext;
-    const {error:e}=await supabase.storage.from("product-images").upload(path,file,{cacheControl:"3600",contentType:file.type,upsert:false});
-    if(e)setError(e.message);else{const {data}=supabase.storage.from("product-images").getPublicUrl(path);setAdDraft(v=>({...v,image_url:data.publicUrl}));}
-    setUploading(false);
+    const imageTypes=["image/jpeg","image/png","image/webp"];
+    const videoTypes=["video/mp4","video/webm","video/quicktime"];
+    const isImage=imageTypes.includes(file.type);
+    const isVideo=videoTypes.includes(file.type);
+    const maxBytes=isVideo?40*1024*1024:5*1024*1024;
+    if(!isImage&&!isVideo){setError("Use JPG, PNG or WebP images, or MP4, WebM or MOV videos.");return;}
+    if(file.size>maxBytes){setError(isVideo?"Videos must be 40 MB or smaller.":"Images must be 5 MB or smaller.");return;}
+    const extByType:Record<string,string>={"image/jpeg":"jpg","image/png":"png","image/webp":"webp","video/mp4":"mp4","video/webm":"webm","video/quicktime":"mov"};
+    const path="advertisements/"+crypto.randomUUID()+"."+extByType[file.type];
+    setUploading(true);setUploadProgress(0);setError("");setNotice("");
+    try{
+      if(isVideo){
+        const {data:{session},error:sessionError}=await supabase.auth.getSession();
+        if(sessionError||!session)throw new Error("Your admin session expired. Please sign in again.");
+        const configuredUrl=process.env.NEXT_PUBLIC_SUPABASE_URL;
+        if(!configuredUrl)throw new Error("Supabase is not configured.");
+        const projectId=new URL(configuredUrl).hostname.split(".")[0];
+        await new Promise<void>((resolve,reject)=>{
+          const upload=new tus.Upload(file,{
+            endpoint:"https://"+projectId+".storage.supabase.co/storage/v1/upload/resumable",
+            retryDelays:[0,3000,5000,10000,20000],
+            headers:{authorization:"Bearer "+session.access_token},
+            uploadDataDuringCreation:true,
+            removeFingerprintOnSuccess:true,
+            metadata:{bucketName:"product-images",objectName:path,contentType:file.type,cacheControl:"3600"},
+            chunkSize:6*1024*1024,
+            onError:reject,
+            onProgress:(uploaded,total)=>setUploadProgress(Math.round(uploaded/total*100)),
+            onSuccess:()=>resolve()
+          });
+          upload.findPreviousUploads().then(previous=>{
+            if(previous.length)upload.resumeFromPreviousUpload(previous[0]);
+            upload.start();
+          }).catch(reject);
+        });
+      }else{
+        const {error:uploadError}=await supabase.storage.from("product-images").upload(path,file,{cacheControl:"3600",contentType:file.type,upsert:false});
+        if(uploadError)throw uploadError;
+        setUploadProgress(100);
+      }
+      const {data}=supabase.storage.from("product-images").getPublicUrl(path);
+      setAdDraft(v=>({...v,image_url:data.publicUrl,media_type:isVideo?"video":"image"}));
+      setNotice(isVideo?"Promotional video uploaded.":"Promotional image uploaded.");
+    }catch(uploadError){
+      setError(uploadError instanceof Error?uploadError.message:"The media upload failed. Please try again.");
+    }finally{
+      setUploading(false);
+    }
   };
 
   const saveAd = async (event: FormEvent) => {
@@ -75,14 +118,14 @@ export default function CloudMomosAdmin() {
     if(adDraft.title.trim().length<2||!/^https?:\/\//i.test(adDraft.image_url)||adDraft.area_ids.length===0){setError("Add a title, upload an image and select at least one delivery area.");return;}
     const sort=Number(adDraft.sort);if(!Number.isInteger(sort)||sort<0){setError("Enter a valid display order.");return;}
     setSaving(true);setError("");setNotice("");
-    const payload={title:adDraft.title.trim(),description:adDraft.description.trim()||null,image_url:adDraft.image_url,button_text:adDraft.button_text.trim()||"Explore",target_url:adDraft.target_url.trim()||null,product_id:adDraft.product_id||null,is_active:adDraft.active,display_order:sort,updated_at:new Date().toISOString()};
+    const payload={title:adDraft.title.trim(),description:adDraft.description.trim()||null,image_url:adDraft.image_url,media_type:adDraft.media_type,button_text:adDraft.button_text.trim()||"Explore",target_url:adDraft.target_url.trim()||null,product_id:adDraft.product_id||null,is_active:adDraft.active,display_order:sort,updated_at:new Date().toISOString()};
     const result=adDraft.id?await supabase.from("advertisements").update(payload).eq("id",adDraft.id).select("id").single():await supabase.from("advertisements").insert(payload).select("id").single();
     if(result.error){setError(result.error.message);setSaving(false);return;}
     const adId=adDraft.id||result.data.id;
     const removed=await supabase.from("advertisement_delivery_areas").delete().eq("advertisement_id",adId);
     const inserted=await supabase.from("advertisement_delivery_areas").insert(adDraft.area_ids.map(delivery_area_id=>({advertisement_id:adId,delivery_area_id})));
     if(removed.error||inserted.error)setError(removed.error?.message||inserted.error?.message||"Could not save area targeting.");
-    else{setNotice("Advertisement saved.");setAdDraft({id:null,title:"",description:"",image_url:"",button_text:"Explore menu",target_url:"",product_id:"",area_ids:[],active:false,sort:String(ads.length)});await refresh();}
+    else{setNotice("Advertisement saved.");setAdDraft({id:null,title:"",description:"",image_url:"",media_type:"image",button_text:"Explore menu",target_url:"",product_id:"",area_ids:[],active:false,sort:String(ads.length)});await refresh();}
     setSaving(false);
   };
 
@@ -105,15 +148,16 @@ export default function CloudMomosAdmin() {
         <h3><Megaphone size={17}/> Homepage advertisement</h3>
         <label>Advertisement title<input required minLength={2} maxLength={120} value={adDraft.title} onChange={e=>setAdDraft(v=>({...v,title:e.target.value}))} placeholder="Fresh Momos now in Zindabazar"/></label>
         <label>Description<textarea rows={2} maxLength={1000} value={adDraft.description} onChange={e=>setAdDraft(v=>({...v,description:e.target.value}))}/></label>
-        <label>Banner image<input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadAdImage} disabled={uploading}/><small>{uploading?"Uploading…":"JPG, PNG or WebP · up to 5 MB"}</small></label>
-        {adDraft.image_url&&<img src={adDraft.image_url} alt="Advertisement preview" style={{width:"100%",maxHeight:150,objectFit:"cover",borderRadius:12}}/>}
+        <label>Promotional image or video<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" onChange={uploadAdMedia} disabled={uploading}/><small>{uploading?"Uploading media… "+uploadProgress+"%":"JPG, PNG or WebP · up to 5 MB | MP4, WebM or MOV · up to 40 MB"}</small></label>
+        {uploading&&<progress value={uploadProgress} max="100" style={{width:"100%"}}/>}
+        {adDraft.image_url&&adDraft.media_type==="video"?<video src={adDraft.image_url} controls playsInline preload="metadata" style={{width:"100%",maxHeight:190,objectFit:"contain",borderRadius:12,background:"#132c21"}}/>:adDraft.image_url?<img src={adDraft.image_url} alt="Advertisement preview" style={{width:"100%",maxHeight:150,objectFit:"cover",borderRadius:12}}/>:null}
         <label>Button text<input maxLength={40} value={adDraft.button_text} onChange={e=>setAdDraft(v=>({...v,button_text:e.target.value}))}/></label>
         <label>Destination URL (optional)<input value={adDraft.target_url} onChange={e=>setAdDraft(v=>({...v,target_url:e.target.value}))} placeholder="/#menu or https://…"/></label>
         <label>Related product (optional)<select value={adDraft.product_id} onChange={e=>setAdDraft(v=>({...v,product_id:e.target.value}))}><option value="">No specific product</option>{products.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
         <label>Available delivery areas<select multiple size={Math.min(5,Math.max(2,areas.length))} value={adDraft.area_ids} onChange={e=>setAdDraft(v=>({...v,area_ids:Array.from(e.target.selectedOptions).map(o=>o.value)}))}>{areas.filter(a=>a.is_active).map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</select><small>Hold Ctrl (desktop) to select multiple areas. At least one active area is required.</small></label>
         <div className="admin-product-form-grid"><label>Display order<input type="number" min="0" step="1" value={adDraft.sort} onChange={e=>setAdDraft(v=>({...v,sort:e.target.value}))}/></label><label className="admin-product-flags"><input type="checkbox" checked={adDraft.active} onChange={e=>setAdDraft(v=>({...v,active:e.target.checked}))}/> Publish advertisement</label></div>
-        <div className="admin-product-form-actions">{adDraft.id&&<button type="button" className="admin-secondary-btn" onClick={()=>setAdDraft({id:null,title:"",description:"",image_url:"",button_text:"Explore menu",target_url:"",product_id:"",area_ids:[],active:false,sort:String(ads.length)})}>Cancel edit</button>}<button className="admin-product-add" disabled={saving||uploading}>{saving?"Saving…":adDraft.id?"Save advertisement":"Create advertisement"}</button></div>
-        <div className="admin-product-list">{ads.map(ad=><article className="admin-product-row" key={ad.id}><div className="admin-product-row-copy"><b>{ad.title}</b><small>{ad.is_active?"Published":"Paused"} · {ad.button_text}</small></div><div className="admin-product-row-actions"><button type="button" className="admin-product-edit" onClick={()=>void editAd(ad)}>Edit</button><button type="button" className="admin-product-edit" onClick={()=>void toggleAd(ad)}>{ad.is_active?"Pause":"Publish"}</button><button type="button" className="admin-product-delete" onClick={()=>void deleteAd(ad)}><Trash2 size={13}/></button></div></article>)}</div>
+        <div className="admin-product-form-actions">{adDraft.id&&<button type="button" className="admin-secondary-btn" onClick={()=>setAdDraft({id:null,title:"",description:"",image_url:"",media_type:"image",button_text:"Explore menu",target_url:"",product_id:"",area_ids:[],active:false,sort:String(ads.length)})}>Cancel edit</button>}<button className="admin-product-add" disabled={saving||uploading}>{saving?"Saving…":adDraft.id?"Save advertisement":"Create advertisement"}</button></div>
+        <div className="admin-product-list">{ads.map(ad=><article className="admin-product-row" key={ad.id}><div className="admin-product-row-copy"><b>{ad.title}</b><small>{ad.is_active?"Published":"Paused"} · {ad.media_type==="video"?"Video":"Image"} · {ad.button_text}</small></div><div className="admin-product-row-actions"><button type="button" className="admin-product-edit" onClick={()=>void editAd(ad)}>Edit</button><button type="button" className="admin-product-edit" onClick={()=>void toggleAd(ad)}>{ad.is_active?"Pause":"Publish"}</button><button type="button" className="admin-product-delete" onClick={()=>void deleteAd(ad)}><Trash2 size={13}/></button></div></article>)}</div>
       </form>
     </div>
     {loading&&<p className="admin-muted"><RefreshCw className="spin" size={14}/> Loading Cloud Momos settings…</p>}
