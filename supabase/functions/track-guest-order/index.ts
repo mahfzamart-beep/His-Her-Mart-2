@@ -1,9 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const allowedOrigins = new Set([
+  "https://cloudmomos.vercel.app",
   "https://his-and-her-mart.vercel.app",
-  "https://his-and-her-mart-his-ans-her-mart.vercel.app",
-  "https://his-and-her-mart-git-main-his-ans-her-mart.vercel.app",
   "http://localhost:3000",
 ]);
 
@@ -38,7 +37,7 @@ Deno.serve(async (req: Request) => {
   const orderNumber = typeof body.order_number === "string" ? body.order_number.trim().toUpperCase() : "";
   const phoneRaw = typeof body.customer_phone === "string" ? body.customer_phone.trim() : "";
   const phone = phoneRaw.replace(/[\s()-]/g, "");
-  if (!/^HHM-[0-9]{6}-[A-F0-9]{6}$/.test(orderNumber)) {
+  if (!/^(?:CM|HHM)-[0-9]{6}-[A-F0-9]{6}$/.test(orderNumber)) {
     return json({ error: "Enter the order number exactly as shown in your confirmation." }, 400, origin);
   }
   if (!/^(?:\+?88)?01[3-9][0-9]{8}$/.test(phone)) {
