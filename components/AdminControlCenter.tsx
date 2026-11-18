@@ -16,11 +16,7 @@ type OrderItem = {
   unit_price: number;
   quantity: number;
   line_total: number;
-  fulfillment_source: string;
-  supplier_id: string | null;
   supplier_cost_snapshot: number | null;
-  supplier_order_reference: string | null;
-  supplier_fulfillment_status: string;
 };
 type Order = {
   id: string;
@@ -90,7 +86,6 @@ type ActivityRow = {
 type Tab = "overview" | "orders" | "inventory" | "suppliers" | "customers" | "finance" | "activity";
 
 const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];
-const SUPPLIER_STATUSES = ["not_submitted", "submitted", "confirmed", "packed", "shipped", "delivered", "cancelled"];
 const EXPENSE_CATEGORIES = ["packaging", "marketing", "courier", "refund", "operations", "software", "supplier", "other"];
 const money = (value: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(value || 0));
 const shortDate = (value: string) => new Intl.DateTimeFormat("en-BD", { dateStyle: "medium" }).format(new Date(value));
@@ -131,7 +126,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     setLoading(true);
     setError("");
     const [orderResult, productResult, supplierResult, expenseResult, activityResult] = await Promise.all([
-      supabase.from("orders").select("id,order_number,customer_name,customer_phone,customer_email,shipping_address,subtotal,delivery_charge,discount,total,payment_method,payment_status,order_status,created_at,updated_at,courier_partner,courier_tracking_number,courier_status_note,handed_over_at,delivered_at,order_items(id,product_id,product_name,unit_price,quantity,line_total,fulfillment_source,supplier_id,supplier_cost_snapshot,supplier_order_reference,supplier_fulfillment_status)").order("created_at", { ascending: false }).limit(500),
+      supabase.from("orders").select("id,order_number,customer_name,customer_phone,customer_email,shipping_address,subtotal,delivery_charge,discount,total,payment_method,payment_status,order_status,created_at,updated_at,courier_partner,courier_tracking_number,courier_status_note,handed_over_at,delivered_at,order_items(id,product_id,product_name,unit_price,quantity,line_total,supplier_cost_snapshot)").order("created_at", { ascending: false }).limit(500),
       supabase.from("products").select("id,name,sku,price,stock_quantity,supplier_cost_price,supplier_id,fulfillment_source,is_active").order("name", { ascending: true }).limit(1000),
       supabase.from("suppliers").select("id,name,platform_code,contact_person,phone,email,website_url,notes,is_active").order("name", { ascending: true }),
       supabase.from("operating_expenses").select("id,category,description,amount,incurred_on,supplier_id,payment_method,reference,notes,supplier:suppliers(name)").order("incurred_on", { ascending: false }).limit(500),
@@ -412,21 +407,6 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     setSaving(false);
   };
 
-  const updateSupplierLine = async (order: Order, item: OrderItem, status: string, reference: string) => {
-    if (!supabase) return;
-    setSaving(true); setError(""); setNotice("");
-    const { error: updateError } = await supabase.from("order_items").update({
-      supplier_fulfillment_status: status, supplier_order_reference: reference.trim() || null
-    }).eq("id", item.id);
-    if (updateError) setError(updateError.message);
-    else {
-      await log("supplier_item_status_updated", "order_item", item.id, "Supplier fulfilment updated for " + item.product_name + " (" + order.order_number + ")", { status, reference });
-      setNotice("Supplier fulfilment updated.");
-      await refresh();
-    }
-    setSaving(false);
-  };
-
   const exportOrders = () => {
     const headers = ["Order Number", "Created At", "Customer", "Phone", "Email", "District", "Area", "Address", "Subtotal", "Discount", "Delivery", "Total", "Payment", "Payment Status", "Order Status", "Courier", "Tracking"];
     const rows = filteredOrders.map(order => [
@@ -497,7 +477,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       })}
     </nav>
 
-    {loading ? <div className="admin-control-loading"><RefreshCw size={18} className="spin"/> Loading business data securely…</div> : <>
+    {loading ? <div className="admin-control-loading"><RefreshCw size={18} className="spin"/> Loading kitchen data securely…</div> : <>
       {tab === "overview" && <>
         <div className="admin-control-toolbar">
           <div><b>Kitchen snapshot</b><small>Calculated from recent momo orders and current menu records.</small></div>
@@ -506,8 +486,8 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
         <div className="admin-control-metrics">
           <article><span><ClipboardList size={17}/> Orders loaded</span><strong>{rangeOrders.length}</strong><small>{pendingCount} pending · {processingCount} processing · {shippedCount} shipped</small></article>
           <article><span><Wallet size={17}/> Delivered sales</span><strong>{money(deliveredRevenue)}</strong><small>{deliveredOrders.length} delivered orders in selected period</small></article>
-          <article><span><Package size={17}/> Active products</span><strong>{activeProducts}</strong><small>{outOfStock.length} out of stock · {lowStockProducts.length} at or below threshold</small></article>
-          <article><span><Boxes size={17}/> Known stock cost</span><strong>{money(inventoryValue)}</strong><small>Excludes products without a recorded supplier cost</small></article>
+          <article><span><Package size={17}/> Active menu items</span><strong>{activeProducts}</strong><small>{outOfStock.length} out of stock · {lowStockProducts.length} at or below threshold</small></article>
+          <article><span><Boxes size={17}/> Known stock cost</span><strong>{money(inventoryValue)}</strong><small>Excludes menu items without a recorded ingredient cost</small></article>
         </div>
         <div className="admin-control-two-col">
           <section className="admin-control-card">
@@ -521,7 +501,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
             <label className="admin-control-inline-label">Low stock threshold <input type="number" min="0" max="10000" value={stockThreshold} onChange={event => setStockThreshold(event.target.value)}/></label>
             {lowStockProducts.length === 0 ? <p className="admin-control-empty-line"><CheckCircle2 size={16}/> No active products need a stock alert.</p> :
               <div className="admin-control-compact-list">{lowStockProducts.slice(0, 6).map(product => <div key={product.id}><span>{product.name}<small>{product.sku || "No menu code"}</small></span><b className={product.stock_quantity <= 0 ? "danger" : "warning"}>{product.stock_quantity <= 0 ? "Out of stock" : product.stock_quantity + " left"}</b></div>)}</div>}
-            <button type="button" className="admin-control-text-btn" onClick={() => setTab("inventory")}>Open inventory <ChevronDown size={14}/></button>
+            <button type="button" className="admin-control-text-btn" onClick={() => setTab("inventory")}>Open kitchen stock <ChevronDown size={14}/></button>
           </section>
         </div>
         <div className="admin-control-two-col">
@@ -530,10 +510,10 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
             {topProducts.length === 0 ? <p className="admin-control-empty-line">No delivered product sales in this period yet.</p> : <div className="admin-control-compact-list">{topProducts.map((product, index) => <div key={product.name}><span><i>{index + 1}</i>{product.name}</span><b>{product.quantity} units · {money(product.sales)}</b></div>)}</div>}
           </section>
           <section className="admin-control-card">
-            <div className="admin-control-card-head"><div><b>Finance confidence</b><small>Based on cost records for delivered items</small></div><IndianRupee size={18}/></div>
+            <div className="admin-control-card-head"><div><b>Food-cost confidence</b><small>Based on cost records for delivered items</small></div><IndianRupee size={18}/></div>
             {profitData.missingLines === 0 ? <><strong className="admin-control-finance-value">{money(profitData.netEstimate || 0)}</strong><p className="admin-control-muted">Estimated result after recorded expenses. Product costs use order snapshots or current supplier cost.</p></> :
               <><strong className="admin-control-finance-value">Incomplete</strong><p className="admin-control-muted">{profitData.missingLines} delivered order item line(s) have no recorded cost. Add missing ingredient costs before using profit figures.</p></>}
-            <button type="button" className="admin-control-text-btn" onClick={() => setTab("finance")}>Review finance <ChevronDown size={14}/></button>
+            <button type="button" className="admin-control-text-btn" onClick={() => setTab("finance")}>Review costs <ChevronDown size={14}/></button>
           </section>
         </div>
         <section className="admin-control-card">
@@ -573,20 +553,14 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
             <p className="admin-control-hint">Courier status is recorded manually. No courier API or live tracking connection is configured.</p>
           </section>;
         })()}
-        <section className="admin-control-card">
-          <div className="admin-control-card-head"><div><b>Ingredient purchase follow-up</b><small>Keep manual supplier references for any menu items fulfilled through a partner.</small></div><Truck size={18}/></div>
-          <div className="admin-control-fulfilment-list">
-            {orders.flatMap(order => (order.order_items || []).filter(item => item.fulfillment_source !== "own_stock").map(item => ({ order, item }))).slice(0, 80).map(({ order, item }) => <SupplierLine key={item.id} order={order} item={item} suppliers={suppliers} saving={saving} onSave={updateSupplierLine}/>)}
-            {orders.every(order => (order.order_items || []).every(item => item.fulfillment_source === "own_stock")) && <p className="admin-control-empty-line">No supplier-fulfilled order items in the loaded order history.</p>}
-          </div>
-        </section>
+        
       </>}
 
       {tab === "inventory" && <>
         <div className="admin-control-toolbar"><div><b>Kitchen stock & ingredient cost</b><small>Update momo box stock, ingredient cost estimates and supplier mapping.</small></div><span className="admin-control-count">{lowStockProducts.length} stock alerts</span></div>
         <div className="admin-control-search"><Search size={16}/><input value={inventorySearch} onChange={event => setInventorySearch(event.target.value)} placeholder="Search momo menu item or SKU"/></div>
         <section className="admin-control-card">
-          <div className="admin-control-table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Boxes in stock</th><th>Unit cost estimate (BDT)</th><th>Ingredient supplier</th><th></th></tr></thead><tbody>
+          <div className="admin-control-table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Boxes in stock</th><th>Ingredient cost per box (BDT)</th><th>Ingredient supplier</th><th></th></tr></thead><tbody>
             {filteredProducts.map(product => <tr key={product.id}>
               <td><b>{product.name}</b><small>{product.sku || "No SKU"} · {product.is_active ? "Published" : "Hidden"}</small></td>
               <td>{money(product.price)}</td>
@@ -595,7 +569,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
               <td><select className="admin-control-cell-select" value={inventoryDrafts[product.id]?.supplier ?? product.supplier_id ?? ""} onChange={event => setInventoryDrafts(current => ({ ...current, [product.id]: { ...(current[product.id] || { stock: String(product.stock_quantity), cost: product.supplier_cost_price == null ? "" : String(product.supplier_cost_price), supplier: "" }), supplier: event.target.value } }))}><option value="">Not assigned</option>{suppliers.map(supplier => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</select></td>
               <td><button type="button" className="admin-control-small-btn" onClick={() => void saveInventory(product)} disabled={saving}>Save</button></td>
             </tr>)}
-            {filteredProducts.length === 0 && <tr><td colSpan={6}>No matching products.</td></tr>}
+            {filteredProducts.length === 0 && <tr><td colSpan={6}>No matching menu items.</td></tr>}
           </tbody></table></div>
         </section>
         <div className="admin-control-note"><AlertTriangle size={16}/><span>Stock and ingredient costs are updated manually. Keep supplier costs current; older orders without a cost snapshot may use today’s cost as an estimate.</span></div>
@@ -655,20 +629,20 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
         <div className="admin-control-note"><AlertTriangle size={16}/><span>{profitData.missingLines > 0 ? "Profit cannot be finalised: some delivered items have no cost record. Add supplier cost in Inventory. Historical orders without a snapshot use today's product cost as an estimate. " : "All delivered item costs in this period are present. " }This is a management estimate before unrecorded COD, tax, packaging, refund and other business costs; only expenses entered below are deducted.</span></div>
         {profitData.netEstimate != null && <section className="admin-control-card admin-control-finance-breakdown"><div><span>Delivered product revenue</span><b>{money(profitData.revenue)}</b></div><div><span>Recorded item cost</span><b>− {money(profitData.knownCost)}</b></div><div><span>Recorded operating expenses</span><b>− {money(profitData.expenseTotal)}</b></div><div className="grand"><span>Estimated result</span><b>{money(profitData.netEstimate)}</b></div></section>}
         <section className="admin-control-card">
-          <div className="admin-control-card-head"><div><b>Record an operating expense</b><small>Track food ingredients, packaging, kitchen operations, courier, marketing and other costs in one ledger.</small></div><Plus size={18}/></div>
+          <div className="admin-control-card-head"><div><b>Record a kitchen or business expense</b><small>Track food ingredients, packaging, kitchen operations, courier, marketing and other costs in one ledger.</small></div><Plus size={18}/></div>
           <form className="admin-control-form-grid" onSubmit={addExpense}>
             <label>Category<select value={expenseDraft.category} onChange={event => setExpenseDraft(current => ({ ...current, category: event.target.value }))}>{EXPENSE_CATEGORIES.map(category => <option key={category} value={category}>{category.toUpperCase()}</option>)}</select></label>
             <label>Amount (BDT)<input type="number" min="0.01" step="0.01" required value={expenseDraft.amount} onChange={event => setExpenseDraft(current => ({ ...current, amount: event.target.value }))} placeholder="0.00"/></label>
             <label>Description<input required minLength={2} maxLength={240} value={expenseDraft.description} onChange={event => setExpenseDraft(current => ({ ...current, description: event.target.value }))} placeholder="e.g. Packaging supplies"/></label>
             <label>Date<input type="date" required value={expenseDraft.incurred_on} onChange={event => setExpenseDraft(current => ({ ...current, incurred_on: event.target.value }))}/></label>
-            <label>Supplier (optional)<select value={expenseDraft.supplier_id} onChange={event => setExpenseDraft(current => ({ ...current, supplier_id: event.target.value }))}><option value="">No supplier linked</option>{suppliers.map(supplier => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</select></label>
+            <label>Ingredient supplier (optional)<select value={expenseDraft.supplier_id} onChange={event => setExpenseDraft(current => ({ ...current, supplier_id: event.target.value }))}><option value="">No supplier linked</option>{suppliers.map(supplier => <option key={supplier.id} value={supplier.id}>{supplier.name}</option>)}</select></label>
             <label>Payment method<select value={expenseDraft.payment_method} onChange={event => setExpenseDraft(current => ({ ...current, payment_method: event.target.value }))}><option value="cash">Cash</option><option value="bank">Bank</option><option value="bkash">bKash</option><option value="nagad">Nagad</option><option value="card">Card</option><option value="other">Other</option></select></label>
             <label>Reference / receipt<input value={expenseDraft.reference} onChange={event => setExpenseDraft(current => ({ ...current, reference: event.target.value }))}/></label>
             <label>Notes<input value={expenseDraft.notes} onChange={event => setExpenseDraft(current => ({ ...current, notes: event.target.value }))}/></label>
             <div className="wide"><button type="submit" disabled={saving}><Plus size={15}/> Save expense</button></div>
           </form>
         </section>
-        <section className="admin-control-card"><div className="admin-control-card-head"><div><b>Expense ledger</b><small>Most recent recorded operating expenses</small></div><Wallet size={18}/></div>
+        <section className="admin-control-card"><div className="admin-control-card-head"><div><b>Kitchen expense ledger</b><small>Most recent recorded operating expenses</small></div><Wallet size={18}/></div>
           <div className="admin-control-table-wrap"><table><thead><tr><th>Date</th><th>Expense</th><th>Category</th><th>Supplier</th><th>Method</th><th>Amount</th></tr></thead><tbody>
             {expenses.map(expense => <tr key={expense.id}><td>{shortDate(expense.incurred_on)}</td><td><b>{expense.description}</b><small>{expense.reference || ""}</small></td><td>{expense.category}</td><td>{expense.supplier?.name || "—"}</td><td>{expense.payment_method || "—"}</td><td>{money(expense.amount)}</td></tr>)}
             {expenses.length === 0 && <tr><td colSpan={6}>No expenses have been entered yet.</td></tr>}
@@ -677,7 +651,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "activity" && <>
-        <div className="admin-control-toolbar"><div><b>Admin activity log</b><small>Records important actions performed from this control centre.</small></div><span className="admin-control-count">{activity.length} events loaded</span></div>
+        <div className="admin-control-toolbar"><div><b>Kitchen activity log</b><small>Records important actions performed from this control centre.</small></div><span className="admin-control-count">{activity.length} events loaded</span></div>
         <section className="admin-control-card"><div className="admin-control-timeline">
           {activity.map(row => <article key={row.id}><span><Activity size={15}/></span><div><b>{row.summary}</b><small>{row.action} · {row.entity_type}{row.entity_id ? " · " + row.entity_id.slice(0, 8) : ""}</small><time>{fullDate(row.created_at)}</time></div></article>)}
           {activity.length === 0 && <p className="admin-control-empty-line">No activity recorded by the new control centre yet.</p>}
@@ -688,21 +662,3 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
   </section>;
 }
 
-function SupplierLine({ order, item, suppliers, saving, onSave }: {
-  order: Order;
-  item: OrderItem;
-  suppliers: Supplier[];
-  saving: boolean;
-  onSave: (order: Order, item: OrderItem, status: string, reference: string) => Promise<void>;
-}) {
-  const [status, setStatus] = useState(item.supplier_fulfillment_status || "not_submitted");
-  const [reference, setReference] = useState(item.supplier_order_reference || "");
-  const supplierName = suppliers.find(supplier => supplier.id === item.supplier_id)?.name ||
-    (item.fulfillment_source === "shopbase_bd" ? "ShopBase BD" : item.fulfillment_source === "dropshippingbd" ? "DropshippingBD" : item.fulfillment_source);
-  return <article className="admin-control-fulfilment-row">
-    <div><b>{item.product_name} × {item.quantity}</b><small>{order.order_number} · {supplierName}</small></div>
-    <input value={reference} onChange={event => setReference(event.target.value)} placeholder="Supplier order reference"/>
-    <select value={status} onChange={event => setStatus(event.target.value)}>{SUPPLIER_STATUSES.map(value => <option key={value} value={value}>{value.replaceAll("_", " ").toUpperCase()}</option>)}</select>
-    <button type="button" className="admin-control-small-btn" onClick={() => void onSave(order, item, status, reference)} disabled={saving}>Save</button>
-  </article>;
-}
