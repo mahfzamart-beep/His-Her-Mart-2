@@ -1,7 +1,7 @@
-const CACHE_NAME = "cloud-momos-shell-v1";
+const CACHE_NAME = "cloud-momos-shell-v2";
 const SHELL_FILES = [
   "/offline",
-  "/app-icon-v3.svg",
+  "/cloud-momos-app-icon.svg",
 ];
 
 self.addEventListener("install", (event) => {
@@ -42,7 +42,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   const shouldCache = [
-      "/app-icon-v3.svg",
+      "/cloud-momos-app-icon.svg",
   ].includes(url.pathname);
 
   if (shouldCache) {
