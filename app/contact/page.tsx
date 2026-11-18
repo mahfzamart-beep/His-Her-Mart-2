@@ -20,7 +20,7 @@ export default function ContactPage() {
   return (
     <main className="policy-shell">
       <header className="policy-top">
-        <Link href="/" className="tracking-back"><ArrowLeft size={16}/> Back to store</Link>
+        <Link href="/" className="tracking-back"><ArrowLeft size={16}/> Back to menu</Link>
         <Link href="/" className="tracking-brand">Cloud<span>Momos</span><small>MADE WITH LOVE IN SYLHET</small></Link>
       </header>
       <article className="policy-card">
@@ -37,16 +37,16 @@ export default function ContactPage() {
 
         <section className="policy-section">
           <h2>What can we help with?</h2>
-          <p><PackageSearch size={15} /> Product availability, variants and product details</p>
-          <p><Clock3 size={15} /> Delivery information and order updates</p>
-          <p><HelpCircle size={15} /> Checkout, payment and exchange questions</p>
+          <p><PackageSearch size={15} /> Momo menu, ingredients and availability</p>
+          <p><Clock3 size={15} /> Sylhet delivery information and order updates</p>
+          <p><HelpCircle size={15} /> Checkout, payment and food-order support</p>
         </section>
 
         <section className="policy-section">
           <h2>Useful customer links</h2>
           <Link className="policy-link" href="/track-order">Track your order <ArrowRight size={15}/></Link>
           <Link className="policy-link" href="/shipping">Shipping information <ArrowRight size={15}/></Link>
-          <Link className="policy-link" href="/returns">Product checks & exchanges <ArrowRight size={15}/></Link>
+          <Link className="policy-link" href="/returns">Food order checks & support <ArrowRight size={15}/></Link>
           <Link className="policy-link" href="/faq">Frequently asked questions <ArrowRight size={15}/></Link>
         </section>
         <p className="policy-updated">Current online checkout supports Cash on Delivery. We do not request advance payment through personal mobile-wallet numbers.</p>
