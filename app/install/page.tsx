@@ -13,7 +13,7 @@ export default function InstallPage() {
   return (
     <main className="pwa-install-page">
       <header className="pwa-install-header">
-        <Link href="/" aria-label="Back to Cloud Momos"><img src="/app-icon-v3.svg" alt="Cloud Momos" /></Link>
+        <Link href="/" aria-label="Back to Cloud Momos"><img src="/cloud-momos-app-icon.svg" alt="Cloud Momos" /></Link>
         <Link href="/" className="pwa-back-link">Back to store</Link>
       </header>
       <PwaInstallCard />
