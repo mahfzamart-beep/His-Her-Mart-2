@@ -9,8 +9,8 @@ type DeferredInstallPrompt = Event & {
 };
 declare global {
   interface Window {
-    __hhmInstallPrompt?: DeferredInstallPrompt;
-    __hhmPwaInstalled?: boolean;
+    __cloudMomosInstallPrompt?: DeferredInstallPrompt;
+    __cloudMomosPwaInstalled?: boolean;
   }
 }
 
@@ -22,24 +22,24 @@ export default function PwaInstallCard() {
 
   useEffect(() => {
     const refresh = () => {
-      setCanPrompt(Boolean(window.__hhmInstallPrompt));
-      setInstalled(Boolean(window.__hhmPwaInstalled) ||
+      setCanPrompt(Boolean(window.__cloudMomosInstallPrompt));
+      setInstalled(Boolean(window.__cloudMomosPwaInstalled) ||
         window.matchMedia("(display-mode: standalone)").matches ||
         Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
     };
     refresh();
-    window.addEventListener("hhm-install-available", refresh);
-    window.addEventListener("hhm-app-installed", refresh);
+    window.addEventListener("cloud-momos-install-available", refresh);
+    window.addEventListener("cloud-momos-app-installed", refresh);
     window.addEventListener("appinstalled", refresh);
     return () => {
-      window.removeEventListener("hhm-install-available", refresh);
-      window.removeEventListener("hhm-app-installed", refresh);
+      window.removeEventListener("cloud-momos-install-available", refresh);
+      window.removeEventListener("cloud-momos-app-installed", refresh);
       window.removeEventListener("appinstalled", refresh);
     };
   }, []);
 
   async function installApp() {
-    const promptEvent = window.__hhmInstallPrompt;
+    const promptEvent = window.__cloudMomosInstallPrompt;
     if (!promptEvent) {
       setShowHelp(true);
       setMessage("Your browser does not offer the one-tap install prompt here. Follow the steps below.");
@@ -48,10 +48,10 @@ export default function PwaInstallCard() {
     try {
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
-      window.__hhmInstallPrompt = undefined;
+      window.__cloudMomosInstallPrompt = undefined;
       setCanPrompt(false);
       if (choice.outcome === "accepted") {
-        setMessage("Installation accepted. His & Hers Mart will appear with your apps.");
+        setMessage("Installation accepted. Cloud Momos will appear with your apps.");
         setInstalled(true);
       } else {
         setMessage("Installation was cancelled. You can try again from your browser menu.");
@@ -64,15 +64,15 @@ export default function PwaInstallCard() {
 
   return (
     <section className="pwa-install-card">
-      <div className="pwa-install-icon"><img src="/app-icon-v3.svg?v=4" alt="" /></div>
-      <p className="eyebrow">SHOP SMART. LIVE BETTER.</p>
+      <div className="pwa-install-icon"><img src="/app-icon-v3.svg?v=5" alt="" /></div>
+      <p className="eyebrow">LITTLE CLOUDS. BIG COMFORT.</p>
       <h2>Take the store <em>with you.</em></h2>
-      <p className="pwa-install-intro">Add His & Hers Mart to your phone’s home screen for a clean, app-like shopping experience. Your existing website account and order services remain on the same secure store.</p>
+      <p className="pwa-install-intro">Add Cloud Momos to your phone’s home screen for a clean, app-like shopping experience. Your existing website account and order services remain on the same secure store.</p>
       {installed ? (
-        <div className="pwa-installed-state"><CheckCircle2 size={18} /> His & Hers Mart is installed on this device.</div>
+        <div className="pwa-installed-state"><CheckCircle2 size={18} /> Cloud Momos is installed on this device.</div>
       ) : (
         <button className="primary-btn pwa-install-button" type="button" onClick={installApp}>
-          <Download size={17} /> {canPrompt ? "Install His & Hers Mart" : "How to install the app"}
+          <Download size={17} /> {canPrompt ? "Install Cloud Momos" : "How to install the app"}
         </button>
       )}
       {message && <p className="pwa-install-message" role="status">{message}</p>}
@@ -86,7 +86,7 @@ export default function PwaInstallCard() {
         </div>
       )}
       <p className="pwa-install-note">This is the official installable web app (PWA), not an APK or a Play Store download. It uses the same live website and does not create a separate account.</p>
-      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the old His &amp; Hers Mart shortcut from your home screen, then install again to refresh the new app icon.</p>
+      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the previous Cloud Momos shortcut from your home screen, then install again to refresh the new app icon.</p>
     </section>
   );
 }
