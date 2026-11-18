@@ -605,3 +605,36 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
   .cm-ad-card .cm-ad-media{min-height:145px;max-height:230px}
   .cm-ad-card div{gap:7px}
 }
+
+
+/* Hero mascot artwork blends into the campaign palette instead of reading as a pasted card. */
+.cm-hero-art{
+  position:relative;isolation:isolate;overflow:visible;
+  border:0;border-radius:0;box-shadow:none;
+  background:
+    radial-gradient(ellipse at 76% 24%,rgba(239,135,61,.34),transparent 43%),
+    radial-gradient(ellipse at 25% 60%,rgba(23,63,48,.26),transparent 52%),
+    radial-gradient(ellipse at 55% 82%,rgba(244,201,141,.55),transparent 58%),
+    linear-gradient(135deg,#f7f1e5 0%,#e9eadb 48%,#f7e5ca 100%);
+}
+.cm-hero-mascot{
+  position:relative;z-index:1;display:block;width:100%;height:100%;
+  min-height:390px;object-fit:cover;object-position:center;
+  border-radius:0;
+  -webkit-mask-image:radial-gradient(ellipse 91% 91% at 50% 50%,#000 60%,rgba(0,0,0,.96) 70%,rgba(0,0,0,.55) 86%,transparent 100%);
+  mask-image:radial-gradient(ellipse 91% 91% at 50% 50%,#000 60%,rgba(0,0,0,.96) 70%,rgba(0,0,0,.55) 86%,transparent 100%);
+}
+.cm-hero-art::before{
+  display:block;z-index:0;pointer-events:none;inset:-34px;
+  width:auto;height:auto;border:0;border-radius:45%;
+  background:
+    radial-gradient(ellipse at 78% 22%,rgba(239,135,61,.2),transparent 38%),
+    radial-gradient(ellipse at 18% 70%,rgba(23,63,48,.16),transparent 44%),
+    radial-gradient(ellipse at 56% 82%,rgba(244,201,141,.28),transparent 45%);
+  filter:blur(18px);
+}
+.cm-hero-art::after{display:none}
+@media(max-width:680px){
+  .cm-hero-art{min-height:0;margin:0 -8px;background:radial-gradient(ellipse at 75% 22%,rgba(239,135,61,.26),transparent 44%),radial-gradient(ellipse at 20% 72%,rgba(23,63,48,.2),transparent 50%),linear-gradient(135deg,#f7f1e5,#f1e7d5)}
+  .cm-hero-mascot{min-height:0;height:auto;aspect-ratio:3/2;object-fit:cover}
+}
