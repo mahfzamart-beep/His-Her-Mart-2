@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
 import ProductDetailsClient from "./ProductDetailsClient";
 
-const SITE_URL = "https://his-and-her-mart.vercel.app";
+const SITE_URL = "https://cloudmomos.vercel.app";
 type PageProps = { params: Promise<{ slug: string }> };
 
 async function getProduct(slug: string) {
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
   const title = product.name;
-  const description = (product.description || `Shop ${product.name} at His & Hers Mart, Bangladesh. Discover thoughtfully selected everyday essentials.`).slice(0, 160);
+  const description = (product.description || `Shop ${product.name} at Cloud Momos in Sylhet. Freshly cooked and frozen momos, six pieces in every box.`).slice(0, 160);
   const image = product.image_url && /^https?:\/\//i.test(product.image_url) ? product.image_url : undefined;
   return {
     title,
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       url: `${SITE_URL}/products/${encodeURIComponent(slug)}`,
-      siteName: "His & Hers Mart",
+      siteName: "Cloud Momos",
       locale: "en_BD",
       type: "website",
       ...(image ? { images: [{ url: image, alt: product.name }] } : {}),
