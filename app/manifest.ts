@@ -13,7 +13,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#173f30",
     categories: ["food", "food-and-drink"],
     icons: [
-      { src: "/app-icon-v3.svg", sizes: "any", type: "image/svg+xml", purpose: "any maskable" }
+      { src: "/app-icon-v3.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }
     ]
   };
 }
