@@ -432,8 +432,8 @@ export default function AdminPage() {
   if (!session || !authorized) return <main className="admin-shell admin-login-shell">
     <a className="admin-back" href="/"><ArrowLeft size={15} /> Back to store</a>
     <section className="admin-login-card">
-      <div className="admin-brand-mark">H<span>&</span>H</div>
-      <p className="eyebrow">HIS & HERS MART</p>
+      <div className="admin-brand-mark">CM</div>
+      <p className="eyebrow">CLOUD MOMOS · OWNER ACCESS</p>
       <h1>Admin sign in</h1>
       <p className="admin-muted">Secure access for authorised store administrators only.</p>
       {session && !authorized && <div className="admin-alert"><ShieldAlert size={17} /> {error || "This account is not an administrator."}</div>}
@@ -451,9 +451,17 @@ export default function AdminPage() {
 
   return <main className="admin-shell">
     <header className="admin-topbar">
-      <a className="admin-brand" href="/"><span>H<span>&</span>H</span><b>HIS & HERS MART</b><small>ADMIN</small></a>
+      <a className="admin-brand" href="/"><span className="admin-brand-monogram">CM</span><b>CLOUD MOMOS</b><small>ADMIN</small></a>
       <div className="admin-top-actions"><span>{session.user.email}</span><button onClick={refresh} aria-label="Refresh orders"><RefreshCw size={16}/></button><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </header>
+    <nav className="admin-quick-nav" aria-label="Admin section shortcuts">
+      <a href="#business-operations">Overview</a>
+      <a href="#delivery-and-ads">Delivery & Ads</a>
+      <a href="#orders">Orders</a>
+      <a href="#products">Products</a>
+      <a href="#categories">Categories</a>
+      <a href="#shipping-offer">Free Shipping</a>
+    </nav>
     <div className="admin-content">
       <AdminControlCenter actorId={session.user.id} />
       <CloudMomosAdmin />
@@ -465,7 +473,7 @@ export default function AdminPage() {
         <article><PackageCheck/><span>Confirmed / Processing</span><strong>{counts.processing}</strong></article>
         <article><Truck/><span>Shipped</span><strong>{counts.shipped}</strong></article>
       </section>
-      <section className="admin-orders-card">
+      <section className="admin-orders-card" id="orders">
         <div className="admin-orders-toolbar"><div><h2>Customer orders</h2><p>Latest 200 orders · Export respects your current filters</p></div><div className="admin-order-tools"><button type="button" className="admin-export-btn" onClick={exportVisibleOrders} disabled={visibleOrders.length===0}>Export CSV ({visibleOrders.length})</button><div className="admin-search"><Search size={15}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search order, name or phone"/></div></div></div>
         <div className="admin-filters">{["all",...statuses].map(status => <button key={status} className={filter===status?"active":""} onClick={()=>setFilter(status)}>{status==="all"?"All":status}</button>)}</div>
         {visibleOrders.length===0 ? <div className="admin-empty"><ClipboardList size={28}/><b>No orders found</b><span>New customer orders will appear here.</span></div> :
@@ -473,17 +481,17 @@ export default function AdminPage() {
             {visibleOrders.map(order=><tr key={order.id}><td><b>{order.order_number}</b><small>{order.payment_method?.toUpperCase()}</small></td><td>{order.customer_name}<small>{order.customer_phone}</small></td><td>{date(order.created_at)}</td><td>{money(order.total)}</td><td><span className={"order-status status-"+order.order_status}>{order.order_status}</span></td><td><button className="view-order-btn" onClick={()=>{setSelected(order);setAdminNote(order.admin_note||"");setDeliveryCharge(String(order.delivery_charge||0));}}>View</button></td></tr>)}
           </tbody></table></div>}
       </section>
-      <section className="admin-orders-card admin-products-card">
+      <section className="admin-orders-card admin-products-card" id="products">
         <div className="admin-orders-toolbar"><div><h2>Product management</h2><p>Add products, update prices and stock, or hide products without deleting order history.</p></div><button className="admin-product-add" onClick={openNewProduct}>+ Add product</button></div>
         {productNotice && <p className="admin-product-success" role="status">{productNotice}</p>}
         <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className="admin-product-source">{product.fulfillment_source === "shopbase_bd" ? "Supplier: ShopBase BD" : product.fulfillment_source === "dropshippingbd" ? "Supplier: DropshippingBD" : "Own stock"}{product.supplier_product_code ? ` · Code: ${product.supplier_product_code}` : ""}</span><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><div className="admin-product-row-actions"><button className="admin-product-edit" disabled={!!productBusy} onClick={()=>openEditProduct(product)}>Edit</button><button className="admin-product-delete" disabled={!!productBusy} onClick={()=>void deleteProduct(product)} title={`Delete ${product.name}`}><Trash2 size={13}/>{productBusy === product.id ? "Deleting…" : "Delete"}</button></div></article>)}</div>
         <AdminProductImport categories={categories} onImported={refresh} />
       </section>
-      <section className="admin-orders-card admin-products-card">
+      <section className="admin-orders-card admin-products-card" id="categories">
         <div className="admin-orders-toolbar"><div><h2>Category management</h2><p>Create categories and control their storefront visibility and display order.</p></div><button className="admin-product-add" onClick={openNewCategory}>+ Add category</button></div>
         <div className="admin-product-list">{categories.map(category=><article key={category.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{category.name}</b><small>Display order: {category.sort_order} · Sizing: {sizeProfileLabel(category.size_profile)}</small><span className={category.is_active ? "admin-product-live" : "admin-product-inactive"}>{category.is_active ? "Visible on storefront" : "Hidden from storefront"}</span></div><button className="admin-product-edit" onClick={()=>openEditCategory(category)}>Edit</button></article>)}</div>
       </section>
-      <section className="admin-orders-card admin-products-card">
+      <section className="admin-orders-card admin-products-card" id="shipping-offer">
         <div className="admin-orders-toolbar"><div><h2>Free shipping selection</h2><p>Choose exactly which products are included in the 3-item free delivery offer.</p></div></div>
         <div className="admin-free-shipping-info"><b>Offer rule: 3 or more eligible item units = FREE SHIPPING</b><span>Products are OFF by default. Turn on only the products you want to include in this offer. Different eligible products can be combined in one order.</span></div>
         {products.length === 0 ? <div className="admin-empty"><Boxes size={28}/><b>No products found</b><span>Products connected to the store will appear here.</span></div> : <div className="admin-free-shipping-grid">{products.map(product => <article key={product.id} className="admin-free-shipping-product"><div className="admin-free-shipping-product-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · Stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}</span></div><label className="admin-toggle"><input type="checkbox" checked={product.free_shipping_eligible} disabled={productBusy === product.id || !product.is_active} onChange={event => void toggleFreeShipping(product, event.target.checked)}/><span>{productBusy === product.id ? "Saving…" : product.free_shipping_eligible ? "Included" : "Not included"}</span></label></article>)}</div>}
