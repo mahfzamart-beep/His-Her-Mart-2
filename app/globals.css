@@ -744,30 +744,6 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
 }
 
 
-/* Cloud Momos — clearer checkout unboxing guide */
-.unboxing-notice{
-  display:grid;grid-template-columns:112px minmax(0,1fr);align-items:start;gap:18px;
-  margin:16px 0;padding:19px;border:1px solid #e8d8bf;border-radius:20px;
-  background:linear-gradient(135deg,#fff8ed 0%,#f4ead9 100%);
-  color:#26352c;box-shadow:0 8px 24px rgba(39,54,39,.045);
-}
-.notice-teacher{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
-.notice-teacher svg{display:block;width:100%;max-width:112px;height:auto;overflow:visible}
-.teacher-label{display:inline-block;padding:6px 9px;border-radius:999px;background:#173f30;color:#fffaf1;font-size:9px;font-weight:800;white-space:nowrap}
-.unboxing-copy{min-width:0}
-.unboxing-copy .eyebrow{margin:0 0 5px;color:#d96e2b;font-size:8px;font-weight:900;letter-spacing:1.6px}
-.unboxing-copy h3{margin:0 0 9px;color:#173f30;font-family:'Space Grotesk',sans-serif;font-size:20px;line-height:1.2}
-.notice-english,.notice-bangla{margin:8px 0;color:#4e5b50;font-size:10px;line-height:1.7}
-.notice-bangla{padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.55)}
-.notice-legal{margin:9px 0;color:#7b8175;font-size:9px;line-height:1.65}
-.notice-legal span{display:block;margin-top:4px}
-.policy-consent{display:grid;grid-template-columns:18px minmax(0,1fr);align-items:start;gap:9px;margin-top:12px;padding:11px 12px;border:1px solid rgba(23,63,48,.14);border-radius:12px;background:#fffdf8;color:#34463a;font-size:10px;font-weight:700;line-height:1.55}
-.policy-consent input{width:17px;height:17px;margin:1px 0 0;accent-color:#173f30}
-.policy-consent span span{display:block;margin-top:3px;color:#737b70;font-weight:500}
-.teacher-smile{transform-origin:90px 116px;animation:cm-teacher-smile 4s ease-in-out infinite}
-.teacher-concern{transform-origin:90px 120px;animation:cm-teacher-concern 4s ease-in-out infinite}
-@keyframes cm-teacher-smile{0%,58%,100%{opacity:1}68%,88%{opacity:0}}
-@keyframes cm-teacher-concern{0%,58%,100%{opacity:0}68%,88%{opacity:1}}
 .cm-checkout{max-height:92vh;overflow-y:auto;overscroll-behavior:contain}
 
 /* Cloud Momos — redesigned brand value section */
@@ -830,19 +806,15 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
 }
 
 
-/* Cloud Momos food-pack video guidance */
-.notice-teacher .notice-food-icon{
-  display:grid;place-items:center;width:92px;height:92px;border-radius:28px;
-  background:linear-gradient(145deg,#f6e8cc,#fffaf1);border:1px solid rgba(23,63,48,.1);
-  box-shadow:0 12px 24px rgba(23,63,48,.08);font-size:49px;
+
+
+/* Cloud Momos checkout support note */
+.cm-checkout-note{
+  display:grid;gap:6px;margin:14px 0;padding:13px 14px;
+  border:1px solid rgba(23,63,48,.14);border-radius:14px;
+  background:linear-gradient(135deg,#fff8ed 0%,#f3eadb 100%);
+  color:#435248;font-size:10px;line-height:1.65;
 }
-.notice-food-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
-.notice-food-steps span{display:flex;align-items:center;gap:7px;padding:9px 10px;border:1px solid rgba(23,63,48,.1);border-radius:11px;background:rgba(255,250,241,.78);color:#536354;font-size:9px;font-weight:700;line-height:1.45}
-.notice-food-steps b{display:grid;place-items:center;flex:0 0 21px;width:21px;height:21px;border-radius:7px;background:#e8f0e5;color:#173f30;font-size:8px}
-.notice-support-link{display:inline-flex;align-items:center;gap:6px;margin-top:3px;color:#d96e2b;font-size:10px;font-weight:900;text-decoration:none}
-.notice-support-link:hover{text-decoration:underline}
-@media(max-width:680px){
-  .notice-teacher .notice-food-icon{width:60px;height:60px;border-radius:18px;font-size:33px}
-  .notice-food-steps{grid-template-columns:1fr;gap:6px;margin:10px 0}
-  .notice-food-steps span{padding:8px 9px;font-size:9px}
-}
+.cm-checkout-note b{color:#173f30;font-size:11px;font-weight:900}
+.cm-checkout-note a{width:max-content;max-width:100%;color:#d96e2b;font-size:10px;font-weight:900;text-decoration:none}
+.cm-checkout-note a:hover{text-decoration:underline}
