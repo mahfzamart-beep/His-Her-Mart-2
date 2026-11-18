@@ -3,7 +3,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "../lib/supabase";
 import { ShoppingBag, MapPin, X, Plus, Minus, ArrowRight, Megaphone } from "lucide-react";
-import UnboxingNotice from "../components/UnboxingNotice";
 
 type Product={id:string;name:string;slug:string;description:string|null;price:number;image_url:string|null;stock_quantity:number;category_id:string;category:{name:string}|null};
 type Area={id:string;name:string;delivery_charge:number;is_active:boolean};
@@ -35,7 +34,6 @@ export default function Home(){
  const [phone,setPhone]=useState("");
  const [email,setEmail]=useState("");
  const [address,setAddress]=useState("");
- const [accepted,setAccepted]=useState(false);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
  const [success,setSuccess]=useState("");
@@ -91,13 +89,13 @@ export default function Home(){
  const buyNow=(id:string)=>{setBuyNowProductId(id);setBuyNowQuantity(1);setCartOpen(false);setError("");setCheckout(true)};
  const placeOrder=async(e:FormEvent)=>{
   e.preventDefault();setError("");
-  if(!supabase||!chosenArea||!lines.length||!accepted)return;
+  if(!supabase||!chosenArea||!lines.length)return;
   if(lines.some(l=>l.product.price<=0||l.product.stock_quantity<l.quantity)){setError("Some products still need a confirmed price or stock. Please contact us.");return}
   setBusy(true);
   const {data,error:fnError}=await supabase.functions.invoke("create-guest-order",{body:{
    customer_name:customerName,customer_phone:phone,customer_email:email||null,
    shipping_address:{delivery_area_id:chosenArea.id,delivery_area_name:chosenArea.name,address_line:address,city:"Sylhet"},
-   items:lines.map(l=>({product_id:l.product.id,quantity:l.quantity})),accept_unboxing_policy:accepted
+   items:lines.map(l=>({product_id:l.product.id,quantity:l.quantity}))
   }});
   setBusy(false);
   if(fnError||data?.error){setError(data?.error||fnError?.message||"Order could not be placed.");return}
@@ -128,22 +126,22 @@ export default function Home(){
   <section className="cm-about" id="about">
    <div className="cm-about-intro">
     <span className="cm-kicker">WHY CLOUD MOMOS</span>
-    <h2>Little clouds.<br/><em>Big comfort.</em></h2>
-    <p>Big momo cravings deserve easy choices. Pick a freshly cooked box for right now, or keep a frozen pack ready for whenever the craving comes back. Every box has six pieces, with delivery in selected areas of Sylhet City.</p>
-    <a className="cm-about-link" href="#menu">Find your momo moment <ArrowRight size={16}/></a>
+    <h2>Why <em>Cloud Momos?</em></h2>
+    <p>From a freshly cooked box for right now to a frozen pack for later, we make momo cravings easy. Every box has six pieces, prices are clear, and your selected Sylhet delivery fee is shown before you place an order.</p>
+    <a className="cm-about-link" href="#menu">Explore the momo menu <ArrowRight size={16}/></a>
    </div>
    <div className="cm-about-grid">
-    <article className="cm-about-card"><span className="cm-about-icon">♨️</span><small>01 / READY TO ENJOY</small><h3>Cooked for now</h3><p>Choose the ready-to-eat menu when you want freshly cooked momos without the extra prep.</p></article>
-    <article className="cm-about-card"><span className="cm-about-icon">❄️</span><small>02 / KEEP FOR LATER</small><h3>Frozen your way</h3><p>Keep a frozen pack in your freezer and cook it when your next momo craving hits.</p></article>
-    <article className="cm-about-card"><span className="cm-about-icon">🥟</span><small>03 / SIX IN EVERY BOX</small><h3>Good things come in six</h3><p>Every box includes six pieces, so you know exactly what you are getting.</p></article>
-    <article className="cm-about-card"><span className="cm-about-icon">🛵</span><small>04 / LOCAL DELIVERY</small><h3>Made for Sylhet</h3><p>Select an active delivery area and see its delivery charge before placing your order.</p></article>
+    <article className="cm-about-card"><span className="cm-about-icon">♨️</span><small>01 / FRESHLY COOKED</small><h3>Ready to enjoy</h3><p>Choose the cooked menu for momos prepared and ready to enjoy when they arrive.</p></article>
+    <article className="cm-about-card"><span className="cm-about-icon">❄️</span><small>02 / FROZEN FOR LATER</small><h3>Cook when you crave</h3><p>Keep uncooked frozen momos in your freezer and cook thoroughly whenever you are ready.</p></article>
+    <article className="cm-about-card"><span className="cm-about-icon">🥟</span><small>03 / SIX PIECES PER BOX</small><h3>No guesswork</h3><p>Every box contains six pieces, and the box price is shown clearly before checkout.</p></article>
+    <article className="cm-about-card"><span className="cm-about-icon">🛵</span><small>04 / LOCAL SYLHET DELIVERY</small><h3>Delivery made clear</h3><p>Choose an active service area and see its delivery fee before placing your order.</p></article>
    </div>
   </section>
   <section className="cm-faq" id="faq"><h2>Good to <em>Know</em></h2><p><b>Ready to Eat:</b> Cooked before delivery and served ready to enjoy.</p><p><b>Frozen Momos:</b> Raw and frozen when packed. Cook thoroughly before eating.</p><p><b>Box size:</b> Every box contains 6 pieces.</p><p><b>Delivery:</b> Currently available only in selected areas of Sylhet City.</p></section>
   <div className="cm-mobile-dock"><a href="#menu">Explore Menu <ArrowRight size={16}/></a><button onClick={()=>setCartOpen(true)}><ShoppingBag size={17}/> Your Box <b>{count}</b></button></div>
   <footer className="cm-footer"><a className="cm-logo" href="#"><span>Cloud</span><b>Momos</b></a><p>Little clouds. Big comfort. ☁️</p><small>© {new Date().getFullYear()} Cloud Momos. Made with love in Sylhet.</small></footer>
   {cartOpen&&<div className="cm-overlay" onClick={()=>setCartOpen(false)}><aside className="cm-drawer" onClick={e=>e.stopPropagation()}><div className="cm-drawer-head"><h2>Your Box ({count})</h2><button onClick={()=>setCartOpen(false)}><X/></button></div>{!lines.length?<p className="cm-empty">Your box is waiting for momos.</p>:<>{lines.map(l=><div className="cm-line" key={l.product.id}><div><b>{l.product.name}</b><small>{l.quantity} box · {money(l.product.price*l.quantity)}</small></div><div className="cm-qty"><button onClick={()=>update(l.product.id,-1)}><Minus/></button>{l.quantity}<button onClick={()=>update(l.product.id,1)}><Plus/></button></div></div>)}<div className="cm-total"><span>Subtotal</span><b>{money(subtotal)}</b></div><button className="cm-btn cm-wide" onClick={()=>{setCartOpen(false);setCheckout(true)}}>Checkout <ArrowRight/></button></>}</aside></div>}
-  {checkout&&<div className="cm-overlay"><form className="cm-checkout" onSubmit={placeOrder}><div className="cm-drawer-head"><h2>Delivery Details</h2><button type="button" onClick={()=>{setCheckout(false);setBuyNowProductId(null);setBuyNowQuantity(1)}}><X/></button></div><p>We currently deliver only in selected Sylhet areas.</p><label>Full name<input required value={customerName} onChange={e=>setCustomerName(e.target.value)}/></label><label>Phone number<input required value={phone} onChange={e=>setPhone(e.target.value)} placeholder="01XXXXXXXXX"/></label><label>Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Delivery area<select required value={areaId} onChange={e=>setAreaId(e.target.value)}><option value="">Choose an active area</option>{areas.map(a=><option key={a.id} value={a.id}>{a.name} — {money(a.delivery_charge)}</option>)}</select></label><label>Full address<textarea required minLength={5} value={address} onChange={e=>setAddress(e.target.value)}/></label><div className="cm-total"><span>Subtotal</span><b>{money(subtotal)}</b></div><div className="cm-total"><span>Delivery</span><b>{chosenArea?money(chosenArea.delivery_charge):"Select area"}</b></div><div className="cm-total"><span>Total</span><b>{money(total)}</b></div><UnboxingNotice checked={accepted} onCheckedChange={setAccepted} />{error&&<p className="cm-error">{error}</p>}<button className="cm-btn cm-wide" disabled={busy||!chosenArea||!accepted}>{busy?"Placing order…":"Place Order · "+money(total)}</button></form></div>}
+  {checkout&&<div className="cm-overlay"><form className="cm-checkout" onSubmit={placeOrder}><div className="cm-drawer-head"><h2>Delivery Details</h2><button type="button" onClick={()=>{setCheckout(false);setBuyNowProductId(null);setBuyNowQuantity(1)}}><X/></button></div><p>We currently deliver only in selected Sylhet areas.</p><label>Full name<input required value={customerName} onChange={e=>setCustomerName(e.target.value)}/></label><label>Phone number<input required value={phone} onChange={e=>setPhone(e.target.value)} placeholder="01XXXXXXXXX"/></label><label>Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Delivery area<select required value={areaId} onChange={e=>setAreaId(e.target.value)}><option value="">Choose an active area</option>{areas.map(a=><option key={a.id} value={a.id}>{a.name} — {money(a.delivery_charge)}</option>)}</select></label><label>Full address<textarea required minLength={5} value={address} onChange={e=>setAddress(e.target.value)}/></label><div className="cm-total"><span>Subtotal</span><b>{money(subtotal)}</b></div><div className="cm-total"><span>Delivery</span><b>{chosenArea?money(chosenArea.delivery_charge):"Select area"}</b></div><div className="cm-total"><span>Total</span><b>{money(total)}</b></div><div className="cm-checkout-note"><b>At delivery</b><span>Please check your food boxes while the delivery person is present. If anything is missing, incorrect or damaged, contact our team with your order number.</span><a href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">WhatsApp customer support</a></div>{error&&<p className="cm-error">{error}</p>}<button className="cm-btn cm-wide" disabled={busy||!chosenArea}>{busy?"Placing order…":"Place Order · "+money(total)}</button></form></div>}
   {success&&<div className="cm-overlay"><div className="cm-checkout"><div className="cm-drawer-head"><h2>Order Received!</h2><button onClick={()=>setSuccess("")}><X/></button></div><p>{success}</p><button className="cm-btn cm-wide" onClick={()=>setSuccess("")}>Continue Shopping</button></div></div>}
  </main>
 }
