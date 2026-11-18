@@ -26,11 +26,11 @@ export default function ReturnsPage() {
         </section>
         <section className="policy-section">
           <h2>Report a problem</h2>
-          <p>If something is missing, incorrect or damaged, contact Cloud Momos promptly with your order number. Clear photos of the food pack can help our team review the issue, but recording a video is not required to place an order.</p>
+          <p>If something is missing, incorrect or damaged, contact Cloud Momos promptly with your order number. Clear photos of the food pack can help our team review the issue if available.</p>
         </section>
         <section className="policy-section">
           <h2>Need assistance?</h2>
-          <p>Share your order number, explain the issue and include clear photos or your opening video where helpful. Our team will review your report and guide you through the next step.</p>
+          <p>Share your order number, explain the issue and include clear photos where helpful. Our team will review your report and guide you through the next step.</p>
           <a className="policy-link" href="https://wa.me/8801969419302" target="_blank" rel="noreferrer">Contact Cloud Momos on WhatsApp <ArrowRight size={15}/></a>
         </section>
         <p className="policy-updated">Food-order concerns are reviewed individually. This page does not promise an unconditional return or refund and does not affect rights under applicable consumer-protection law.</p>
