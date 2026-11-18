@@ -113,14 +113,12 @@ button{cursor:pointer}
 .cm-btn:hover{transform:translateY(-2px);background:var(--cm-orange-deep);border-color:var(--cm-orange-deep);box-shadow:0 14px 28px rgba(217,95,19,.23)}
 .cm-btn:disabled{opacity:.48;cursor:not-allowed;transform:none;box-shadow:none}
 .cm-hero-art{
-  position:relative;isolation:isolate;display:grid;place-items:center;min-height:390px;
-  overflow:hidden;border-radius:34px 34px 110px 34px;
-  background:
-    radial-gradient(circle at 80% 18%,rgba(255,196,119,.25),transparent 28%),
-    radial-gradient(circle at 15% 90%,rgba(255,255,255,.09),transparent 36%),
-    linear-gradient(145deg,#245b3e 0%,#163f2c 60%,#102f22 100%);
+  position:relative;isolation:isolate;display:block;min-height:390px;overflow:hidden;
+  border-radius:34px 34px 110px 34px;background:#163f2c;
   box-shadow:0 28px 55px rgba(16,47,34,.2),inset 0 0 0 1px rgba(255,255,255,.12);
 }
+.cm-hero-mascot{display:block;width:100%;height:100%;min-height:390px;object-fit:cover;object-position:center;border-radius:inherit}
+.cm-hero-art::before,.cm-hero-art::after{display:none}
 .cm-hero-art::before,.cm-hero-art::after{
   content:"";position:absolute;z-index:-1;border:1px solid rgba(255,255,255,.15);border-radius:50%;
 }
@@ -159,17 +157,13 @@ button{cursor:pointer}
   padding:14px clamp(18px,5vw,72px) 32px;background:var(--cm-cream);
 }
 .cm-category-banners a{
-  position:relative;isolation:isolate;display:flex;flex-direction:column;align-items:flex-start;
-  justify-content:center;gap:9px;min-height:166px;padding:25px 30px;overflow:hidden;
-  border:1px solid rgba(22,63,44,.08);border-radius:25px;
-  background:linear-gradient(115deg,#163f2c,#20583b);color:#fff8e8;text-decoration:none;
+  position:relative;display:block;min-height:0;aspect-ratio:1000/418;padding:0;overflow:hidden;
+  border:1px solid rgba(22,63,44,.08);border-radius:25px;background:var(--cm-paper);
   box-shadow:0 12px 28px rgba(22,63,44,.09);transition:transform .22s,box-shadow .22s;
 }
-.cm-category-banners a::after{
-  content:"";position:absolute;z-index:-1;width:190px;height:190px;right:-48px;top:-85px;
-  border:1px solid rgba(255,255,255,.2);border-radius:50%;
-  box-shadow:0 0 0 22px rgba(255,255,255,.045),0 0 0 44px rgba(255,255,255,.025);
-}
+.cm-category-banners a img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .35s}
+.cm-category-banners a:hover img{transform:scale(1.025)}
+.cm-category-banners a::after{display:none}
 .cm-category-banners a:nth-child(2){
   background:linear-gradient(115deg,#f6dfb8,#f4c98e);color:var(--cm-forest);
   box-shadow:0 12px 28px rgba(171,113,48,.09);
@@ -221,9 +215,11 @@ button{cursor:pointer}
   border:1px solid rgba(133,91,47,.12);border-radius:50%;
   box-shadow:0 0 0 18px rgba(255,255,255,.18),0 0 0 37px rgba(255,255,255,.12);
 }
+.cm-food-photo img{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.cm-card:hover .cm-food-photo img{transform:scale(1.045)}
 .cm-food-photo::after{
-  content:"";position:absolute;left:0;right:0;bottom:0;height:42%;
-  background:linear-gradient(180deg,transparent,rgba(88,59,25,.08));
+  content:"";position:absolute;z-index:1;left:0;right:0;bottom:0;height:42%;
+  background:linear-gradient(180deg,transparent,rgba(31,39,25,.14));pointer-events:none;
 }
 .cm-dumpling{
   position:relative;z-index:1;display:block;font-size:92px;
@@ -231,11 +227,12 @@ button{cursor:pointer}
 }
 .cm-card:hover .cm-dumpling{transform:translateY(-5px) scale(1.06) rotate(-4deg)}
 .cm-food-photo small{
-  position:absolute;top:12px;left:12px;z-index:2;max-width:calc(100% - 24px);
+  position:absolute;top:12px;left:12px;z-index:3;max-width:calc(100% - 24px);
   padding:7px 10px;border:1px solid rgba(22,63,44,.07);border-radius:999px;
   background:rgba(255,253,248,.91);color:var(--cm-forest);
   font-size:7px;font-weight:800;letter-spacing:1px;backdrop-filter:blur(8px);
 }
+.cm-demo-tag{position:absolute;top:12px;right:12px;z-index:3;padding:7px 9px;border-radius:999px;background:rgba(242,125,44,.94);color:white;font-size:7px;font-style:normal;font-weight:900;letter-spacing:1px}
 .cm-card-body{padding:17px 17px 18px}
 .cm-card h3{
   margin:0;color:var(--cm-forest);font-family:'Space Grotesk',sans-serif;
@@ -428,12 +425,13 @@ button{cursor:pointer}
   .cm-hero-copy>p{max-width:420px;font-size:13px}
   .cm-location{margin:18px 0 20px}
   .cm-hero-art{min-height:300px;margin:0 2px;border-radius:28px 28px 76px 28px}
+  .cm-hero-mascot{min-height:300px}
   .cm-mascot{width:180px;height:190px;transform:scale(.92) rotate(-4deg)}
   .cm-mascot svg{width:47px;height:47px}
   .cm-mascot small{right:-38px;top:22px;font-size:13px}
   .cm-steamer{bottom:15px;height:65px;font-size:25px;width:75%}
   .cm-category-banners{grid-template-columns:1fr;gap:11px;padding:0 15px 21px}
-  .cm-category-banners a{min-height:132px;padding:21px 23px;border-radius:20px}
+  .cm-category-banners a{min-height:0;padding:0;border-radius:20px}
   .cm-category-banners b{font-size:26px}
   .cm-category-banners span{font-size:11px}
   .cm-menu,.cm-ads{padding:52px 15px 58px}
