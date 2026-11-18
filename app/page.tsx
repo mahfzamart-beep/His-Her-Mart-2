@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "../lib/supabase";
-import { ShoppingBag, MapPin, Menu, X, Plus, Minus, ArrowRight, Cloud, ChefHat, Megaphone } from "lucide-react";
+import { ShoppingBag, MapPin, X, Plus, Minus, ArrowRight, ChefHat, Megaphone } from "lucide-react";
 
 type Product={id:string;name:string;slug:string;description:string|null;price:number;image_url:string|null;stock_quantity:number;category_id:string;category:{name:string}|null};
 type Area={id:string;name:string;delivery_charge:number;is_active:boolean};
@@ -68,7 +68,7 @@ export default function Home(){
  const chosenArea=areas.find(a=>a.id===areaId);
  const total=subtotal+Number(chosenArea?.delivery_charge||0);
  const update=(id:string,delta:number)=>setCart(old=>{const next={...old};const q=(next[id]||0)+delta;if(q<=0)delete next[id];else next[id]=Math.min(10,q);return next});
- const placeOrder=async(e:React.FormEvent)=>{
+ const placeOrder=async(e:FormEvent)=>{
   e.preventDefault();setError("");
   if(!supabase||!chosenArea||!lines.length||!accepted)return;
   if(lines.some(l=>l.product.price<=0||l.product.stock_quantity<l.quantity)){setError("Some products still need a confirmed price or stock. Please contact us.");return}
