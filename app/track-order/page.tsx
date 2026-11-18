@@ -35,16 +35,16 @@ export default function TrackOrderPage() {
 
   return <main className="tracking-shell">
     <header className="tracking-top">
-      <Link href="/" className="tracking-back"><ArrowLeft size={16} /> Back to store</Link>
-      <Link href="/" className="tracking-brand">H<span>&</span>H <small>HIS & HERS MART</small></Link>
+      <Link href="/" className="tracking-back"><ArrowLeft size={16} /> Back to menu</Link>
+      <Link href="/" className="tracking-brand">Cloud<span>Momos</span><small>MADE WITH LOVE IN SYLHET</small></Link>
     </header>
     <section className="tracking-card">
       <div className="tracking-icon"><PackageSearch size={25} /></div>
-      <p className="eyebrow">HIS & HERS MART</p>
+      <p className="eyebrow">CLOUD MOMOS · ORDER SUPPORT</p>
       <h1>Track your <em>order.</em></h1>
       <p className="tracking-intro">Enter the order number from your confirmation and the mobile number used at checkout.</p>
       <form onSubmit={submit} className="tracking-form">
-        <label>Order number<input required value={orderNumber} onChange={e => setOrderNumber(e.target.value.toUpperCase())} placeholder="HHM-261106-A1B2C3" /></label>
+        <label>Order number<input required value={orderNumber} onChange={e => setOrderNumber(e.target.value.toUpperCase())} placeholder="Enter your order number" /></label>
         <label>Checkout mobile number<input required type="tel" inputMode="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="01XXXXXXXXX" /></label>
         {error && <p className="tracking-error" role="alert">{error}</p>}
         <button className="primary-btn" disabled={busy}>{busy ? "CHECKING…" : "TRACK ORDER"} <Search size={15} /></button>
