@@ -38,10 +38,9 @@
   color:#fffdf4;box-shadow:0 5px 22px rgba(16,47,37,.13);
 }
 .admin-brand{display:flex;align-items:center;gap:11px;min-width:0;text-decoration:none}
-.admin-brand .admin-brand-monogram{
-  display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(255,255,255,.23);
-  border-radius:14px;background:linear-gradient(145deg,#f4a15f,#e47b32);color:#fff;
-  font:700 14px/1 "Space Grotesk",sans-serif;letter-spacing:-.5px;
+.admin-brand-icon{
+  display:block;flex:0 0 42px;width:42px;height:42px;object-fit:contain;
+  border:1px solid rgba(255,255,255,.22);border-radius:14px;background:#fffaf1;
 }
 .admin-brand>b{color:#fff9e9;font:700 15px/1.1 "Space Grotesk",sans-serif;letter-spacing:.8px;white-space:nowrap}
 .admin-brand>small{padding:5px 8px;border:1px solid rgba(255,255,255,.2);border-radius:999px;color:#e2eadf;font-size:9px;font-weight:900;letter-spacing:1.2px}
@@ -357,7 +356,7 @@
   width:min(440px,100%);padding:clamp(24px,5vw,38px);border:1px solid rgba(255,255,255,.8);
   border-radius:25px;background:rgba(255,253,248,.96);box-shadow:0 24px 70px rgba(26,48,34,.12);
 }
-.admin-brand-mark{display:grid;place-items:center;width:58px;height:58px;margin-bottom:20px;border-radius:19px;background:linear-gradient(145deg,#f2a05e,#d96f31);color:#fff;font:700 18px "Space Grotesk",sans-serif}
+.admin-brand-mark{display:block;width:66px;height:66px;object-fit:contain;margin-bottom:20px;border-radius:20px;background:#fffaf1;box-shadow:0 8px 20px rgba(23,63,48,.1)}
 .admin-login-card h1{margin:0;color:var(--adm-forest);font-size:30px;letter-spacing:-1px}
 .admin-login-card>.admin-muted{margin:9px 0 18px}
 .admin-forgot-link{margin:0 0 12px;text-align:right;font-size:11px}
@@ -404,7 +403,7 @@
   .admin-shell{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
   .admin-topbar{min-height:64px;padding:9px 13px;gap:9px}
   .admin-brand{gap:8px}
-  .admin-brand .admin-brand-monogram{flex-basis:37px;width:37px;height:37px;border-radius:12px}
+  .admin-brand-icon{flex-basis:38px;width:38px;height:38px;border-radius:12px}
   .admin-brand>b{font-size:12px;letter-spacing:.55px}
   .admin-brand>small{padding:4px 6px;font-size:8px}
   .admin-top-actions{gap:6px}
@@ -530,3 +529,9 @@
   .admin-area-checkbox-grid label small{font-size:10px}
   .admin-product-form input[type=file]{min-height:54px;padding:13px;font-size:12px}
 }
+
+
+/* Food-first menu editor */
+.admin-food-product-note{display:grid;gap:5px;padding:13px 14px;border:1px solid #dce8d7;border-radius:14px;background:#f1f7ef}
+.admin-food-product-note b{color:var(--adm-forest);font-size:12px}
+.admin-food-product-note small{color:#71806e;font-size:10px;line-height:1.6}
