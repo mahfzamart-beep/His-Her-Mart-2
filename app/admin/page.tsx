@@ -233,7 +233,7 @@ export default function AdminPage() {
       ? `\n\nThis product is linked to ${count} saved order item(s). Their saved product name, SKU, price and quantity will remain in order history.`
       : "";
     const confirmed = window.confirm(
-      `Permanently delete "${product.name}" from the catalogue?${historyWarning}\n\nWishlist entries for this product will also be removed. This action cannot be undone.`
+      `Permanently remove "${product.name}" from the Cloud Momos menu?${historyWarning}\\n\\nThis menu item will no longer be available to customers. This action cannot be undone.`
     );
 
     if (!confirmed) {
