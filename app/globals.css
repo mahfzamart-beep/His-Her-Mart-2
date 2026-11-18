@@ -783,14 +783,6 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
   .cm-about-intro p{max-width:620px}
 }
 @media(max-width:680px){
-  .unboxing-notice{grid-template-columns:1fr;gap:9px;margin:13px 0;padding:14px;border-radius:16px}
-  .notice-teacher{flex-direction:row;justify-content:flex-start;gap:10px}
-  .notice-teacher svg{width:66px;height:70px}
-  .teacher-label{font-size:8px}
-  .unboxing-copy h3{font-size:18px}
-  .notice-english,.notice-bangla{font-size:9px}
-  .notice-legal{font-size:8px}
-  .policy-consent{font-size:9px}
   .cm-about{margin:25px 13px;padding:26px 18px;border-radius:24px;gap:23px}
   .cm-about-intro h2{font-size:39px;letter-spacing:-1.7px}
   .cm-about-intro p{font-size:10px;line-height:1.8}
@@ -799,10 +791,6 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
   .cm-about-icon{width:32px;height:32px;margin-bottom:10px;font-size:16px}
   .cm-about-card h3{font-size:15px}
   .cm-about-card p{font-size:9px}
-}
-@media(prefers-reduced-motion:reduce){
-  .teacher-smile,.teacher-concern{animation:none}
-  .teacher-smile{opacity:1}.teacher-concern{opacity:0}
 }
 
 
