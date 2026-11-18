@@ -65,9 +65,9 @@ export default function PwaInstallCard() {
   return (
     <section className="pwa-install-card">
       <div className="pwa-install-icon"><img src="/app-icon-v3.svg?v=5" alt="" /></div>
-      <p className="eyebrow">LITTLE CLOUDS. BIG COMFORT.</p>
-      <h2>Take the store <em>with you.</em></h2>
-      <p className="pwa-install-intro">Add Cloud Momos to your phone’s home screen for a clean, app-like shopping experience. Your existing website account and order services remain on the same secure store.</p>
+      <p className="eyebrow">CLOUD MOMOS · MADE FOR YOUR CRAVING</p>
+      <h2>Your momo favourites,<br/><em>one tap away.</em></h2>
+      <p className="pwa-install-intro">Add Cloud Momos to your home screen for quick access to the Cooked and Frozen menus, local delivery information and order tracking.</p>
       {installed ? (
         <div className="pwa-installed-state"><CheckCircle2 size={18} /> Cloud Momos is installed on this device.</div>
       ) : (
@@ -85,8 +85,8 @@ export default function PwaInstallCard() {
           <article><Share size={19} /><div><b>iPhone · Safari</b><p>Open this website in Safari, tap the Share icon, choose <strong>Add to Home Screen</strong>, then tap Add.</p></div></article>
         </div>
       )}
-      <p className="pwa-install-note">This is the official installable web app (PWA), not an APK or a Play Store download. It uses the same live website and does not create a separate account.</p>
-      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the previous Cloud Momos shortcut from your home screen, then install again to refresh the new app icon.</p>
+      <p className="pwa-install-note">This is the official Cloud Momos installable web app, not an APK or a Play Store download. It opens the same live momo menu, checkout and order tracking as the website.</p>
+      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the previous Cloud Momos home-screen shortcut, then install again to refresh the new dumpling icon.</p>
     </section>
   );
 }
