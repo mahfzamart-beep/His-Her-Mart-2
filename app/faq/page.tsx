@@ -3,93 +3,43 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, HelpCircle } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Help & FAQs",
-  description: "Answers about ordering, COD, delivery, order tracking, product comparisons, quick view, cart and wishlist at His & Hers Mart.",
-  alternates: { canonical: "https://his-and-her-mart.vercel.app/faq" },
+  title: "Momo Ordering Help",
+  description: "Answers about Cloud Momos menu choices, six-piece boxes, Sylhet delivery, food-pack checks and order tracking.",
+  alternates: { canonical: "https://cloudmomos.vercel.app/faq" },
   openGraph: {
-    title: "Help & FAQs | His & Hers Mart",
-    description: "Helpful answers for shopping at His & Hers Mart, Bangladesh.",
-    url: "https://his-and-her-mart.vercel.app/faq",
-    siteName: "His & Hers Mart",
+    title: "Help & FAQs | Cloud Momos",
+    description: "Helpful answers about ordering momos in Sylhet.",
+    url: "https://cloudmomos.vercel.app/faq",
+    siteName: "Cloud Momos",
     locale: "en_BD",
     type: "website",
   },
 };
 
 const faqs = [
-  {
-    category: "Ordering",
-    question: "How do I place an order?",
-    answer: "Choose a product, add it to your bag, and continue to checkout. Enter your name, Bangladesh mobile number and delivery address, review the order details, then submit your order. Product price and available stock are checked again when the order is placed.",
-  },
-  {
-    category: "Payment",
-    question: "Which payment method is available right now?",
-    answer: "Cash on Delivery (COD) is the currently available payment method. bKash and Nagad checkout are not active yet. Please do not send advance payments to personal numbers or outside the website.",
-  },
-  {
-    category: "Delivery",
-    question: "How does selected-product free shipping work?",
-    answer: "Products that qualify are marked in the store. An order containing at least 3 quantity units of eligible products unlocks free shipping. The offer applies only to marked products; it does not automatically cover every product in the catalogue.",
-  },
-  {
-    category: "Delivery",
-    question: "How much is the delivery charge?",
-    answer: "Delivery is ৳80 for Inside Dhaka and ৳150 for Outside Dhaka. Select the correct delivery area at checkout. Orders with at least 3 quantity units from selected free-shipping products still qualify for that offer.",
-  },
-  {
-    category: "Exchange policy",
-    question: "What should I do if I find a defect in the product?",
-    answer: "Please check the product while the delivery person is still present, before they leave. If you find a product defect at that time, contact us and we will send a replacement at our expense. If you request an exchange after the delivery person has left, a new delivery charge will apply. Please inspect the parcel and product carefully at your doorstep.",
-  },
-  {
-    category: "Customer support",
-    question: "How can I contact His & Hers Mart?",
-    answer: "Message our customer support team on WhatsApp at +8801969419302.",
-    link: "https://wa.me/8801969419302",
-    linkLabel: "Chat on WhatsApp",
-  },
-  {
-    category: "Tracking",
-    question: "How can I track my order?",
-    answer: "Open the Track Order page and enter the order number and the same Bangladesh mobile number used at checkout. The page displays the current order and payment status without showing your full delivery address.",
-    link: "/track-order",
-    linkLabel: "Track an order",
-  },
-  {
-    category: "Product discovery",
-    question: "Can I preview or compare products before ordering?",
-    answer: "Use Quick View on a product card for a fast look at its price, description and stock. You can add up to three products to Compare and see their prices, category, availability and available options side by side.",
-  },
-  {
-    category: "Saved items",
-    question: "Can I save an item from my shopping bag for later?",
-    answer: "Choose Save for later under an item in your bag. It will move to your wishlist so you can find it again while browsing. Wishlist and comparison selections stay in the current browser on your device.",
-  },
-  {
-    category: "Product questions",
-    question: "How can I ask about a specific product?",
-    answer: "Open the product details page and choose Ask about this product on WhatsApp. The message includes the product name and its store link so our team can understand which item you mean.",
-  },
-  {
-    category: "Saved items",
-    question: "Will my cart and wishlist be available on another phone?",
-    answer: "Your cart and wishlist are saved in the browser on the device you are using. They do not currently sync between different phones, browsers or customer accounts. Clearing browser data can remove saved items.",
-  },
+  { category: "The menu", question: "What is the difference between Cooked and Frozen Momos?", answer: "Cooked Momos are prepared and ready to enjoy when delivered. Frozen Momos are uncooked frozen packs; keep them frozen and cook thoroughly before eating." },
+  { category: "Box size", question: "How many momos are in one box?", answer: "Every Cloud Momos box contains 6 pieces. The product card shows the price for one box." },
+  { category: "Ordering", question: "How do I place an order?", answer: "Choose a momo favourite, tap Add to Box to continue browsing or Buy Now to go straight to delivery details. Enter your name, mobile number, full address and an active delivery area, then review the total before placing the order." },
+  { category: "Payment", question: "Which payment method is available?", answer: "Cash on Delivery is available. Pay the confirmed order total when your delivery arrives. Do not send advance payments to personal numbers." },
+  { category: "Delivery", question: "Where does Cloud Momos deliver?", answer: "We currently deliver only in selected areas of Sylhet City. The active service areas and their delivery charges are shown on the website and at checkout." },
+  { category: "Delivery", question: "How much is delivery?", answer: "Delivery charges depend on the active Sylhet area you choose. The exact fee is shown before you place your order." },
+  { category: "Order care", question: "Should I record a video when opening my food pack?", answer: "Yes, it helps us review a report about a damaged, incorrect or missing item. Use your phone camera to start one continuous video before opening the sealed pack. Show the order label, opening and items inside. The website does not record or upload video itself; share the clip with our support team on WhatsApp if there is an issue." },
+  { category: "Order tracking", question: "How do I track my order?", answer: "Open Track Order and enter the order number from your confirmation together with the same phone number used at checkout. You can see the latest order and payment status.", link: "/track-order", linkLabel: "Track an order" },
+  { category: "Customer support", question: "How can I contact Cloud Momos?", answer: "Message our team on WhatsApp at +8801969419302. Include your order number and a short description of the issue.", link: "https://wa.me/8801969419302", linkLabel: "Chat with Cloud Momos" },
 ];
 
 export default function FaqPage() {
   return (
     <main className="faq-shell">
       <header className="faq-top">
-        <Link href="/" className="faq-back"><ArrowLeft size={16} /> Back to store</Link>
+        <Link href="/" className="faq-back"><ArrowLeft size={16} /> Back to menu</Link>
         <Link href="/track-order" className="faq-track">Track order <ArrowRight size={15} /></Link>
       </header>
       <section className="faq-intro">
         <div className="faq-mark"><HelpCircle size={22} /></div>
-        <p className="eyebrow">HIS & HERS MART · CUSTOMER HELP</p>
-        <h1>A little help.<br /><em>Before you shop.</em></h1>
-        <p>Clear answers about ordering, payment, delivery, tracking and saved items.</p>
+        <p className="eyebrow">CLOUD MOMOS · CUSTOMER CARE</p>
+        <h1>Good to know.<br /><em>Before the first bite.</em></h1>
+        <p>Clear answers about our momo menu, six-piece boxes, Sylhet delivery and order care.</p>
       </section>
       <section className="faq-list" aria-label="Frequently asked questions">
         {faqs.map((item, index) => (
@@ -110,8 +60,8 @@ export default function FaqPage() {
       </section>
       <footer className="faq-footer">
         <p className="eyebrow">CUSTOMER SUPPORT · WHATSAPP +8801969419302</p>
-        <h2>Find something <em>lovely.</em></h2>
-        <Link className="primary-btn" href="/">Explore the collection <ArrowRight size={16} /></Link>
+        <h2>Little clouds.<br/><em>Big comfort.</em></h2>
+        <Link className="primary-btn" href="/">Explore the momo menu <ArrowRight size={16} /></Link>
       </footer>
     </main>
   );
