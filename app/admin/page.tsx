@@ -18,32 +18,10 @@ type Order = {
   admin_note: string | null; created_at: string; order_items: OrderItem[];
   free_shipping_applied: boolean; free_shipping_eligible_quantity: number;
 };
-type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; images: string[] | null; color_options: string[]; size_type: string; size_options: string[] | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
-type SizeProfile = "none" | "apparel" | "footwear";
-type ProductSizeType = "none" | "apparel_alpha" | "apparel_numeric" | "shoe_eu" | "shoe_uk" | "shoe_us" | "numeric" | "letter" | "custom";
-type StoreCategory = { id: string; name: string; slug: string; description: string | null; image_url: string | null; sort_order: number; is_active: boolean; size_profile: SizeProfile };
-type CategoryFormState = { id: string | null; name: string; description: string; image_url: string; sort_order: string; is_active: boolean; size_profile: SizeProfile };
-type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; size_type: ProductSizeType; size_options_text: string; color_options: string[]; category_id: string; is_active: boolean; is_featured: boolean; fulfillment_source: string; supplier_product_code: string; supplier_product_url: string };
-const sizeTypeOptionsForProfile = (profile: SizeProfile): Array<{ value: ProductSizeType; label: string }> => {
-  if (profile === "apparel") return [
-    { value: "apparel_alpha", label: "Alphanumeric clothing sizes (XS, S, M, L, XL, 2XL…)" },
-    { value: "apparel_numeric", label: "Numeric clothing sizes (28, 30, 32, 34…)" },
-  ];
-  if (profile === "footwear") return [
-    { value: "shoe_eu", label: "Shoe size — EU (36, 37, 38…)" },
-    { value: "shoe_uk", label: "Shoe size — UK (3, 4, 5…)" },
-    { value: "shoe_us", label: "Shoe size — US (5, 6, 7…)" },
-  ];
-  return [];
-};
-const sizePresets: Partial<Record<ProductSizeType, string[]>> = {
-  apparel_alpha: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"],
-  apparel_numeric: ["28", "30", "32", "34", "36", "38", "40", "42", "44", "46", "48", "50"],
-  shoe_eu: ["36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"],
-  shoe_uk: ["3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
-  shoe_us: ["5", "6", "7", "8", "9", "10", "11", "12", "13"],
-};
-const sizeProfileLabel = (profile: SizeProfile) => profile === "apparel" ? "Clothing & apparel" : profile === "footwear" ? "Shoes & footwear" : "No size system";
+type StoreProduct = { id: string; name: string; slug: string; sku: string | null; description: string | null; price: number; compare_at_price: number | null; stock_quantity: number; image_url: string | null; images: string[] | null; is_active: boolean; is_featured: boolean; free_shipping_eligible: boolean; fulfillment_source: string; supplier_product_code: string | null; supplier_product_url: string | null; category_id: string | null; category: { name: string }[] };
+type StoreCategory = { id: string; name: string; slug: string; description: string | null; image_url: string | null; sort_order: number; is_active: boolean };
+type CategoryFormState = { id: string | null; name: string; description: string; image_url: string; sort_order: string; is_active: boolean };
+type ProductFormState = { id: string | null; name: string; sku: string; description: string; price: string; compare_at_price: string; stock_quantity: string; image_url: string; images: string[]; category_id: string; is_active: boolean; is_featured: boolean };
 const statuses = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];
 const money = (value: number) => new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT", maximumFractionDigits: 0 }).format(Number(value || 0));
 const date = (value: string) => new Intl.DateTimeFormat("en-BD", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -60,9 +38,9 @@ export default function AdminPage() {
   const [products, setProducts] = useState<StoreProduct[]>([]);
   const [categories, setCategories] = useState<StoreCategory[]>([]);
   const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
-  const [categoryForm, setCategoryForm] = useState<CategoryFormState>({ id: null, name: "", description: "", image_url: "", sort_order: "0", is_active: true, size_profile: "none" });
+  const [categoryForm, setCategoryForm] = useState<CategoryFormState>({ id: null, name: "", description: "", image_url: "", sort_order: "0", is_active: true });
   const [productEditorOpen, setProductEditorOpen] = useState(false);
-  const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
+  const [productForm, setProductForm] = useState<ProductFormState>({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], category_id: "", is_active: true, is_featured: false });
   const [productBusy, setProductBusy] = useState<string | null>(null);
   const [productNotice, setProductNotice] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
@@ -86,10 +64,10 @@ export default function AdminPage() {
     const { data, error: orderError } = await supabase.from("orders").select("*, order_items(*)").order("created_at", { ascending: false }).limit(200);
     if (orderError) setError(orderError.message);
     else setOrders((data || []) as Order[]);
-    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,images,color_options,size_type,size_options,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
+    const { data: productData, error: productError } = await supabase.from("products").select("id,name,slug,sku,description,price,compare_at_price,stock_quantity,image_url,images,is_active,is_featured,free_shipping_eligible,fulfillment_source,supplier_product_code,supplier_product_url,category_id,category:categories(name)").order("name", { ascending: true });
     if (productError) setError(productError.message);
     else setProducts((productData || []) as StoreProduct[]);
-    const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name,slug,description,image_url,sort_order,is_active,size_profile").order("sort_order", { ascending: true });
+    const { data: categoryData, error: categoryError } = await supabase.from("categories").select("id,name,slug,description,image_url,sort_order,is_active").order("sort_order", { ascending: true });
     if (categoryError) setError(categoryError.message);
     else setCategories(categoryData || []);
     setChecking(false);
@@ -128,13 +106,13 @@ export default function AdminPage() {
 
   const openNewCategory = () => {
     setError("");
-    setCategoryForm({ id: null, name: "", description: "", image_url: "", sort_order: String(categories.length), is_active: true, size_profile: "none" });
+    setCategoryForm({ id: null, name: "", description: "", image_url: "", sort_order: String(categories.length), is_active: true });
     setCategoryEditorOpen(true);
   };
 
   const openEditCategory = (category: StoreCategory) => {
     setError("");
-    setCategoryForm({ id: category.id, name: category.name, description: category.description || "", image_url: category.image_url || "", sort_order: String(category.sort_order), is_active: category.is_active, size_profile: category.size_profile || "none" });
+    setCategoryForm({ id: category.id, name: category.name, description: category.description || "", image_url: category.image_url || "", sort_order: String(category.sort_order), is_active: category.is_active });
     setCategoryEditorOpen(true);
   };
 
@@ -150,7 +128,7 @@ export default function AdminPage() {
     const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const slug = `${slugBase || "category"}-${(categoryForm.id || crypto.randomUUID()).slice(0, 6)}`;
     setBusy(true); setError("");
-    const payload = { name, slug, description: categoryForm.description.trim() || null, image_url: categoryForm.image_url.trim() || null, sort_order: sortOrder, is_active: categoryForm.is_active, size_profile: categoryForm.size_profile };
+    const payload = { name, slug, description: categoryForm.description.trim() || null, image_url: categoryForm.image_url.trim() || null, sort_order: sortOrder, is_active: categoryForm.is_active };
     const result = categoryForm.id
       ? await supabase.from("categories").update(payload).eq("id", categoryForm.id)
       : await supabase.from("categories").insert(payload);
@@ -161,13 +139,13 @@ export default function AdminPage() {
 
   const openNewProduct = () => {
     setError("");
-    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], size_type: "none", size_options_text: "", color_options: [], category_id: categories[0]?.id || "", is_active: true, is_featured: false, fulfillment_source: "own_stock", supplier_product_code: "", supplier_product_url: "" });
+    setProductForm({ id: null, name: "", sku: "", description: "", price: "", compare_at_price: "", stock_quantity: "0", image_url: "", images: [], category_id: categories[0]?.id || "", is_active: true, is_featured: false });
     setProductEditorOpen(true);
   };
 
   const openEditProduct = (product: StoreProduct) => {
     setError("");
-    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), size_type: (["apparel_alpha", "apparel_numeric", "shoe_eu", "shoe_uk", "shoe_us", "numeric", "letter", "custom"].includes(product.size_type) ? product.size_type : "none") as ProductFormState["size_type"], size_options_text: Array.isArray(product.size_options) ? product.size_options.join(", ") : "", color_options: Array.isArray(product.color_options) ? product.color_options : [], category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured, fulfillment_source: product.fulfillment_source || "own_stock", supplier_product_code: product.supplier_product_code || "", supplier_product_url: product.supplier_product_url || "" });
+    setProductForm({ id: product.id, name: product.name, sku: product.sku || "", description: product.description || "", price: String(product.price), compare_at_price: product.compare_at_price == null ? "" : String(product.compare_at_price), stock_quantity: String(product.stock_quantity), image_url: product.image_url || "", images: Array.from(new Set([...(Array.isArray(product.images) ? product.images : []), ...(product.image_url ? [product.image_url] : [])])).slice(0, 12), category_id: product.category_id || "", is_active: product.is_active, is_featured: product.is_featured });
     setProductEditorOpen(true);
   };
 
@@ -213,25 +191,14 @@ export default function AdminPage() {
     const price = Number(productForm.price);
     const stock = Number(productForm.stock_quantity);
     const compareAt = productForm.compare_at_price.trim() ? Number(productForm.compare_at_price) : null;
-    const sizeOptions = productForm.size_type === "none" ? [] : Array.from(new Set(productForm.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean))).slice(0, 50);
     const imageUrls = Array.from(new Set([productForm.image_url.trim(), ...productForm.images].filter(Boolean))).slice(0, 12);
     if (name.length < 2 || !Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0 || (compareAt !== null && (!Number.isFinite(compareAt) || compareAt < price))) {
       setError("Check the product name, price, stock quantity and compare-at price.");
       return;
     }
-    const productCategoryProfile = categories.find(category => category.id === productForm.category_id)?.size_profile || "none";
-    const sizeTypeAllowed = sizeTypeOptionsForProfile(productCategoryProfile).some(option => option.value === productForm.size_type);
-    if (productForm.size_type !== "none" && !sizeTypeAllowed) {
-      setError("Choose a size system that matches this product category.");
-      return;
-    }
-    if (productForm.size_type !== "none" && sizeOptions.length === 0) {
-      setError("Add at least one available size. Customers will only see the sizes entered here.");
-      return;
-    }
     const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const slug = `${slugBase || "product"}-${(productForm.id || crypto.randomUUID()).slice(0, 6)}`;
-    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: imageUrls[0] || null, images: imageUrls, size_type: productForm.size_type, size_options: sizeOptions, color_options: productForm.color_options, category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: productForm.fulfillment_source, supplier_product_code: productForm.supplier_product_code.trim() || null, supplier_product_url: productForm.supplier_product_url.trim() || null, updated_at: new Date().toISOString() };
+    const payload = { name, slug, sku: productForm.sku.trim() || null, description: productForm.description.trim() || null, price, compare_at_price: compareAt, stock_quantity: stock, image_url: imageUrls[0] || null, images: imageUrls, size_type: "none", size_options: [], color_options: [], category_id: productForm.category_id || null, is_active: productForm.is_active, is_featured: productForm.is_featured, fulfillment_source: "own_stock", supplier_product_code: null, supplier_product_url: null, updated_at: new Date().toISOString() };
     setProductBusy(productForm.id || "new");
     setError("");
     const result = productForm.id
@@ -390,7 +357,7 @@ export default function AdminPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `his-her-mart-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `cloud-momos-orders-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -404,26 +371,8 @@ export default function AdminPage() {
     shipped: orders.filter(o => o.order_status === "shipped").length,
   }), [orders]);
 
-  const selectedProductCategory = categories.find(category => category.id === productForm.category_id);
-  const selectedProductSizeProfile = selectedProductCategory?.size_profile || "none";
-  const productSizeTypeOptions = sizeTypeOptionsForProfile(selectedProductSizeProfile);
-  const suggestedSizes = sizePresets[productForm.size_type] || [];
-  const currentSizeValues = productForm.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean);
-
-  const addSuggestedSize = (size: string) => {
-    setProductForm(current => {
-      const values = current.size_options_text.split(/[,;\r\n]+/).map(value => value.trim()).filter(Boolean);
-      if (values.includes(size)) return current;
-      return { ...current, size_options_text: [...values, size].join(", ") };
-    });
-  };
-
   const changeProductCategory = (categoryId: string) => {
-    const profile = categories.find(category => category.id === categoryId)?.size_profile || "none";
-    setProductForm(current => {
-      const compatible = current.size_type === "none" || sizeTypeOptionsForProfile(profile).some(option => option.value === current.size_type);
-      return { ...current, category_id: categoryId, size_type: compatible ? current.size_type : "none", size_options_text: compatible ? current.size_options_text : "" };
-    });
+    setProductForm(current => ({ ...current, category_id: categoryId }));
   };
 
   if (checking) return <main className="admin-shell"><div className="admin-loading"><RefreshCw className="spin" /> Checking secure admin access…</div></main>;
@@ -511,10 +460,10 @@ export default function AdminPage() {
     {selected && <div className="admin-modal-backdrop" onClick={()=>setSelected(null)}><section className="admin-order-modal" onClick={e=>e.stopPropagation()}>
       <div className="admin-modal-head"><div><p className="eyebrow">MOMO ORDER DETAILS</p><h2>{selected.order_number}</h2><small>{date(selected.created_at)}</small></div><button onClick={()=>setSelected(null)}>×</button></div>
       <div className="admin-customer-info"><b>{selected.customer_name}</b><span>{selected.customer_phone}</span>{selected.customer_email&&<span>{selected.customer_email}</span>}<p>{selected.shipping_address?.address_line}, {selected.shipping_address?.area}, {selected.shipping_address?.district}</p></div>
-      <h3>Menu items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}{item.fulfillment_source === "shopbase_bd" ? <small className="admin-item-supplier">Fulfil via ShopBase BD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : item.fulfillment_source === "dropshippingbd" ? <small className="admin-item-supplier">Fulfil via DropshippingBD{item.supplier_product_code ? ` · ${item.supplier_product_code}` : ""}{item.supplier_product_url ? <> · <a href={item.supplier_product_url} target="_blank" rel="noreferrer">Supplier item</a></> : null}</small> : null}</span><b>{money(item.line_total)}</b></div>)}</div>
+      <h3>Menu items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}</span><b>{money(item.line_total)}</b></div>)}</div>
       <div className="admin-modal-total"><span>Momo subtotal</span><b>{money(selected.subtotal)}</b></div>
       <div className="admin-modal-total"><span>Delivery charge</span><b>{selected.free_shipping_applied ? "FREE" : selected.delivery_charge ? money(selected.delivery_charge) : "Awaiting confirmation"}</b></div>
-      <div className="admin-modal-total"><span>Free shipping</span><b>{selected.free_shipping_applied ? `Applied (${selected.free_shipping_eligible_quantity} eligible items)` : "Not applied"}</b></div>
+      
       <div className="admin-modal-total grand"><span>Total</span><b>{money(selected.total)}</b></div>
       <label className="admin-note-field">Delivery charge (BDT)<input type="number" min="0" max="100000" step="1" value={deliveryCharge} onChange={e=>setDeliveryCharge(e.target.value)} disabled={selected.free_shipping_applied}/></label>
       <button className="admin-save-note" onClick={()=>void saveDeliveryCharge(selected)} disabled={busy || selected.free_shipping_applied}>{selected.free_shipping_applied ? "Free shipping — no delivery fee" : "Save delivery charge and update total"}</button>
