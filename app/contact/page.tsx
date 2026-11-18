@@ -4,13 +4,13 @@ import { ArrowLeft, ArrowRight, MessageCircle, PackageSearch, HelpCircle, Clock3
 
 export const metadata: Metadata = {
   title: "Contact customer support",
-  description: "Contact His & Hers Mart customer support for product, delivery and order questions in Bangladesh.",
-  alternates: { canonical: "https://his-and-her-mart.vercel.app/contact" },
+  description: "Contact Cloud Momos customer support for product, delivery and order questions in Bangladesh.",
+  alternates: { canonical: "https://cloudmomos.vercel.app/contact" },
   openGraph: {
-    title: "Contact customer support | His & Hers Mart",
-    description: "We're one message away. Contact His & Hers Mart for shopping and order support.",
-    url: "https://his-and-her-mart.vercel.app/contact",
-    siteName: "His & Hers Mart",
+    title: "Contact customer support | Cloud Momos",
+    description: "We're one message away. Contact Cloud Momos for momo orders, delivery and food-pack support.",
+    url: "https://cloudmomos.vercel.app/contact",
+    siteName: "Cloud Momos",
     locale: "en_BD",
     type: "website",
   },
