@@ -560,3 +560,48 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
   .cm-hero-art{border-radius:27px 27px 76px 27px}
   .cm-menu{background:linear-gradient(180deg,#f7f1e5,#f2eadb)}
 }
+
+
+/* Cloud Momos campaign media + live delivery coverage */
+.cm-service-areas{
+  max-width:1120px;margin:27px auto 34px;padding:20px 22px;
+  border:1px solid rgba(23,63,48,.1);border-radius:22px;
+  background:rgba(255,250,241,.74);box-shadow:0 12px 28px rgba(34,55,41,.045);
+}
+.cm-service-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+.cm-service-head span{color:var(--cm-orange-deep);font-size:9px;font-weight:900;letter-spacing:1.7px}
+.cm-service-head b{color:var(--cm-forest);font-family:'Space Grotesk',sans-serif;font-size:12px}
+.cm-area-chips{display:flex;align-items:center;flex-wrap:wrap;gap:9px}
+.cm-area-chips button{
+  display:flex;align-items:center;gap:8px;min-height:39px;padding:8px 13px;
+  border:1px solid #e1d5c1;border-radius:999px;background:#fffdf8;color:var(--cm-forest);
+  font-size:10px;font-weight:800;transition:all .2s;
+}
+.cm-area-chips button span{display:inline-flex;align-items:center;gap:6px}
+.cm-area-chips button small{color:#8b887a;font-size:9px;font-weight:700}
+.cm-area-chips button:hover,.cm-area-chips button.active{border-color:var(--cm-forest);background:var(--cm-forest);color:#fff}
+.cm-area-chips button.active small,.cm-area-chips button:hover small{color:#e3eddf}
+.cm-service-areas>.cm-empty{padding:12px 0 0}
+.cm-promo-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 15px}
+.cm-promo-heading span{color:var(--cm-forest);font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700}
+.cm-promo-heading small{color:var(--cm-muted);font-size:9px}
+.cm-ad-card{grid-template-columns:minmax(0,40%) minmax(0,1fr);align-items:stretch}
+.cm-ad-card .cm-ad-media{display:block;width:100%;height:100%;min-height:180px;max-height:310px;object-fit:cover;background:#e5d7bf}
+.cm-ad-card video.cm-ad-media{object-fit:contain;background:#122f25}
+.cm-ad-card div{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px}
+.cm-ad-card p{margin:0 0 4px}
+.cm-ad-card .cm-ad-cta{
+  display:inline-flex;align-items:center;gap:7px;margin-top:2px;
+  color:var(--cm-orange-deep);font-size:10px;font-weight:900;text-decoration:none;
+}
+.cm-ad-card .cm-ad-cta:hover{color:var(--cm-forest)}
+@media(max-width:680px){
+  .cm-service-areas{margin:20px 0 28px;padding:16px 14px;border-radius:18px}
+  .cm-service-head{align-items:flex-start;flex-direction:column;gap:5px}
+  .cm-area-chips{gap:7px}
+  .cm-area-chips button{min-height:36px;padding:7px 10px;font-size:9px}
+  .cm-promo-heading{align-items:flex-start;flex-direction:column;gap:4px}
+  .cm-promo-heading span{font-size:15px}
+  .cm-ad-card .cm-ad-media{min-height:145px;max-height:230px}
+  .cm-ad-card div{gap:7px}
+}
