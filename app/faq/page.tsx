@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, HelpCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Momo Ordering Help",
-  description: "Answers about Cloud Momos menu choices, six-piece boxes, Sylhet delivery, food-pack checks and order tracking.",
+  description: "Answers about the Cloud Momos menu, six-piece boxes, Sylhet delivery, ordering and customer support.",
   alternates: { canonical: "https://cloudmomos.vercel.app/faq" },
   openGraph: {
     title: "Help & FAQs | Cloud Momos",
@@ -23,7 +23,7 @@ const faqs = [
   { category: "Payment", question: "Which payment method is available?", answer: "Cash on Delivery is available. Pay the confirmed order total when your delivery arrives. Do not send advance payments to personal numbers." },
   { category: "Delivery", question: "Where does Cloud Momos deliver?", answer: "We currently deliver only in selected areas of Sylhet City. The active service areas and their delivery charges are shown on the website and at checkout." },
   { category: "Delivery", question: "How much is delivery?", answer: "Delivery charges depend on the active Sylhet area you choose. The exact fee is shown before you place your order." },
-  { category: "Order care", question: "Should I record a video when opening my food pack?", answer: "Yes, it helps us review a report about a damaged, incorrect or missing item. Use your phone camera to start one continuous video before opening the sealed pack. Show the order label, opening and items inside. The website does not record or upload video itself; share the clip with our support team on WhatsApp if there is an issue." },
+  { category: "Order care", question: "What should I do if something is wrong with my order?", answer: "Please check your food boxes while the delivery person is present. If anything is missing, incorrect or damaged, contact Cloud Momos support promptly and share your order number. Clear photos can help our team understand the issue." },
   { category: "Order tracking", question: "How do I track my order?", answer: "Open Track Order and enter the order number from your confirmation together with the same phone number used at checkout. You can see the latest order and payment status.", link: "/track-order", linkLabel: "Track an order" },
   { category: "Customer support", question: "How can I contact Cloud Momos?", answer: "Message our team on WhatsApp at +8801969419302. Include your order number and a short description of the issue.", link: "https://wa.me/8801969419302", linkLabel: "Chat with Cloud Momos" },
 ];
