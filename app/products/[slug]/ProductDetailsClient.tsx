@@ -147,7 +147,7 @@ export default function ProductDetailsPage({ slug }: { slug: string }) {
         <p className="detail-stock">{stock > 0 ? (stock < 5 ? "Only " + stock + " boxes left" : "Available to order") : "Currently out of stock"}</p>
         <p className="detail-description">{product.description || "A Cloud Momos favourite, prepared with care. Every box contains 6 pieces."}</p>
         <div className="detail-quantity"><span>Boxes · 6 pieces each</span><div><button onClick={() => setQty(v => Math.max(1, v - 1))} disabled={qty <= 1}><Minus size={14} /></button><b>{qty}</b><button onClick={() => setQty(v => Math.min(stock, 10, v + 1))} disabled={qty >= stock || qty >= 10}><Plus size={14} /></button></div></div>
-        {purchaseError && <p className="detail-size-error" role="alert">{purchaseError}</p>}
+        {purchaseError && <p className="detail-purchase-error" role="alert">{purchaseError}</p>}
         <div className="detail-actions">
           <button className="primary-btn" onClick={inBoxQty > 0 ? openBox : addToBox} disabled={stock <= 0}>{inBoxQty > 0 ? "View Your Box (" + inBoxQty + ")" : "Add to Box"} {inBoxQty > 0 ? <ShoppingBag size={16} /> : <Plus size={16} />}</button>
           <button className="order-now-btn" onClick={buyNow} disabled={stock <= 0}>Buy Now <ArrowRight size={16} /></button>
