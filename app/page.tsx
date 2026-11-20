@@ -39,42 +39,51 @@ export default function Home(){
  const [success,setSuccess]=useState("");
  const [adArea,setAdArea]=useState("");
 
- useEffect(()=>{let cancelled=false;(async()=>{
-  if(!supabase){setError("Store is temporarily unavailable.");setLoading(false);return;}
-  const [p,a,b]=await Promise.all([
-   supabase.from("products").select("id,name,slug,description,price,image_url,stock_quantity,category_id,categories(name)").eq("is_active",true).order("created_at"),
-   supabase.from("delivery_areas").select("id,name,delivery_charge,is_active").eq("is_active",true).order("sort_order").order("name"),
-   supabase.from("advertisements").select("id,title,description,image_url,media_type,button_text,target_url,product_id,display_order").eq("is_active",true).order("display_order")
-  ]);
-  if(cancelled)return;
-  if(p.error)setError("Could not load the momo menu. Please refresh.");
-  const loadedProducts=(p.data||[]).map((x:any)=>({...x,category:Array.isArray(x.categories)?x.categories[0]:x.categories}));
-   setProducts(loadedProducts);
-   const params=new URLSearchParams(window.location.search);
-   const requestedProduct=params.get("buyNow");
-   if(requestedProduct){
-    const found=loadedProducts.find((x:Product)=>x.id===requestedProduct);
-    if(found&&Number(found.price)>0&&Number(found.stock_quantity)>0){
-     const requestedQty=Math.max(1,Math.min(10,Number(found.stock_quantity),Number(params.get("qty")||1)));
-     setBuyNowProductId(found.id);setBuyNowQuantity(requestedQty);setCheckout(true);
+ useEffect(()=>{let cancelled=false;
+  const withTimeout=(promise:any)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error("Request timed out")),12000))]);
+  const loadStore=async()=>{
+   if(!supabase){setError("Store connection is unavailable. Please try again shortly.");setLoading(false);return;}
+   try{
+    const [p,a,b]=await Promise.all([
+     withTimeout(supabase.from("products").select("id,name,slug,description,price,image_url,stock_quantity,category_id,categories(name)").eq("is_active",true).order("created_at")).catch((error:any)=>({data:null,error})),
+     withTimeout(supabase.from("delivery_areas").select("id,name,delivery_charge,is_active").eq("is_active",true).order("sort_order").order("name")).catch((error:any)=>({data:null,error})),
+     withTimeout(supabase.from("advertisements").select("id,title,description,image_url,media_type,button_text,target_url,product_id,display_order").eq("is_active",true).order("display_order")).catch((error:any)=>({data:[],error}))
+    ]);
+    if(cancelled)return;
+    if(p.error)setError("Momo menu is taking too long to load. Please refresh once or try again.");
+    const loadedProducts=((p.data||[]) as any[]).map((x:any)=>({...x,category:Array.isArray(x.categories)?x.categories[0]:x.categories}));
+    setProducts(loadedProducts);
+    setAreas(a.data||[]);
+    const params=new URLSearchParams(window.location.search);
+    const requestedProduct=params.get("buyNow");
+    if(requestedProduct){
+     const found=loadedProducts.find((x:Product)=>x.id===requestedProduct);
+     if(found&&Number(found.price)>0&&Number(found.stock_quantity)>0){
+      const requestedQty=Math.max(1,Math.min(10,Number(found.stock_quantity),Number(params.get("qty")||1)));
+      setBuyNowProductId(found.id);setBuyNowQuantity(requestedQty);setCheckout(true);
+     }
     }
-   }
-   if(params.get("openBox")==="1")setCartOpen(true);
-   if(params.has("buyNow")||params.has("openBox"))window.history.replaceState(null,"",window.location.pathname);
-  setAreas(a.data||[]);
-  const activeAds=b.data||[];
-  if(activeAds.length){
-   const ids=activeAds.map((x:any)=>x.id);
-   const links=await supabase.from("advertisement_delivery_areas").select("advertisement_id,delivery_area_id").in("advertisement_id",ids);
-   if(!cancelled&&!links.error){
-    const activeAreaIds=new Set((a.data||[]).map((x:any)=>x.id));
-    const grouped=new Map<string,string[]>();
-    (links.data||[]).forEach((x:any)=>grouped.set(x.advertisement_id,[...(grouped.get(x.advertisement_id)||[]),x.delivery_area_id]));
-    setAds(activeAds.filter((x:any)=> (grouped.get(x.id)||[]).some((id:string)=>activeAreaIds.has(id))).map((x:any)=>({...x,areaIds:grouped.get(x.id)||[]})));
-   }
-  }
-  setLoading(false);
- })();return()=>{cancelled=true}},[]);
+    if(params.get("openBox")==="1")setCartOpen(true);
+    if(params.has("buyNow")||params.has("openBox"))window.history.replaceState(null,"",window.location.pathname);
+    setLoading(false);
+    const activeAds=(b.data||[]) as any[];
+    if(activeAds.length&&a.data?.length){
+     const ids=activeAds.map((x:any)=>x.id);
+     const links=await withTimeout(supabase.from("advertisement_delivery_areas").select("advertisement_id,delivery_area_id").in("advertisement_id",ids)).catch(()=>null);
+     if(!cancelled&&links&&!links.error){
+      const activeAreaIds=new Set((a.data||[]).map((x:any)=>x.id));
+      const grouped=new Map<string,string[]>();
+      (links.data||[]).forEach((x:any)=>grouped.set(x.advertisement_id,[...(grouped.get(x.advertisement_id)||[]),x.delivery_area_id]));
+      setAds(activeAds.filter((x:any)=>(grouped.get(x.id)||[]).some((id:string)=>activeAreaIds.has(id))).map((x:any)=>({...x,areaIds:grouped.get(x.id)||[]})));
+     }
+    }
+   }catch(error){
+    if(!cancelled)setError("The store connection is slow right now. Please refresh to try again.");
+   }finally{if(!cancelled)setLoading(false)}
+  };
+  loadStore();
+  return()=>{cancelled=true}
+ },[]);
  useEffect(()=>{try{setCart(JSON.parse(localStorage.getItem("cloud-momos-box-v1")||"{}"))}catch{setCart({})}setCartReady(true)},[]);
  useEffect(()=>{if(cartReady)localStorage.setItem("cloud-momos-box-v1",JSON.stringify(cart))},[cart,cartReady]);
  const cookedProducts=products.filter(p=>/ready[\s-]*to[\s-]*eat|cooked/i.test(p.category?.name||""));
