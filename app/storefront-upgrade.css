@@ -323,7 +323,7 @@ button,a{-webkit-tap-highlight-color:transparent}
 :root{--cm-forest:#1b1210;--cm-forest-deep:#1b1210;--cm-forest-soft:#34211d;--cm-orange:#e8341c;--cm-orange-deep:#c52b16;--cm-amber:#ffd84d;--cm-cream:#fff1f5;--cm-paper:#fff;--cm-sand:#ff8fb1;--cm-ink:#1b1210;--cm-muted:#66534e;--cm-line:#1b1210;--cm-shadow:5px 5px 0 #1b1210}
 body,.cm{background:#fff1f5;color:#1b1210;font-family:'Hind Siliguri','DM Sans',sans-serif}.cm{overflow-x:clip}
 .cm-top{position:relative;overflow:hidden;min-height:43px;padding:0 12px;background:#ffd84d;color:#1b1210;border-block:3px solid #1b1210;font-size:0;letter-spacing:0}
-.cm-top:before,.cm-top:after{content:'🔥 গরম গরম  |  🥟 স্টিম মোমো  |  🌶️ ঝাল সস ফ্রি  |  ⚡ WhatsApp-এ অর্ডার  |  ';position:absolute;top:50%;width:max-content;white-space:nowrap;font-family:'Hind Siliguri',sans-serif;font-size:13px;font-weight:800;transform:translateY(-50%);animation:cm-sticker-marquee 23s linear infinite}
+.cm-top-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.cm-top:before,.cm-top:after{content:'🥟  6 PIECES PER BOX   •   FRESHLY COOKED   •   FROZEN FOR LATER   •   SYLHET DELIVERY   •   ';position:absolute;top:50%;width:max-content;white-space:nowrap;font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;font-size:12px;font-weight:800;letter-spacing:.7px;transform:translateY(-50%);animation:cm-sticker-marquee 26s linear infinite}.cm-top:before{left:0}.cm-top:after{left:100%}@keyframes cm-sticker-marquee{from{transform:translate(0,-50%)}to{transform:translate(-100%,-50%)}}
 .cm-top:before{left:0}.cm-top:after{left:100%}@keyframes cm-sticker-marquee{from{transform:translate(0,-50%)}to{transform:translate(-100%,-50%)}}
 .cm-header{min-height:72px;padding-inline:clamp(12px,4vw,54px);background:#fff1f5;border-bottom:3px solid #1b1210;backdrop-filter:none;gap:12px}
 .cm-logo{color:#1b1210;font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;font-weight:800;letter-spacing:-2px}.cm-logo b{color:#e8341c;font-weight:800}
@@ -354,3 +354,112 @@ body,.cm{background:#fff1f5;color:#1b1210;font-family:'Hind Siliguri','DM Sans',
 @media(max-width:680px){.cm-top{min-height:39px}.cm-header{min-height:64px;padding:0 10px;gap:8px}.cm-logo{font-size:21px}.cm-header nav{gap:10px}.cm-header nav a{font-size:9px}.cm-hero{grid-template-columns:1fr;gap:18px;padding:27px 14px 24px;min-height:0}.cm-hero h1{font-size:clamp(65px,17vw,92px);line-height:.82;letter-spacing:-.085em;margin:16px 0}.cm-hero-copy>p{font-size:12px;line-height:1.75}.cm-hero-art{min-height:0;max-height:350px;border-radius:20px}.cm-hero-mascot{min-height:0;height:auto;aspect-ratio:3/2;object-fit:cover}.cm-hero-actions{flex-wrap:wrap;gap:10px}.cm-hero-actions .cm-btn{min-height:44px;padding:10px 15px}.cm-hero-secondary{min-height:41px;padding:9px 13px}.cm-menu-category{padding:13px;border-radius:17px!important}.cm-menu-category-head{gap:8px;align-items:flex-start}.cm-menu-category-head h3{font-size:23px}.cm-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.cm-card{border-radius:16px;box-shadow:4px 4px 0 #1b1210}.cm-card-body{padding:10px}.cm-card h3{font-size:13px;line-height:1.45}.cm-card p{font-size:9px;line-height:1.65;min-height:55px}.cm-card-foot{align-items:flex-start;flex-direction:column;gap:4px;padding-top:9px;margin:10px 0}.cm-card-foot b{font-size:16px}.cm-card-actions{grid-template-columns:1fr;gap:7px}.cm-card-actions button{min-height:39px;font-size:10px}.cm-about{grid-template-columns:1fr;gap:19px;margin:24px 12px;padding:22px 16px;border-radius:18px}.cm-about-intro h2{font-size:37px;letter-spacing:-1.6px}.cm-about-intro p{font-size:11px;line-height:1.75}.cm-about-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.cm-about-card{min-height:0;padding:12px;transform:none;border-radius:14px;box-shadow:3px 3px 0 #1b1210}.cm-about-card:nth-child(n){transform:none}.cm-about-card h3{font-size:14px}.cm-about-card p{font-size:9px;line-height:1.6}.cm-about-card>small{font-size:8px}.cm-about-icon{width:30px;height:30px;margin-bottom:9px}.cm-faq{padding:38px 15px 105px}.cm-faq p{font-size:10px;line-height:1.65}.cm-faq p b{font-size:10px}.cm-footer{padding:30px 15px calc(110px + env(safe-area-inset-bottom))}.cm-drawer,.cm-checkout{border-radius:18px}.cm-mobile-dock{bottom:calc(10px + env(safe-area-inset-bottom))}.cm-ad-card{border-radius:15px;box-shadow:4px 4px 0 #1b1210}}
 @media(max-width:380px){.cm-hero h1{font-size:62px}.cm-grid{gap:8px}.cm-card-body{padding:9px}.cm-card h3{font-size:12px}.cm-card p{font-size:8px;min-height:52px}.cm-card-actions button{font-size:9px}.cm-about-grid{grid-template-columns:1fr}.cm-about-card p{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.cm-top:before,.cm-top:after{animation:none!important}.cm-card,.cm-card:hover,.cm-btn,.cm-hero-secondary,.cm-about-card,.cm-mobile-dock a,.cm-mobile-dock button{transition:none!important;transform:none!important}}
+
+
+/* Cloud Momos — polished, image-light sticker storefront */
+.cm-hero{align-items:center;gap:clamp(24px,4vw,58px);padding-top:clamp(42px,5.5vw,74px);padding-bottom:clamp(42px,5.5vw,74px)}
+.cm-hero-copy{max-width:650px}
+.cm-hero h1{font-size:clamp(76px,10.5vw,138px);line-height:.86}
+.cm-hero-copy>p{max-width:510px}
+.cm-hero-actions{gap:13px;flex-wrap:wrap}
+.cm-hero-art{position:relative;isolation:isolate;display:grid;place-items:center;min-height:350px;overflow:hidden;border:3px solid #1b1210;border-radius:28px;background:radial-gradient(circle at 50% 48%,#fff1f5 0 31%,#ffd84d 31.5% 100%);box-shadow:7px 7px 0 #1b1210}
+.cm-hero-art::before,.cm-hero-art::after{display:none!important}
+.cm-art-momo{position:relative;z-index:2;display:grid;place-items:center;width:clamp(170px,19vw,235px);height:clamp(170px,19vw,235px);border:4px solid #1b1210;border-radius:50%;background:#fff1f5;box-shadow:8px 8px 0 #1b1210;font-size:clamp(105px,12vw,152px);line-height:1;transform:rotate(-8deg);animation:cm-momo-float 4s ease-in-out infinite}
+.cm-art-cloud{position:absolute;z-index:1;top:24px;right:34px;font-size:clamp(52px,7vw,82px);line-height:1;filter:drop-shadow(3px 3px 0 #1b1210);transform:rotate(8deg)}
+.cm-art-sticker{position:absolute;z-index:3;display:inline-flex;align-items:center;justify-content:center;padding:9px 13px;border:3px solid #1b1210;border-radius:11px;background:#ff8fb1;color:#1b1210;font-family:'Bricolage Grotesque','Hind Siliguri',sans-serif;font-size:11px;font-weight:900;letter-spacing:.5px;box-shadow:4px 4px 0 #1b1210}
+.cm-art-sticker-top{top:34px;left:24px;transform:rotate(-7deg)}
+.cm-art-sticker-side{right:18px;bottom:96px;background:#9be7c4;transform:rotate(7deg)}
+.cm-art-spark{position:absolute;z-index:2;color:#e8341c;font-size:42px;font-weight:900;text-shadow:2px 2px 0 #1b1210;line-height:1}
+.cm-art-spark-one{left:30px;bottom:88px;transform:rotate(-12deg)}
+.cm-art-spark-two{top:92px;left:25%;font-size:30px;color:#1b1210;transform:rotate(13deg)}
+.cm-art-caption{position:absolute;z-index:4;left:50%;bottom:18px;display:grid;gap:3px;width:max-content;max-width:calc(100% - 30px);padding:9px 15px;border:3px solid #1b1210;border-radius:12px;background:#fff;color:#1b1210;text-align:center;box-shadow:4px 4px 0 #1b1210;transform:translateX(-50%) rotate(-1deg)}
+.cm-art-caption b{font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;font-size:12px;font-weight:900;letter-spacing:.4px}
+.cm-art-caption small{font-family:'Hind Siliguri',sans-serif;font-size:9px;font-weight:800;letter-spacing:.4px}
+@keyframes cm-momo-float{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-7px) rotate(-5deg)}}
+.cm-category-banners{display:none!important}
+.cm-trust-strip{display:flex;justify-content:space-evenly;align-items:center;flex-wrap:wrap;padding:18px clamp(12px,4vw,46px)}
+.cm-trust-strip>div{min-width:145px;gap:5px}
+.cm-trust-strip>div>span{display:grid;place-items:center;width:38px;height:38px;margin:0 auto 3px;font-size:18px}
+.cm-trust-strip b,.cm-trust-strip small{display:block;text-align:center}
+.cm-menu{padding-top:clamp(54px,6vw,82px);padding-bottom:clamp(62px,7vw,92px)}
+.cm-section-title{max-width:760px;margin-inline:auto}
+.cm-section-title>span{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:2px solid #1b1210;border-radius:999px;background:#9be7c4;box-shadow:3px 3px 0 #1b1210;color:#1b1210!important;font-size:10px!important;font-weight:900}
+.cm-section-title h2{margin-top:18px;font-size:clamp(39px,5vw,58px);line-height:1;letter-spacing:-2.4px}
+.cm-section-title p{max-width:620px;margin:0 auto 28px;font-size:13px;line-height:1.8}
+.cm-menu-category{max-width:1250px;margin:22px auto 28px;padding:22px;border:3px solid #1b1210!important;border-radius:24px!important;background:#fff!important;box-shadow:6px 6px 0 #1b1210!important}
+.cm-menu-category-head{align-items:center;gap:16px;margin-bottom:18px}
+.cm-menu-category-head h3{font-size:clamp(23px,3vw,30px);letter-spacing:-.7px}
+.cm-menu-category-head p{margin:6px 0 0;color:#66534e;font-family:'Hind Siliguri',sans-serif;font-size:12px;line-height:1.65}
+.cm-grid{gap:17px}
+.cm-card{box-shadow:4px 4px 0 #1b1210}
+.cm-card:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 #1b1210}
+.cm-food-photo{height:210px}
+.cm-card-body{padding:15px}
+.cm-card p{min-height:42px}
+.cm-card-actions button{min-height:43px}
+.cm-ads{padding-top:clamp(50px,6vw,78px);padding-bottom:clamp(58px,7vw,86px);border-top:3px solid #1b1210;background:#fff1f5!important}
+.cm-ads>.cm-section-title p{margin-bottom:26px}
+.cm-service-areas{max-width:1050px;margin:0 auto 25px;padding:clamp(17px,2.8vw,25px)}
+.cm-area-chips{gap:10px}
+.cm-promo-heading{max-width:1050px;margin:30px auto 14px}
+.cm-ad-grid{max-width:1050px;margin-inline:auto;gap:18px}
+.cm-ad-card{overflow:hidden;grid-template-columns:minmax(130px,38%) 1fr}
+.cm-ad-card .cm-ad-media{display:block;width:100%;height:100%;min-height:180px;object-fit:cover;border-right:3px solid #1b1210}
+.cm-ad-card>div{padding:20px}
+.cm-ad-card b{font-family:'Hind Siliguri',sans-serif;font-size:17px;font-weight:800}
+.cm-ad-card p{font-family:'Hind Siliguri',sans-serif;font-size:11px;line-height:1.7}
+.cm-ad-card .cm-ad-cta{display:inline-flex;align-items:center;gap:7px;font-weight:900;text-decoration:none}
+.cm-about{align-items:stretch;gap:24px}
+.cm-about-intro{align-self:center}
+.cm-about-grid{gap:13px}
+.cm-about-card{padding:17px;box-shadow:4px 4px 0 #1b1210}
+.cm-faq{padding-top:clamp(42px,5vw,70px)}
+.cm-footer{padding-top:38px}
+.cm-mobile-dock{box-shadow:4px 4px 0 #1b1210}
+.cm-overlay{z-index:90}
+.cm-drawer,.cm-checkout{box-shadow:6px 6px 0 #1b1210}
+@media(max-width:680px){
+ .cm-top{min-height:37px}
+ .cm-top:before,.cm-top:after{font-size:10px;letter-spacing:.35px;animation-duration:22s}
+ .cm-hero{gap:17px;padding:28px 14px 23px}
+ .cm-hero h1{font-size:clamp(65px,17vw,92px);line-height:.84;letter-spacing:-.085em}
+ .cm-hero-art{min-height:260px;max-height:300px;border-radius:21px;box-shadow:5px 5px 0 #1b1210}
+ .cm-art-momo{width:152px;height:152px;font-size:96px;box-shadow:5px 5px 0 #1b1210}
+ .cm-art-cloud{top:14px;right:16px;font-size:54px}
+ .cm-art-sticker{padding:7px 9px;font-size:9px;border-width:2px;box-shadow:3px 3px 0 #1b1210}
+ .cm-art-sticker-top{top:19px;left:14px}
+ .cm-art-sticker-side{right:8px;bottom:78px}
+ .cm-art-spark-one{left:15px;bottom:76px;font-size:31px}
+ .cm-art-spark-two{top:64px;left:24%;font-size:24px}
+ .cm-art-caption{bottom:12px;padding:7px 10px;border-width:2px;box-shadow:3px 3px 0 #1b1210}
+ .cm-art-caption b{font-size:10px}
+ .cm-art-caption small{font-size:8px}
+ .cm-trust-strip{gap:13px;padding:15px 8px}
+ .cm-trust-strip>div{min-width:calc(50% - 14px);display:grid;grid-template-columns:35px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center}
+ .cm-trust-strip>div>span{grid-row:1/3;margin:0;width:34px;height:34px}
+ .cm-trust-strip b,.cm-trust-strip small{text-align:left}
+ .cm-menu-category{margin:17px 0 23px;padding:14px;border-radius:18px!important;box-shadow:4px 4px 0 #1b1210!important}
+ .cm-menu-category-head h3{font-size:22px}
+ .cm-menu-category-head p{font-size:10px;line-height:1.6}
+ .cm-grid{gap:10px}
+ .cm-food-photo{height:clamp(128px,38vw,168px)}
+ .cm-card{box-shadow:3px 3px 0 #1b1210}
+ .cm-card:hover{box-shadow:2px 2px 0 #1b1210}
+ .cm-card-body{padding:10px}
+ .cm-card p{min-height:54px}
+ .cm-card-actions button{min-height:39px}
+ .cm-ad-card{grid-template-columns:34% 1fr}
+ .cm-ad-card .cm-ad-media{min-height:145px}
+ .cm-ad-card>div{padding:12px}
+ .cm-ad-card b{font-size:14px}
+ .cm-about{gap:17px}
+ .cm-about-card{padding:12px}
+}
+@media(max-width:380px){
+ .cm-art-momo{width:132px;height:132px;font-size:84px}
+ .cm-art-sticker-side{right:5px}
+ .cm-menu-category-head h3{font-size:20px}
+}
+@media(prefers-reduced-motion:reduce){
+ .cm-top:before,.cm-top:after,.cm-art-momo{animation:none!important}
+}
