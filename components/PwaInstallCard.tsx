@@ -28,12 +28,12 @@ export default function PwaInstallCard() {
         Boolean((navigator as Navigator & { standalone?: boolean }).standalone));
     };
     refresh();
-    window.addEventListener("cloud-momos-install-available", refresh);
-    window.addEventListener("cloud-momos-app-installed", refresh);
+    window.addEventListener("miss-can-cake-install-available", refresh);
+    window.addEventListener("miss-can-cake-app-installed", refresh);
     window.addEventListener("appinstalled", refresh);
     return () => {
-      window.removeEventListener("cloud-momos-install-available", refresh);
-      window.removeEventListener("cloud-momos-app-installed", refresh);
+      window.removeEventListener("miss-can-cake-install-available", refresh);
+      window.removeEventListener("miss-can-cake-app-installed", refresh);
       window.removeEventListener("appinstalled", refresh);
     };
   }, []);
@@ -51,7 +51,7 @@ export default function PwaInstallCard() {
       window.__cloudMomosInstallPrompt = undefined;
       setCanPrompt(false);
       if (choice.outcome === "accepted") {
-        setMessage("Installation accepted. Cloud Momos will appear with your apps.");
+        setMessage("Installation accepted. Miss Can Cake will appear with your apps.");
         setInstalled(true);
       } else {
         setMessage("Installation was cancelled. You can try again from your browser menu.");
@@ -64,15 +64,15 @@ export default function PwaInstallCard() {
 
   return (
     <section className="pwa-install-card">
-      <div className="pwa-install-icon"><img src="/cloud-momos-app-icon.svg?v=1" alt="" /></div>
+      <div className="pwa-install-icon"><img src="/miss-can-cake-app-icon.svg?v=1" alt="" /></div>
       <p className="eyebrow">CLOUD MOMOS · MADE FOR YOUR CRAVING</p>
       <h2>Your momo favourites,<br/><em>one tap away.</em></h2>
-      <p className="pwa-install-intro">Install Cloud Momos for one-tap access to the Cooked and Frozen momo menus, Sylhet delivery updates and order tracking.</p>
+      <p className="pwa-install-intro">Install Miss Can Cake for one-tap access to the Cooked and Frozen momo menus, Sylhet delivery updates and order tracking.</p>
       {installed ? (
-        <div className="pwa-installed-state"><CheckCircle2 size={18} /> Cloud Momos is installed on this device.</div>
+        <div className="pwa-installed-state"><CheckCircle2 size={18} /> Miss Can Cake is installed on this device.</div>
       ) : (
         <button className="primary-btn pwa-install-button" type="button" onClick={installApp}>
-          <Download size={17} /> {canPrompt ? "Install Cloud Momos" : "How to install the app"}
+          <Download size={17} /> {canPrompt ? "Install Miss Can Cake" : "How to install the app"}
         </button>
       )}
       {message && <p className="pwa-install-message" role="status">{message}</p>}
@@ -85,8 +85,8 @@ export default function PwaInstallCard() {
           <article><Share size={19} /><div><b>iPhone · Safari</b><p>Open this website in Safari, tap the Share icon, choose <strong>Add to Home Screen</strong>, then tap Add.</p></div></article>
         </div>
       )}
-      <p className="pwa-install-note">This is the official Cloud Momos installable web app, not an APK or a Play Store download. It opens the same live momo menu, checkout and order tracking as the website.</p>
-      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the previous Cloud Momos home-screen shortcut, then install again to refresh the new dumpling icon.</p>
+      <p className="pwa-install-note">This is the official Miss Can Cake installable web app, not an APK or a Play Store download. It opens the same live momo menu, checkout and order tracking as the website.</p>
+      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the previous Miss Can Cake home-screen shortcut, then install again to refresh the new dumpling icon.</p>
     </section>
   );
 }
