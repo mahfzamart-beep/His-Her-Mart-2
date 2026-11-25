@@ -4,7 +4,7 @@ import "./storefront-upgrade.css";
 import PwaInstallManager from "../components/PwaInstallManager";
 export const viewport: Viewport={width:"device-width",initialScale:1,themeColor:"#173f30"};
 export const metadata: Metadata={
- metadataBase:new URL("https://cloudmomos.vercel.app"),
+ metadataBase:new URL("https://cloud-momos-two.vercel.app"),
  title:{default:"Miss Can Cake | A Little Cup of Joy.",template:"%s | Miss Can Cake"},
  applicationName:"Miss Can Cake",
  description:"Chilled desserts made with care and delivered in selected areas of Sylhet City.",
