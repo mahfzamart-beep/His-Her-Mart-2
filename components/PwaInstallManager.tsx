@@ -20,12 +20,12 @@ export default function PwaInstallManager() {
     const onInstallPrompt = (event: Event) => {
       event.preventDefault();
       window.__cloudMomosInstallPrompt = event as DeferredInstallPrompt;
-      window.dispatchEvent(new Event("cloud-momos-install-available"));
+      window.dispatchEvent(new Event("miss-can-cake-install-available"));
     };
     const onInstalled = () => {
       window.__cloudMomosPwaInstalled = true;
       window.__cloudMomosInstallPrompt = undefined;
-      window.dispatchEvent(new Event("cloud-momos-app-installed"));
+      window.dispatchEvent(new Event("miss-can-cake-app-installed"));
     };
     window.addEventListener("beforeinstallprompt", onInstallPrompt);
     window.addEventListener("appinstalled", onInstalled);
@@ -33,7 +33,7 @@ export default function PwaInstallManager() {
       navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
         .then((registration) => registration.update().catch(() => undefined))
         .catch((error) => {
-          console.warn("Cloud Momos app worker registration failed:", error);
+          console.warn("Miss Can Cake app worker registration failed:", error);
         });
     }
     return () => {
