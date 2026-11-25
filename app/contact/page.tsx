@@ -4,13 +4,13 @@ import { ArrowLeft, ArrowRight, MessageCircle, PackageSearch, HelpCircle, Clock3
 
 export const metadata: Metadata = {
   title: "Contact customer support",
-  description: "Contact Cloud Momos customer support for product, delivery and order questions in Bangladesh.",
-  alternates: { canonical: "https://cloudmomos.vercel.app/contact" },
+  description: "Contact Miss Can Cake customer support for product, delivery and order questions in Bangladesh.",
+  alternates: { canonical: "https://cloud-desserts-two.vercel.app/contact" },
   openGraph: {
-    title: "Contact customer support | Cloud Momos",
-    description: "We're one message away. Contact Cloud Momos for momo orders, delivery and food-pack support.",
-    url: "https://cloudmomos.vercel.app/contact",
-    siteName: "Cloud Momos",
+    title: "Contact customer support | Miss Can Cake",
+    description: "We're one message away. Contact Miss Can Cake for dessert orders, delivery and food-pack support.",
+    url: "https://cloud-desserts-two.vercel.app/contact",
+    siteName: "Miss Can Cake",
     locale: "en_BD",
     type: "website",
   },
@@ -21,7 +21,7 @@ export default function ContactPage() {
     <main className="policy-shell">
       <header className="policy-top">
         <Link href="/" className="tracking-back"><ArrowLeft size={16}/> Back to menu</Link>
-        <Link href="/" className="tracking-brand">Cloud<span>Momos</span><small>MADE WITH LOVE IN SYLHET</small></Link>
+        <Link href="/" className="tracking-brand">Cloud<span>Desserts</span><small>MADE WITH LOVE IN SYLHET</small></Link>
       </header>
       <article className="policy-card">
         <div className="tracking-icon"><MessageCircle size={24}/></div>
@@ -37,7 +37,7 @@ export default function ContactPage() {
 
         <section className="policy-section">
           <h2>What can we help with?</h2>
-          <p><PackageSearch size={15} /> Momo menu, ingredients and availability</p>
+          <p><PackageSearch size={15} /> Dessert menu, ingredients and availability</p>
           <p><Clock3 size={15} /> Sylhet delivery information and order updates</p>
           <p><HelpCircle size={15} /> Checkout, payment and food-order support</p>
         </section>
