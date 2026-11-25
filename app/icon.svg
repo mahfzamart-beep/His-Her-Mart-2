@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Cloud Momos app icon">
-  <rect width="512" height="512" rx="112" fill="#173f30"/>
-  <circle cx="256" cy="256" r="196" fill="#214f3b"/>
-  <path d="M176 132c-25-25-18-53 10-72M252 122c-21-25-16-48 7-69M326 132c-17-24-12-47 10-66" fill="none" stroke="#f4c98d" stroke-width="15" stroke-linecap="round"/>
-  <path d="M102 281c4-49 43-86 92-86 32 0 56 15 69 40 13-25 37-40 69-40 49 0 88 37 92 86-8 61-68 106-161 106S110 342 102 281Z" fill="#fffaf1"/>
-  <path d="M128 278c8-40 34-62 66-62 31 0 55 18 69 51 14-33 38-51 69-51 32 0 58 22 66 62-17 43-63 73-135 73s-118-30-135-73Z" fill="#f7e8ce"/>
-  <path d="M256 225v125M222 224c-8 31-8 69 2 107M290 224c8 31 8 69-2 107" fill="none" stroke="#e7b97e" stroke-width="10" stroke-linecap="round"/>
-  <path d="M192 286c10-12 22-12 32 0M288 286c10-12 22-12 32 0" fill="none" stroke="#173f30" stroke-width="10" stroke-linecap="round"/>
-  <path d="M229 319c16 14 38 14 54 0" fill="none" stroke="#d96e2b" stroke-width="10" stroke-linecap="round"/>
-  <path d="M135 392h242" stroke="#ef873d" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="180" cy="392" r="8" fill="#fffaf1"/><circle cx="332" cy="392" r="8" fill="#fffaf1"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Miss Can Cake app icon"><rect width="512" height="512" rx="112" fill="#173f30"/><circle cx="256" cy="242" r="172" fill="#fff8ed"/><path d="M153 180h206l-22 196q-4 34-38 34H213q-34 0-38-34z" fill="#f2dfc9" stroke="#173f30" stroke-width="13"/><path d="M164 238h184l-7 48H171z" fill="#70432f"/><path d="M171 286h170l-7 47H178z" fill="#fff1df"/><path d="M178 333h156l-5 38q-3 25-28 25h-90q-25 0-28-25z" fill="#70432f"/><path d="M153 183q103-24 206 0l-4 24q-99-19-198 0z" fill="#fff8ed" stroke="#173f30" stroke-width="10"/><path d="M166 182q20-40 52-21 19-47 54-20 34-41 64-6 35-14 46 47z" fill="#fff8ed" stroke="#173f30" stroke-width="10"/><circle cx="221" cy="163" r="6" fill="#70432f"/><circle cx="260" cy="151" r="6" fill="#70432f"/><circle cx="299" cy="164" r="6" fill="#70432f"/></svg>
