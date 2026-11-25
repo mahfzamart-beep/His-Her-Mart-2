@@ -480,7 +480,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     {loading ? <div className="admin-control-loading"><RefreshCw size={18} className="spin"/> Loading kitchen data securely…</div> : <>
       {tab === "overview" && <>
         <div className="admin-control-toolbar">
-          <div><b>Kitchen snapshot</b><small>Calculated from recent dessert orders and current menu records.</small></div>
+          <div><b>Dessert kitchen snapshot</b><small>Calculated from recent dessert orders and current menu records.</small></div>
           <select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")} aria-label="Dashboard reporting period"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select>
         </div>
         <div className="admin-control-metrics">
@@ -557,7 +557,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "inventory" && <>
-        <div className="admin-control-toolbar"><div><b>Kitchen stock & ingredient cost</b><small>Update dessert cup stock, ingredient cost estimates and supplier mapping.</small></div><span className="admin-control-count">{lowStockProducts.length} stock alerts</span></div>
+        <div className="admin-control-toolbar"><div><b>Dessert stock & ingredient cost</b><small>Update dessert cup stock, ingredient cost estimates and supplier mapping.</small></div><span className="admin-control-count">{lowStockProducts.length} stock alerts</span></div>
         <div className="admin-control-search"><Search size={16}/><input value={inventorySearch} onChange={event => setInventorySearch(event.target.value)} placeholder="Search dessert item or SKU"/></div>
         <section className="admin-control-card">
           <div className="admin-control-table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Cups in stock</th><th>Ingredient cost per cup (BDT)</th><th>Ingredient supplier</th><th></th></tr></thead><tbody>
@@ -619,7 +619,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "finance" && <>
-        <div className="admin-control-toolbar"><div><b>Sales & kitchen cost tracker</b><small>Delivered momo sales, known ingredient costs and recorded operating expenses.</small></div><select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select></div>
+        <div className="admin-control-toolbar"><div><b>Sales & kitchen cost tracker</b><small>Delivered dessert sales, known ingredient costs and recorded operating expenses.</small></div><select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select></div>
         <div className="admin-control-metrics compact">
           <article><span><Wallet size={16}/> Delivered sales</span><strong>{money(profitData.revenue)}</strong><small>Product subtotal, not all placed orders</small></article>
           <article><span><Boxes size={16}/> Known product cost</span><strong>{money(profitData.knownCost)}</strong><small>{profitData.knownLines} item lines with cost</small></article>
