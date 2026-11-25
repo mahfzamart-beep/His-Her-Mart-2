@@ -5,11 +5,11 @@ import { ArrowLeft, ArrowRight, MessageCircle, PackageSearch, HelpCircle, Clock3
 export const metadata: Metadata = {
   title: "Contact customer support",
   description: "Contact Miss Can Cake customer support for product, delivery and order questions in Bangladesh.",
-  alternates: { canonical: "https://cloud-desserts-two.vercel.app/contact" },
+  alternates: { canonical: "https://cloud-momos-two.vercel.app/contact" },
   openGraph: {
     title: "Contact customer support | Miss Can Cake",
     description: "We're one message away. Contact Miss Can Cake for dessert orders, delivery and food-pack support.",
-    url: "https://cloud-desserts-two.vercel.app/contact",
+    url: "https://cloud-momos-two.vercel.app/contact",
     siteName: "Miss Can Cake",
     locale: "en_BD",
     type: "website",
@@ -21,7 +21,7 @@ export default function ContactPage() {
     <main className="policy-shell">
       <header className="policy-top">
         <Link href="/" className="tracking-back"><ArrowLeft size={16}/> Back to menu</Link>
-        <Link href="/" className="tracking-brand">Cloud<span>Desserts</span><small>MADE WITH LOVE IN SYLHET</small></Link>
+        <Link href="/" className="tracking-brand">Miss<span>Can Cake</span><small>MADE WITH LOVE IN SYLHET</small></Link>
       </header>
       <article className="policy-card">
         <div className="tracking-icon"><MessageCircle size={24}/></div>
