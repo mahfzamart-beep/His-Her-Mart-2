@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./storefront-upgrade.css";
+import "./miss-can-cake-redesign.css";
 import PwaInstallManager from "../components/PwaInstallManager";
-export const viewport: Viewport={width:"device-width",initialScale:1,themeColor:"#173f30"};
+export const viewport: Viewport={width:"device-width",initialScale:1,themeColor:"#2c1c19"};
 export const metadata: Metadata={
  metadataBase:new URL("https://cloud-momos-two.vercel.app"),
  title:{default:"Miss Can Cake | A Little Cup of Joy.",template:"%s | Miss Can Cake"},
