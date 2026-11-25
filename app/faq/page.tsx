@@ -4,12 +4,12 @@ import { ArrowLeft, ArrowRight, HelpCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Dessert Ordering Help",
-  description: "Answers about the Miss Can Cake menu, six-piece boxes, Sylhet delivery, ordering and customer support.",
-  alternates: { canonical: "https://cloud-desserts-two.vercel.app/faq" },
+  description: "Answers about Miss Tiramisu, 120ml cups, Sylhet delivery, ordering and customer support.",
+  alternates: { canonical: "https://cloud-momos-two.vercel.app/faq" },
   openGraph: {
     title: "Help & FAQs | Miss Can Cake",
     description: "Helpful answers about ordering desserts in Sylhet.",
-    url: "https://cloud-desserts-two.vercel.app/faq",
+    url: "https://cloud-momos-two.vercel.app/faq",
     siteName: "Miss Can Cake",
     locale: "en_BD",
     type: "website",
@@ -39,7 +39,7 @@ export default function FaqPage() {
         <div className="faq-mark"><HelpCircle size={22} /></div>
         <p className="eyebrow">CLOUD MOMOS · CUSTOMER CARE</p>
         <h1>Good to know.<br /><em>Before the first bite.</em></h1>
-        <p>Clear answers about our dessert menu, six-piece boxes, Sylhet delivery and order care.</p>
+        <p>Clear answers about our dessert menu, 120ml cups, Sylhet delivery and order care.</p>
       </section>
       <section className="faq-list" aria-label="Frequently asked questions">
         {faqs.map((item, index) => (
