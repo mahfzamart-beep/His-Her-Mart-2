@@ -35,7 +35,7 @@ export default function FaqPage() {
       </header>
       <section className="faq-intro">
         <div className="faq-mark"><HelpCircle size={22} /></div>
-        <p className="eyebrow">CLOUD MOMOS · CUSTOMER CARE</p>
+        <p className="eyebrow">MISS CAN CAKE · CUSTOMER CARE</p>
         <h1>Good to know.<br /><em>Before the first bite.</em></h1>
         <p>Clear answers about our dessert menu, 120ml cups, Sylhet delivery and order care.</p>
       </section>
@@ -58,7 +58,7 @@ export default function FaqPage() {
       </section>
       <footer className="faq-footer">
         <p className="eyebrow">CUSTOMER SUPPORT · WHATSAPP +8801969419302</p>
-        <h2>Little clouds.<br/><em>Big comfort.</em></h2>
+        <h2>A little cup.<br/><em>Big happiness.</em></h2>
         <Link className="primary-btn" href="/">Explore Miss Tiramisu <ArrowRight size={16} /></Link>
       </footer>
     </main>
