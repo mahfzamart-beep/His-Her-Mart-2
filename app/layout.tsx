@@ -5,10 +5,10 @@ import PwaInstallManager from "../components/PwaInstallManager";
 export const viewport: Viewport={width:"device-width",initialScale:1,themeColor:"#173f30"};
 export const metadata: Metadata={
  metadataBase:new URL("https://cloudmomos.vercel.app"),
- title:{default:"Cloud Momos | Little Clouds. Big Comfort.",template:"%s | Cloud Momos"},
- applicationName:"Cloud Momos",
- description:"Freshly cooked and frozen momos delivered in selected areas of Sylhet City.",
- openGraph:{title:"Cloud Momos",description:"Little clouds. Big comfort. Fresh momos in Sylhet.",siteName:"Cloud Momos",locale:"en_BD",type:"website"},
- icons:{icon:"/cloud-momos-app-icon.svg"},robots:{index:true,follow:true}
+ title:{default:"Miss Can Cake | A Little Cup of Joy.",template:"%s | Miss Can Cake"},
+ applicationName:"Miss Can Cake",
+ description:"Chilled desserts made with care and delivered in selected areas of Sylhet City.",
+ openGraph:{title:"Miss Can Cake",description:"A little cup of joy. Chilled desserts in Sylhet.",siteName:"Miss Can Cake",locale:"en_BD",type:"website"},
+ icons:{icon:"/miss-can-cake-app-icon.svg"},robots:{index:true,follow:true}
 };
 export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><PwaInstallManager/>{children}</body></html>}
