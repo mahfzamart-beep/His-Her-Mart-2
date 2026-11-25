@@ -17,16 +17,14 @@ export const metadata: Metadata = {
 };
 
 const faqs = [
-  { category: "The menu", question: "What is the difference between Cooked and Frozen Desserts?", answer: "Cooked Desserts are prepared and ready to enjoy when delivered. Frozen Desserts are uncooked frozen packs; keep them frozen and cook thoroughly before eating." },
-  { category: "Box size", question: "How many desserts are in one box?", answer: "Every Miss Can Cake box contains 6 pieces. The product card shows the price for one box." },
-  { category: "Ordering", question: "How do I place an order?", answer: "Choose a dessert favourite, tap Add to Box to continue browsing or Buy Now to go straight to delivery details. Enter your name, mobile number, full address and an active delivery area, then review the total before placing the order." },
-  { category: "Payment", question: "Which payment method is available?", answer: "Cash on Delivery is available. Pay the confirmed order total when your delivery arrives. Do not send advance payments to personal numbers." },
-  { category: "Delivery", question: "Where does Miss Can Cake deliver?", answer: "We currently deliver only in selected areas of Sylhet City. The active service areas and their delivery charges are shown on the website and at checkout." },
-  { category: "Delivery", question: "How much is delivery?", answer: "Delivery charges depend on the active Sylhet area you choose. The exact fee is shown before you place your order." },
-  { category: "Order care", question: "What should I do if something is wrong with my order?", answer: "Please check your food boxes while the delivery person is present. If anything is missing, incorrect or damaged, contact Miss Can Cake support promptly and share your order number. Clear photos can help our team understand the issue." },
-  { category: "Order tracking", question: "How do I track my order?", answer: "Open Track Order and enter the order number from your confirmation together with the same phone number used at checkout. You can see the latest order and payment status.", link: "/track-order", linkLabel: "Track an order" },
-  { category: "Customer support", question: "How can I contact Miss Can Cake?", answer: "Message our team on WhatsApp at +8801969419302. Include your order number and a short description of the issue.", link: "https://wa.me/8801969419302", linkLabel: "Chat with Miss Can Cake" },
-];
+  { category: "The dessert", question: "What is Miss Tiramisu?", answer: "Miss Tiramisu is our first chilled dessert, made with four small Dry Cake pieces, coffee cream and cocoa." },
+  { category: "Cup size", question: "How much is in one cup?", answer: "Each 120ml cup contains four small Dry Cake pieces. The product card shows the price for one cup." },
+  { category: "Ordering", question: "How do I place an order?", answer: "Choose Miss Tiramisu, tap Add to Cup or Buy Now, then enter your name, mobile number, full address and an active delivery area. Review the total before placing the order." },
+  { category: "Storage", question: "How should I store my dessert?", answer: "Keep Miss Tiramisu refrigerated and enjoy chilled. Do not leave it at room temperature for extended periods." },
+  { category: "Payment", question: "Which payment method is available?", answer: "Cash on Delivery is available. Pay the confirmed order total when your delivery arrives." },
+  { category: "Delivery", question: "Where does Miss Can Cake deliver?", answer: "We currently deliver only in selected areas of Sylhet City. Active service areas and delivery charges are shown on the website and at checkout." },
+  { category: "Customer support", question: "How can I contact Miss Can Cake?", answer: "Message our team on WhatsApp at +8801969419302. Include your order number and a short description of the issue.", link: "https://wa.me/8801969419302", linkLabel: "Chat with Miss Can Cake" }
+];;
 
 export default function FaqPage() {
   return (
@@ -61,7 +59,7 @@ export default function FaqPage() {
       <footer className="faq-footer">
         <p className="eyebrow">CUSTOMER SUPPORT · WHATSAPP +8801969419302</p>
         <h2>Little clouds.<br/><em>Big comfort.</em></h2>
-        <Link className="primary-btn" href="/">Explore the dessert menu <ArrowRight size={16} /></Link>
+        <Link className="primary-btn" href="/">Explore Miss Tiramisu <ArrowRight size={16} /></Link>
       </footer>
     </main>
   );
