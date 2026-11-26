@@ -64,7 +64,7 @@ export default function PwaInstallCard() {
 
   return (
     <section className="pwa-install-card">
-      <div className="pwa-install-icon"><img src="/miss-can-cake-app-icon.svg?v=1" alt="" /></div>
+      <div className="pwa-install-icon"><img src="/miss-can-cake-app-icon.svg?v=2" alt="" /></div>
       <p className="eyebrow">MISS CAN CAKE · MADE WITH CARE</p>
       <h2>Your dessert favourite,<br/><em>one tap away.</em></h2>
       <p className="pwa-install-intro">Install Miss Can Cake for one-tap access to Miss Tiramisu, Sylhet delivery updates and order tracking.</p>
@@ -86,7 +86,7 @@ export default function PwaInstallCard() {
         </div>
       )}
       <p className="pwa-install-note">This is the official Miss Can Cake installable web app, not an APK or a Play Store download. It opens the same dessert menu, checkout and order tracking as the website.</p>
-      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the previous Miss Can Cake home-screen shortcut, then install again to refresh the new dumpling icon.</p>
+      <p className="pwa-install-note"><strong>Already installed an earlier version?</strong> Remove the previous Miss Can Cake home-screen shortcut, then install again to refresh the new Miss Can Cake dessert icon.</p>
     </section>
   );
 }
