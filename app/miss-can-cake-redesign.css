@@ -242,3 +242,47 @@ body{background:var(--mc-cream);color:var(--mc-ink)}
  .cm-drawer{width:100%;padding:20px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* Miss Can Cake — approved cocoa & cream art direction */
+:root{--mc-cream:#f8f2e9;--mc-cocoa:#2c1c19;--mc-cocoa-dark:#211411;--mc-rose:#76513d;--mc-rose-dark:#5d3d2e;--mc-blush:#eee1d3;--mc-line:#e7d9ca;--mc-muted:#806e61}
+.cm{background:#fffdf9;color:var(--mc-cocoa);font-family:'DM Sans',sans-serif}
+.cm-top{background:#2c1c19;color:#f8f2e9}
+.cm-header{background:rgba(255,253,249,.94);border-bottom:1px solid #eee5db;backdrop-filter:blur(18px)}
+.cm-logo span{color:#76513d}.cm-logo b{color:#2c1c19}
+.cm-header nav a{color:#59483e}.cm-icon{background:#2c1c19;color:#fff8ef;border-color:#2c1c19}
+.cm-hero{background:linear-gradient(110deg,#f8f2e9 0%,#fffaf4 55%,#eee1d3 100%);min-height:650px}
+.cm-kicker,.cm-section-title>span,.cm-menu-category-head>div>span{color:#76513d}
+.cm-hero h1{max-width:680px;color:#2c1c19;font-family:'Playfair Display',serif;font-size:clamp(54px,6vw,86px);line-height:1.04;letter-spacing:-2.6px}
+.cm-hero h1 em{color:#76513d}
+.cm-hero-copy>p{max-width:510px;color:#6e5b4e;font-size:15px;line-height:1.9}
+.cm-hero-art{background:radial-gradient(ellipse at 50% 45%,#fffdf9 0%,#eadac8 68%,#d7c0a9 100%);border-radius:46% 46% 28px 28px;box-shadow:0 28px 65px rgba(44,28,25,.12)}
+.cm-hero-art:after{background:#2c1c19;color:#f8f2e9}
+.cm-btn{background:#2c1c19;color:#fffaf4;border:1px solid #2c1c19;border-radius:999px}
+.cm-hero-secondary{color:#5d3d2e}
+.cm-trust-strip{background:#fffdf9;border-block:1px solid #eee5db}
+.cm-trust-strip>div>span{background:#f0e5d9}
+.cm-menu{background:#fffdf9}
+.cm-section-title h2,.cm-menu-category-head h3,.cm-card h3,.cm-faq h2{color:#2c1c19}
+.cm-section-title h2 em,.cm-faq h2 em{color:#76513d}
+.cm-menu-category,.cm-menu-category.cm-cooked{background:linear-gradient(135deg,#fffdf9,#f8f2e9);border-color:#e9ddcf;box-shadow:0 16px 45px rgba(44,28,25,.05)}
+.cm-card{border-color:#e9ddcf;border-radius:20px;box-shadow:0 10px 30px rgba(44,28,25,.06)}
+.cm-food-photo{background:radial-gradient(circle at 50% 50%,#fffdf9 0%,#eee1d3 65%,#dfcbb7 100%)}
+.cm-food-photo small{color:#2c1c19;border-color:#e7d9ca}
+.cm-card-foot b{color:#76513d}.cm-card-actions button,.cm-card-actions .cm-buy-button{background:#2c1c19;border-color:#2c1c19;border-radius:999px}
+.cm-card-actions .cm-buy-button{background:#76513d;border-color:#76513d}
+.cm-ads{background:#f8f2e9}
+.cm-service-areas,.cm-ad-card{border-color:#e7d9ca;background:#fffdf9}
+.cm-service-head span,.cm-ad-card .cm-ad-cta{color:#76513d}
+.cm-area-chips button:hover,.cm-area-chips button.active{background:#2c1c19;border-color:#2c1c19}
+.cm-about{background:linear-gradient(130deg,#2c1c19,#493127 72%,#76513d)}
+.cm-about-intro h2 em{color:#d8b99c}.cm-about .cm-kicker,.cm-about-card>small{color:#d8b99c}
+.cm-about-link{background:#76513d}
+.cm-faq{background:#fffdf9}
+.cm-footer{background:#211411}
+.cm-mobile-dock{background:rgba(44,28,25,.97)}
+.cm-mobile-dock a{background:#76513d}
+.mc-hero-price{display:flex;align-items:center;gap:13px;margin:18px 0 4px}
+.mc-hero-price strong{font-family:'Playfair Display',serif;font-size:30px;color:#2c1c19}
+.mc-hero-price span{font-size:9px;font-weight:800;letter-spacing:1.6px;color:#76513d}
+@media(max-width:680px){.cm-hero{background:linear-gradient(160deg,#f8f2e9,#fffaf4)}.cm-hero h1{font-size:clamp(44px,11vw,66px);letter-spacing:-1.8px}.cm-hero-art{border-radius:28px}.mc-hero-price{margin:14px 0}}
