@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowRight, Truck } from "lucide-react";
 export const metadata: Metadata = {
   title: "Sylhet Delivery Information",
   description: "Miss Can Cake delivery areas, local delivery charges and order information for Sylhet City.",
-  alternates: { canonical: "https://cloud-momos-two.vercel.app/shipping" },
 };
 
 export default function ShippingPage() {
