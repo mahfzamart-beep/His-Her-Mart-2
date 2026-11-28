@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 export const metadata: Metadata = {
   title: "Order Care & Food Pack Checks",
   description: "How to check a Miss Can Cake order and contact the team about damaged, incorrect or missing items.",
-  alternates: { canonical: "https://cloud-momos-two.vercel.app/returns" },
 };
 
 export default function ReturnsPage() {
