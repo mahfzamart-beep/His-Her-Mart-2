@@ -495,7 +495,7 @@ button{cursor:pointer}
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
-/* Cloud Momos — mascot-led, blended brand palette refinement */
+/* Miss Can Cake — blended dessert brand palette refinement */
 :root{
   --cm-forest:#173f30;
   --cm-forest-deep:#102f25;
@@ -565,7 +565,7 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
 }
 
 
-/* Cloud Momos campaign media + live delivery coverage */
+/* Miss Can Cake campaign media + delivery coverage */
 .cm-service-areas{
   max-width:1120px;margin:27px auto 34px;padding:20px 22px;
   border:1px solid rgba(23,63,48,.1);border-radius:22px;
@@ -643,7 +643,7 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
 }
 
 
-/* Separate Cooked and Frozen menu sections */
+/* Dessert menu section styling */
 .cm-menu-category{
   margin:28px 0;padding:clamp(20px,3vw,34px);
   border:1px solid rgba(23,63,48,.1);border-radius:27px;
@@ -746,7 +746,7 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
 
 .cm-checkout{max-height:92vh;overflow-y:auto;overscroll-behavior:contain}
 
-/* Cloud Momos — redesigned brand value section */
+/* Miss Can Cake — brand values section */
 .cm-about{
   display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);
   align-items:center;gap:clamp(28px,5vw,70px);
@@ -796,7 +796,7 @@ body,.cm{background:var(--cm-cream);color:var(--cm-ink)}
 
 
 
-/* Cloud Momos checkout support note */
+/* Miss Can Cake checkout support note */
 .cm-checkout-note{
   display:grid;gap:6px;margin:14px 0;padding:13px 14px;
   border:1px solid rgba(23,63,48,.14);border-radius:14px;

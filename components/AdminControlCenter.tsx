@@ -415,12 +415,12 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       order.subtotal, order.discount, order.delivery_charge, order.total, order.payment_method, order.payment_status,
       order.order_status, order.courier_partner, order.courier_tracking_number
     ]);
-    downloadCsv("cloud-momos-orders.csv", [headers, ...rows]);
+    downloadCsv("miss-can-cake-orders.csv", [headers, ...rows]);
   };
 
   const exportCustomers = () => {
     const headers = ["Customer", "Phone", "Email", "Total Orders", "Delivered Orders", "Delivered Spend", "Last Order"];
-    downloadCsv("cloud-momos-customers.csv", [headers, ...filteredCustomers.map(customer => [customer.name, customer.phone, customer.email, customer.count, customer.delivered, customer.total, customer.last])]);
+    downloadCsv("miss-can-cake-customers.csv", [headers, ...filteredCustomers.map(customer => [customer.name, customer.phone, customer.email, customer.count, customer.delivered, customer.total, customer.last])]);
   };
 
   function downloadCsv(filename: string, rows: unknown[][]) {
@@ -440,7 +440,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     const invoiceWindow = window.open("", "_blank", "width=850,height=900");
     if (!invoiceWindow) { setError("Allow pop-ups to print the invoice."); return; }
     const itemRows = (order.order_items || []).map(item => "<tr><td>" + escapeHtml(item.product_name) + "</td><td>" + Number(item.quantity) + "</td><td>" + money(Number(item.unit_price)) + "</td><td>" + money(Number(item.line_total)) + "</td></tr>").join("");
-    invoiceWindow.document.write("<!doctype html><html><head><title>Invoice " + escapeHtml(order.order_number) + "</title><meta name='viewport' content='width=device-width,initial-scale=1'><style>body{font:14px Arial,sans-serif;color:#222;margin:40px}header{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:18px}h1{font-family:Georgia,serif;font-size:30px}table{width:100%;border-collapse:collapse;margin-top:30px}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.total{margin:25px 0 0 auto;width:260px}.total p{display:flex;justify-content:space-between}@media print{button{display:none}}</style></head><body><header><div><h1>CLOUD MOMOS</h1><p>Momo order invoice / Cash on Delivery</p></div><div><b>" + escapeHtml(order.order_number) + "</b><p>" + escapeHtml(fullDate(order.created_at)) + "</p></div></header><h3>Customer</h3><p>" + escapeHtml(order.customer_name) + "<br>" + escapeHtml(order.customer_phone) + "<br>" + escapeHtml(order.shipping_address?.address_line) + ", " + escapeHtml(order.shipping_address?.area) + ", " + escapeHtml(order.shipping_address?.district) + "</p><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr></thead><tbody>" + itemRows + "</tbody></table><div class='total'><p><span>Subtotal</span><b>" + money(Number(order.subtotal)) + "</b></p><p><span>Discount</span><b>− " + money(Number(order.discount || 0)) + "</b></p><p><span>Delivery</span><b>" + money(Number(order.delivery_charge)) + "</b></p><p><span>Total</span><b>" + money(Number(order.total)) + "</b></p></div><script>window.onload=()=>window.print()</script></body></html>");
+    invoiceWindow.document.write("<!doctype html><html><head><title>Invoice " + escapeHtml(order.order_number) + "</title><meta name='viewport' content='width=device-width,initial-scale=1'><style>body{font:14px Arial,sans-serif;color:#222;margin:40px}header{display:flex;justify-content:space-between;border-bottom:2px solid #222;padding-bottom:18px}h1{font-family:Georgia,serif;font-size:30px}table{width:100%;border-collapse:collapse;margin-top:30px}th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}.total{margin:25px 0 0 auto;width:260px}.total p{display:flex;justify-content:space-between}@media print{button{display:none}}</style></head><body><header><div><h1>MISS CAN CAKE</h1><p>Dessert order invoice / Cash on Delivery</p></div><div><b>" + escapeHtml(order.order_number) + "</b><p>" + escapeHtml(fullDate(order.created_at)) + "</p></div></header><h3>Customer</h3><p>" + escapeHtml(order.customer_name) + "<br>" + escapeHtml(order.customer_phone) + "<br>" + escapeHtml(order.shipping_address?.address_line) + ", " + escapeHtml(order.shipping_address?.area) + ", " + escapeHtml(order.shipping_address?.district) + "</p><table><thead><tr><th>Product</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr></thead><tbody>" + itemRows + "</tbody></table><div class='total'><p><span>Subtotal</span><b>" + money(Number(order.subtotal)) + "</b></p><p><span>Discount</span><b>− " + money(Number(order.discount || 0)) + "</b></p><p><span>Delivery</span><b>" + money(Number(order.delivery_charge)) + "</b></p><p><span>Total</span><b>" + money(Number(order.total)) + "</b></p></div><script>window.onload=()=>window.print()</script></body></html>");
     invoiceWindow.document.close();
   };
 
@@ -457,9 +457,9 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
   return <section className="admin-control-center" id="business-operations">
     <div className="admin-control-heading">
       <div>
-        <p className="eyebrow">CLOUD MOMOS · KITCHEN OPERATIONS</p>
+        <p className="eyebrow">MISS CAN CAKE · KITCHEN OPERATIONS</p>
         <h2>The kitchen, in control.</h2>
-        <p>One place for momo orders, menu availability, ingredient stock, local delivery, customer care and daily kitchen costs.</p>
+        <p>One place for dessert orders, menu availability, ingredient stock, local delivery, customer care and daily kitchen costs.</p>
       </div>
       <div className="admin-control-heading-actions">
         <span><ShieldCheck size={14}/> Owner workspace</span>
@@ -480,7 +480,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
     {loading ? <div className="admin-control-loading"><RefreshCw size={18} className="spin"/> Loading kitchen data securely…</div> : <>
       {tab === "overview" && <>
         <div className="admin-control-toolbar">
-          <div><b>Kitchen snapshot</b><small>Calculated from recent momo orders and current menu records.</small></div>
+          <div><b>Dessert kitchen snapshot</b><small>Calculated from recent dessert orders and current menu records.</small></div>
           <select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")} aria-label="Dashboard reporting period"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select>
         </div>
         <div className="admin-control-metrics">
@@ -506,7 +506,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
         </div>
         <div className="admin-control-two-col">
           <section className="admin-control-card">
-            <div className="admin-control-card-head"><div><b>Top-selling momos</b><small>Ranked by units in the selected period</small></div><ShoppingBag size={18}/></div>
+            <div className="admin-control-card-head"><div><b>Top-selling desserts</b><small>Ranked by units in the selected period</small></div><ShoppingBag size={18}/></div>
             {topProducts.length === 0 ? <p className="admin-control-empty-line">No delivered product sales in this period yet.</p> : <div className="admin-control-compact-list">{topProducts.map((product, index) => <div key={product.name}><span><i>{index + 1}</i>{product.name}</span><b>{product.quantity} units · {money(product.sales)}</b></div>)}</div>}
           </section>
           <section className="admin-control-card">
@@ -526,7 +526,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "orders" && <>
-        <div className="admin-control-toolbar"><div><b>Order & delivery desk</b><small>Manage momo orders, delivery partner references, order status, bulk updates and invoice printing.</small></div><button type="button" className="admin-control-outline-btn" onClick={exportOrders}><Download size={15}/> Export filtered orders</button></div>
+        <div className="admin-control-toolbar"><div><b>Order & delivery desk</b><small>Manage dessert orders, delivery partner references, order status, bulk updates and invoice printing.</small></div><button type="button" className="admin-control-outline-btn" onClick={exportOrders}><Download size={15}/> Export filtered orders</button></div>
         <div className="admin-control-search"><Search size={16}/><input value={orderSearch} onChange={event => setOrderSearch(event.target.value)} placeholder="Search order number, customer or phone"/></div>
         <div className="admin-control-bulk"><label><input type="checkbox" checked={filteredOrders.length > 0 && filteredOrders.every(order => selectedOrderIds.includes(order.id))} onChange={event => setSelectedOrderIds(event.target.checked ? Array.from(new Set([...selectedOrderIds, ...filteredOrders.map(order => order.id)])) : selectedOrderIds.filter(id => !filteredOrders.some(order => order.id === id)))}/> Select visible orders</label><select value={bulkStatus} onChange={event => setBulkStatus(event.target.value)}>{ORDER_STATUSES.map(status => <option key={status} value={status}>{status.toUpperCase()}</option>)}</select><button type="button" onClick={() => void bulkUpdateOrders()} disabled={!selectedOrderIds.length || saving}>Update {selectedOrderIds.length || ""} selected</button></div>
         <section className="admin-control-card">
@@ -557,10 +557,10 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "inventory" && <>
-        <div className="admin-control-toolbar"><div><b>Kitchen stock & ingredient cost</b><small>Update momo box stock, ingredient cost estimates and supplier mapping.</small></div><span className="admin-control-count">{lowStockProducts.length} stock alerts</span></div>
-        <div className="admin-control-search"><Search size={16}/><input value={inventorySearch} onChange={event => setInventorySearch(event.target.value)} placeholder="Search momo menu item or SKU"/></div>
+        <div className="admin-control-toolbar"><div><b>Dessert stock & ingredient cost</b><small>Update dessert cup stock, ingredient cost estimates and supplier mapping.</small></div><span className="admin-control-count">{lowStockProducts.length} stock alerts</span></div>
+        <div className="admin-control-search"><Search size={16}/><input value={inventorySearch} onChange={event => setInventorySearch(event.target.value)} placeholder="Search dessert item or SKU"/></div>
         <section className="admin-control-card">
-          <div className="admin-control-table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Boxes in stock</th><th>Ingredient cost per box (BDT)</th><th>Ingredient supplier</th><th></th></tr></thead><tbody>
+          <div className="admin-control-table-wrap"><table><thead><tr><th>Product</th><th>Price</th><th>Cups in stock</th><th>Ingredient cost per cup (BDT)</th><th>Ingredient supplier</th><th></th></tr></thead><tbody>
             {filteredProducts.map(product => <tr key={product.id}>
               <td><b>{product.name}</b><small>{product.sku || "No SKU"} · {product.is_active ? "Published" : "Hidden"}</small></td>
               <td>{money(product.price)}</td>
@@ -619,7 +619,7 @@ export default function AdminControlCenter({ actorId }: { actorId: string }) {
       </>}
 
       {tab === "finance" && <>
-        <div className="admin-control-toolbar"><div><b>Sales & kitchen cost tracker</b><small>Delivered momo sales, known ingredient costs and recorded operating expenses.</small></div><select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select></div>
+        <div className="admin-control-toolbar"><div><b>Sales & kitchen cost tracker</b><small>Delivered dessert sales, known ingredient costs and recorded operating expenses.</small></div><select value={period} onChange={event => setPeriod(event.target.value as "7" | "30" | "all")}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="all">All loaded history</option></select></div>
         <div className="admin-control-metrics compact">
           <article><span><Wallet size={16}/> Delivered sales</span><strong>{money(profitData.revenue)}</strong><small>Product subtotal, not all placed orders</small></article>
           <article><span><Boxes size={16}/> Known product cost</span><strong>{money(profitData.knownCost)}</strong><small>{profitData.knownLines} item lines with cost</small></article>

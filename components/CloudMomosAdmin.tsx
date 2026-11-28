@@ -130,7 +130,7 @@ export default function CloudMomosAdmin() {
   const deleteAd = async (ad: Ad) => {if(!supabase||!window.confirm("Delete advertisement “"+ad.title+"”?"))return;const {error:e}=await supabase.from("advertisements").delete().eq("id",ad.id);if(e)setError(e.message);else await refresh();};
 
   return <section className="admin-orders-card admin-products-card" id="delivery-and-ads" style={{marginTop:24}}>
-    <div className="admin-orders-toolbar"><div><p className="eyebrow">CLOUD MOMOS OPERATIONS</p><h2>Delivery areas & advertisements</h2><p>Start with selected Sylhet areas and expand whenever you are ready.</p></div><button className="admin-refresh" onClick={()=>void refresh()}><RefreshCw size={15}/> Refresh</button></div>
+    <div className="admin-orders-toolbar"><div><p className="eyebrow">MISS CAN CAKE OPERATIONS</p><h2>Delivery areas & advertisements</h2><p>Start with selected Sylhet areas and expand whenever you are ready.</p></div><button className="admin-refresh" onClick={()=>void refresh()}><RefreshCw size={15}/> Refresh</button></div>
     {error&&<p className="admin-error" role="alert">{error}</p>}{notice&&<p className="admin-product-success" role="status">{notice}</p>}
     <div className="admin-product-form-grid" style={{alignItems:"start"}}>
       <form className="admin-product-form" onSubmit={saveArea} style={{border:"1px solid #e6dfd1",borderRadius:16,padding:16}}>
@@ -143,7 +143,7 @@ export default function CloudMomosAdmin() {
       </form>
       <form className="admin-product-form" onSubmit={saveAd} style={{border:"1px solid #e6dfd1",borderRadius:16,padding:16}}>
         <h3><Megaphone size={17}/> Homepage advertisement</h3>
-        <label>Advertisement title<input required minLength={2} maxLength={120} value={adDraft.title} onChange={e=>setAdDraft(v=>({...v,title:e.target.value}))} placeholder="Fresh Momos now in Zindabazar"/></label>
+        <label>Advertisement title<input required minLength={2} maxLength={120} value={adDraft.title} onChange={e=>setAdDraft(v=>({...v,title:e.target.value}))} placeholder="New dessert offer in Zindabazar"/></label>
         <label>Description<textarea rows={2} maxLength={1000} value={adDraft.description} onChange={e=>setAdDraft(v=>({...v,description:e.target.value}))}/></label>
         <label>Promotional image or video<input type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" onChange={uploadAdMedia} disabled={uploading}/><small>{uploading?"Uploading media… "+uploadProgress+"%":"JPG, PNG or WebP · up to 5 MB | MP4, WebM or MOV · up to 40 MB"}</small></label>
         {uploading&&<progress value={uploadProgress} max="100" style={{width:"100%"}}/>}
@@ -157,6 +157,6 @@ export default function CloudMomosAdmin() {
         <div className="admin-product-list">{ads.map(ad=><article className="admin-product-row" key={ad.id}><div className="admin-product-row-copy"><b>{ad.title}</b><small>{ad.is_active?"Published":"Paused"} · {ad.media_type==="video"?"Video":"Image"} · {ad.button_text}</small></div><div className="admin-product-row-actions"><button type="button" className="admin-product-edit" onClick={()=>void editAd(ad)}>Edit</button><button type="button" className="admin-product-edit" onClick={()=>void toggleAd(ad)}>{ad.is_active?"Pause":"Publish"}</button><button type="button" className="admin-product-delete" onClick={()=>void deleteAd(ad)}><Trash2 size={13}/></button></div></article>)}</div>
       </form>
     </div>
-    {loading&&<p className="admin-muted"><RefreshCw className="spin" size={14}/> Loading Cloud Momos settings…</p>}
+    {loading&&<p className="admin-muted"><RefreshCw className="spin" size={14}/> Loading Miss Can Cake settings…</p>}
   </section>;
 }

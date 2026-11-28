@@ -1,7 +1,7 @@
-const CACHE_NAME = "cloud-momos-shell-v2";
+const CACHE_NAME = "miss-can-cake-shell-v2";
 const SHELL_FILES = [
   "/offline",
-  "/cloud-momos-app-icon.svg",
+  "/miss-can-cake-app-icon.svg",
 ];
 
 self.addEventListener("install", (event) => {
@@ -16,7 +16,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
-        keys.filter((key) => ((key.startsWith("hhm-shell-") || key.startsWith("cloud-momos-shell-")) && key !== CACHE_NAME)).map((key) => caches.delete(key))
+        keys.filter((key) => ((key.startsWith("hhm-shell-") || key.startsWith("miss-can-cake-shell-")) && key !== CACHE_NAME)).map((key) => caches.delete(key))
       ))
       .then(() => self.clients.claim())
   );
@@ -42,7 +42,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   const shouldCache = [
-      "/cloud-momos-app-icon.svg",
+      "/miss-can-cake-app-icon.svg",
   ].includes(url.pathname);
 
   if (shouldCache) {

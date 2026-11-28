@@ -233,7 +233,7 @@ export default function AdminPage() {
       ? `\n\nThis product is linked to ${count} saved order item(s). Their saved product name, SKU, price and quantity will remain in order history.`
       : "";
     const confirmed = window.confirm(
-      `Permanently remove "${product.name}" from the Cloud Momos menu?${historyWarning}\\n\\nThis menu item will no longer be available to customers. This action cannot be undone.`
+      `Permanently remove "${product.name}" from the Miss Can Cake menu?${historyWarning}\\n\\nThis menu item will no longer be available to customers. This action cannot be undone.`
     );
 
     if (!confirmed) {
@@ -357,7 +357,7 @@ export default function AdminPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `cloud-momos-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `miss-can-cake-orders-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -380,8 +380,8 @@ export default function AdminPage() {
   if (!session || !authorized) return <main className="admin-shell admin-login-shell">
     <a className="admin-back" href="/"><ArrowLeft size={15} /> Back to menu</a>
     <section className="admin-login-card">
-      <img className="admin-brand-mark" src="/cloud-momos-app-icon.svg" alt="Cloud Momos" />
-      <p className="eyebrow">CLOUD MOMOS · OWNER ACCESS</p>
+      <img className="admin-brand-mark" src="/miss-can-cake-app-icon.svg" alt="Miss Can Cake" />
+      <p className="eyebrow">MISS CAN CAKE · OWNER ACCESS</p>
       <h1>Admin sign in</h1>
       <p className="admin-muted">Secure access for authorised store administrators only.</p>
       {session && !authorized && <div className="admin-alert"><ShieldAlert size={17} /> {error || "This account is not an administrator."}</div>}
@@ -399,7 +399,7 @@ export default function AdminPage() {
 
   return <main className="admin-shell">
     <header className="admin-topbar">
-      <a className="admin-brand" href="/"><img className="admin-brand-icon" src="/cloud-momos-app-icon.svg" alt="" /><b>CLOUD MOMOS</b><small>KITCHEN CONTROL</small></a>
+      <a className="admin-brand" href="/"><img className="admin-brand-icon" src="/miss-can-cake-app-icon.svg" alt="" /><b>MISS CAN CAKE</b><small>KITCHEN CONTROL</small></a>
       <div className="admin-top-actions"><span>{session.user.email}</span><button onClick={refresh} aria-label="Refresh orders"><RefreshCw size={16}/></button><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </header>
     <nav className="admin-quick-nav" aria-label="Admin section shortcuts">
@@ -412,7 +412,7 @@ export default function AdminPage() {
     <div className="admin-content">
       <AdminControlCenter actorId={session.user.id} />
       <CloudMomosAdmin />
-      <div className="admin-heading"><div><p className="eyebrow">CLOUD MOMOS · KITCHEN OPERATIONS</p><h1>The kitchen, in control.</h1><p>Manage today’s momo orders, menu items, kitchen stock, Sylhet delivery and customer care.</p></div><button className="admin-refresh" onClick={refresh}><RefreshCw size={15}/> Refresh</button></div>
+      <div className="admin-heading"><div><p className="eyebrow">MISS CAN CAKE · KITCHEN OPERATIONS</p><h1>The kitchen, in control.</h1><p>Manage today’s dessert orders, menu items, kitchen stock, Sylhet delivery and customer care.</p></div><button className="admin-refresh" onClick={refresh}><RefreshCw size={15}/> Refresh</button></div>
       {error && <div className="admin-alert"><ShieldAlert size={17}/>{error}</div>}
       <section className="admin-stats">
         <article><ClipboardList/><span>Total orders</span><strong>{counts.total}</strong></article>
@@ -429,39 +429,39 @@ export default function AdminPage() {
           </tbody></table></div>}
       </section>
       <section className="admin-orders-card admin-products-card" id="products">
-        <div className="admin-orders-toolbar"><div><h2>Momo menu management</h2><p>Add momo menu items, update box prices and kitchen stock, or hide items without deleting order history.</p></div><button className="admin-product-add" onClick={openNewProduct}>+ Add menu item</button></div>
+        <div className="admin-orders-toolbar"><div><h2>Dessert menu management</h2><p>Add dessert menu items, update cup prices and kitchen stock, or hide items without deleting order history.</p></div><button className="admin-product-add" onClick={openNewProduct}>+ Add menu item</button></div>
         {productNotice && <p className="admin-product-success" role="status">{productNotice}</p>}
-        <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Boxes in stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><div className="admin-product-row-actions"><button className="admin-product-edit" disabled={!!productBusy} onClick={()=>openEditProduct(product)}>Edit</button><button className="admin-product-delete" disabled={!!productBusy} onClick={()=>void deleteProduct(product)} title={`Delete ${product.name}`}><Trash2 size={13}/>{productBusy === product.id ? "Deleting…" : "Delete"}</button></div></article>)}</div>
+        <div className="admin-product-list">{products.map(product => <article key={product.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{product.name}</b><small>{product.category?.[0]?.name || "Uncategorised"} · SKU: {product.sku || "—"} · Cups in stock: {product.stock_quantity} · {money(Number(product.price))}</small><span className={product.is_active ? "admin-product-live" : "admin-product-inactive"}>{product.is_active ? "Published" : "Hidden"}{product.is_featured ? " · Featured" : ""}</span></div><div className="admin-product-row-actions"><button className="admin-product-edit" disabled={!!productBusy} onClick={()=>openEditProduct(product)}>Edit</button><button className="admin-product-delete" disabled={!!productBusy} onClick={()=>void deleteProduct(product)} title={`Delete ${product.name}`}><Trash2 size={13}/>{productBusy === product.id ? "Deleting…" : "Delete"}</button></div></article>)}</div>
         <AdminProductImport categories={categories} onImported={refresh} />
       </section>
       <section className="admin-orders-card admin-products-card" id="categories">
         <div className="admin-orders-toolbar"><div><h2>Menu category management</h2><p>Create categories and control their storefront visibility and display order.</p></div><button className="admin-product-add" onClick={openNewCategory}>+ Add menu category</button></div>
         <div className="admin-product-list">{categories.map(category=><article key={category.id} className="admin-product-row"><div className="admin-product-row-copy"><b>{category.name}</b><small>Menu display order: {category.sort_order}</small><span className={category.is_active ? "admin-product-live" : "admin-product-inactive"}>{category.is_active ? "Visible on storefront" : "Hidden from storefront"}</span></div><button className="admin-product-edit" onClick={()=>openEditCategory(category)}>Edit</button></article>)}</div>
       </section>
-    {categoryEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setCategoryEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">MOMO MENU CATEGORIES</p><h2>{categoryForm.id ? "Edit category" : "Add category"}</h2><small>Hidden categories stay attached to existing products.</small></div><button onClick={()=>setCategoryEditorOpen(false)}>×</button></div><form onSubmit={saveCategory} className="admin-product-form"><label>Category name<input required minLength={2} maxLength={80} value={categoryForm.name} onChange={e=>setCategoryForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Chicken Momos"/></label><label>Description<textarea rows={3} maxLength={1000} value={categoryForm.description} onChange={e=>setCategoryForm(current=>({...current,description:e.target.value}))} placeholder="Short category description"/></label><label>Category image URL<input type="url" value={categoryForm.image_url} onChange={e=>setCategoryForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label><div className="admin-product-form-grid"><label>Display order<input type="number" min="0" max="10000" step="1" value={categoryForm.sort_order} onChange={e=>setCategoryForm(current=>({...current,sort_order:e.target.value}))}/></label><label className="admin-category-visible"><span>Visible on storefront</span><input type="checkbox" checked={categoryForm.is_active} onChange={e=>setCategoryForm(current=>({...current,is_active:e.target.checked}))}/></label></div>{error&&<p className="admin-error" role="alert">{error}</p>}<div className="admin-product-form-actions"><button type="button" className="admin-secondary-btn" onClick={()=>setCategoryEditorOpen(false)}>Cancel</button><button type="submit" className="admin-product-add" disabled={busy}>{busy ? "Saving…" : categoryForm.id ? "Save category" : "Create category"}</button></div></form></section></div>}
-    {productEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setProductEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">CLOUD MOMOS · MENU MANAGEMENT</p><h2>{productForm.id ? "Edit menu item" : "Add menu item"}</h2><small>Changes are saved to the live momo menu.</small></div><button onClick={()=>setProductEditorOpen(false)}>×</button></div><form onSubmit={saveProduct} className="admin-product-form">
-      <label>Product name<input required minLength={2} maxLength={140} value={productForm.name} onChange={e=>setProductForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Chicken Cheese Momos"/></label>
+    {categoryEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setCategoryEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">DESSERT MENU CATEGORIES</p><h2>{categoryForm.id ? "Edit category" : "Add category"}</h2><small>Hidden categories stay attached to existing products.</small></div><button onClick={()=>setCategoryEditorOpen(false)}>×</button></div><form onSubmit={saveCategory} className="admin-product-form"><label>Category name<input required minLength={2} maxLength={80} value={categoryForm.name} onChange={e=>setCategoryForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Desserts"/></label><label>Description<textarea rows={3} maxLength={1000} value={categoryForm.description} onChange={e=>setCategoryForm(current=>({...current,description:e.target.value}))} placeholder="Short category description"/></label><label>Category image URL<input type="url" value={categoryForm.image_url} onChange={e=>setCategoryForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label><div className="admin-product-form-grid"><label>Display order<input type="number" min="0" max="10000" step="1" value={categoryForm.sort_order} onChange={e=>setCategoryForm(current=>({...current,sort_order:e.target.value}))}/></label><label className="admin-category-visible"><span>Visible on storefront</span><input type="checkbox" checked={categoryForm.is_active} onChange={e=>setCategoryForm(current=>({...current,is_active:e.target.checked}))}/></label></div>{error&&<p className="admin-error" role="alert">{error}</p>}<div className="admin-product-form-actions"><button type="button" className="admin-secondary-btn" onClick={()=>setCategoryEditorOpen(false)}>Cancel</button><button type="submit" className="admin-product-add" disabled={busy}>{busy ? "Saving…" : categoryForm.id ? "Save category" : "Create category"}</button></div></form></section></div>}
+    {productEditorOpen && <div className="admin-modal-backdrop" onClick={()=>setProductEditorOpen(false)}><section className="admin-order-modal admin-product-editor" onClick={e=>e.stopPropagation()}><div className="admin-modal-head"><div><p className="eyebrow">MISS CAN CAKE · MENU MANAGEMENT</p><h2>{productForm.id ? "Edit menu item" : "Add menu item"}</h2><small>Changes are saved to the live dessert menu.</small></div><button onClick={()=>setProductEditorOpen(false)}>×</button></div><form onSubmit={saveProduct} className="admin-product-form">
+      <label>Product name<input required minLength={2} maxLength={140} value={productForm.name} onChange={e=>setProductForm(current=>({...current,name:e.target.value}))} placeholder="e.g. Miss Tiramisu"/></label>
       <label>Menu category<select value={productForm.category_id} onChange={e=>changeProductCategory(e.target.value)}><option value="">Choose a menu category</option>{categories.filter(category=>category.is_active).map(category=><option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
       <div className="admin-product-form-grid">
         <label>Price (BDT)<input required type="number" min="0" step="0.01" value={productForm.price} onChange={e=>setProductForm(current=>({...current,price:e.target.value}))}/></label>
         <label>Compare-at price (BDT)<input type="number" min="0" step="0.01" value={productForm.compare_at_price} onChange={e=>setProductForm(current=>({...current,compare_at_price:e.target.value}))}/></label>
-        <label>Kitchen stock (boxes)<input required type="number" min="0" step="1" value={productForm.stock_quantity} onChange={e=>setProductForm(current=>({...current,stock_quantity:e.target.value}))}/></label>
+        <label>Kitchen stock (cups)<input required type="number" min="0" step="1" value={productForm.stock_quantity} onChange={e=>setProductForm(current=>({...current,stock_quantity:e.target.value}))}/></label>
         <label>SKU (optional)<input maxLength={80} value={productForm.sku} onChange={e=>setProductForm(current=>({...current,sku:e.target.value}))} placeholder="Product code"/></label>
       </div>
       <label>Primary product image URL<input type="url" value={productForm.image_url} onChange={e=>setProductForm(current=>({...current,image_url:e.target.value}))} placeholder="https://…"/></label>
       <label className="admin-image-upload">Upload product images<input type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={imageUploading || productForm.images.length >= 12} onChange={uploadProductImages}/><small>{imageUploading ? "Uploading images…" : `JPG, PNG or WebP · maximum 5 MB each · up to 12 images total. ${productForm.images.length}/12 added.`}</small></label>
       {productForm.images.length > 0 && <div className="admin-image-gallery" aria-label="Product image previews">{productForm.images.map((url,index)=><div className="admin-image-preview" key={url}><img src={url} alt={`Product image ${index+1}`}/><span>{index===0 ? "Primary" : `Image ${index+1}`}</span><button type="button" onClick={()=>removeProductImage(url)} aria-label={`Remove image ${index+1}`}>×</button></div>)}</div>}
-      <div className="admin-food-product-note"><b>Food menu item</b><small>Customers order by box quantity. Each box contains 6 pieces.</small></div>
+      <div className="admin-food-product-note"><b>Food menu item</b><small>Customers order by cup quantity. Each cup contains 4 Dry Cake pieces.</small></div>
       <label>Description<textarea rows={3} maxLength={5000} value={productForm.description} onChange={e=>setProductForm(current=>({...current,description:e.target.value}))} placeholder="Ingredients, filling and preparation details"/></label>
       <div className="admin-product-flags"><label><input type="checkbox" checked={productForm.is_active} onChange={e=>setProductForm(current=>({...current,is_active:e.target.checked}))}/> Publish product</label><label><input type="checkbox" checked={productForm.is_featured} onChange={e=>setProductForm(current=>({...current,is_featured:e.target.checked}))}/> Featured product</label></div>
       {error&&<p className="admin-error" role="alert">{error}</p>}
       <div className="admin-product-form-actions"><button type="button" className="admin-secondary-btn" onClick={()=>setProductEditorOpen(false)}>Cancel</button><button type="submit" className="admin-product-add" disabled={!!productBusy}>{productBusy ? "Saving…" : productForm.id ? "Save changes" : "Create product"}</button></div>
     </form></section></div>}
     {selected && <div className="admin-modal-backdrop" onClick={()=>setSelected(null)}><section className="admin-order-modal" onClick={e=>e.stopPropagation()}>
-      <div className="admin-modal-head"><div><p className="eyebrow">MOMO ORDER DETAILS</p><h2>{selected.order_number}</h2><small>{date(selected.created_at)}</small></div><button onClick={()=>setSelected(null)}>×</button></div>
+      <div className="admin-modal-head"><div><p className="eyebrow">DESSERT ORDER DETAILS</p><h2>{selected.order_number}</h2><small>{date(selected.created_at)}</small></div><button onClick={()=>setSelected(null)}>×</button></div>
       <div className="admin-customer-info"><b>{selected.customer_name}</b><span>{selected.customer_phone}</span>{selected.customer_email&&<span>{selected.customer_email}</span>}<p>{selected.shipping_address?.address_line}, {selected.shipping_address?.area}, {selected.shipping_address?.district}</p></div>
       <h3>Menu items</h3><div className="admin-line-items">{(selected.order_items||[]).map(item=><div key={item.id}><span>{item.product_name} × {item.quantity}</span><b>{money(item.line_total)}</b></div>)}</div>
-      <div className="admin-modal-total"><span>Momo subtotal</span><b>{money(selected.subtotal)}</b></div>
+      <div className="admin-modal-total"><span>Dessert subtotal</span><b>{money(selected.subtotal)}</b></div>
       <div className="admin-modal-total"><span>Delivery charge</span><b>{selected.free_shipping_applied ? "FREE" : selected.delivery_charge ? money(selected.delivery_charge) : "Awaiting confirmation"}</b></div>
       
       <div className="admin-modal-total grand"><span>Total</span><b>{money(selected.total)}</b></div>
