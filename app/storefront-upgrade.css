@@ -1,4 +1,4 @@
-/* Cloud Momos — secondary food-shop pages and install experience */
+/* Miss Can Cake — secondary storefront pages and install experience */
 :root{
   --cm-page-forest:#173f30;
   --cm-page-forest-deep:#102f25;
@@ -241,7 +241,7 @@ button,a{-webkit-tap-highlight-color:transparent}
 .policy-updated a{color:#c76b30;font-weight:800}
 .policy-secondary{display:inline-flex;margin-top:5px;color:var(--cm-page-forest);font-size:10px;font-weight:900;text-decoration:underline}
 
-/* Installable Cloud Momos app */
+/* Installable Miss Can Cake app */
 .pwa-install-page{width:min(760px,100%);min-height:100vh;margin:0 auto;padding:24px 20px 40px}
 .pwa-install-header{margin-bottom:22px}
 .pwa-install-header img{display:block;width:52px;height:52px;border-radius:16px}
@@ -319,11 +319,11 @@ button,a{-webkit-tap-highlight-color:transparent}
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
-/* Cloud Momos — neo-brutalist sticker storefront refresh */
+/* Miss Can Cake — playful premium dessert storefront refinement */
 :root{--cm-forest:#1b1210;--cm-forest-deep:#1b1210;--cm-forest-soft:#34211d;--cm-orange:#e8341c;--cm-orange-deep:#c52b16;--cm-amber:#ffd84d;--cm-cream:#fff1f5;--cm-paper:#fff;--cm-sand:#ff8fb1;--cm-ink:#1b1210;--cm-muted:#66534e;--cm-line:#1b1210;--cm-shadow:5px 5px 0 #1b1210}
 body,.cm{background:#fff1f5;color:#1b1210;font-family:'Hind Siliguri','DM Sans',sans-serif}.cm{overflow-x:clip}
 .cm-top{position:relative;overflow:hidden;min-height:43px;padding:0 12px;background:#ffd84d;color:#1b1210;border-block:3px solid #1b1210;font-size:0;letter-spacing:0}
-.cm-top-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.cm-top:before,.cm-top:after{content:'🥟  6 PIECES PER BOX   •   FRESHLY COOKED   •   FROZEN FOR LATER   •   SYLHET DELIVERY   •   ';position:absolute;top:50%;width:max-content;white-space:nowrap;font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;font-size:12px;font-weight:800;letter-spacing:.7px;transform:translateY(-50%);animation:cm-sticker-marquee 26s linear infinite}.cm-top:before{left:0}.cm-top:after{left:100%}@keyframes cm-sticker-marquee{from{transform:translate(0,-50%)}to{transform:translate(-100%,-50%)}}
+.cm-top-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.cm-top:before,.cm-top:after{content:'MISS CAN CAKE   •   CHILLED DESSERTS   •   SMALL BATCH   •   MADE WITH CARE   •   SYLHET DELIVERY   •   ';position:absolute;top:50%;width:max-content;white-space:nowrap;font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;font-size:12px;font-weight:800;letter-spacing:.7px;transform:translateY(-50%);animation:cm-sticker-marquee 26s linear infinite}.cm-top:before{left:0}.cm-top:after{left:100%}@keyframes cm-sticker-marquee{from{transform:translate(0,-50%)}to{transform:translate(-100%,-50%)}}
 .cm-top:before{left:0}.cm-top:after{left:100%}@keyframes cm-sticker-marquee{from{transform:translate(0,-50%)}to{transform:translate(-100%,-50%)}}
 .cm-header{min-height:72px;padding-inline:clamp(12px,4vw,54px);background:#fff1f5;border-bottom:3px solid #1b1210;backdrop-filter:none;gap:12px}
 .cm-logo{color:#1b1210;font-family:'Bricolage Grotesque','Space Grotesk',sans-serif;font-weight:800;letter-spacing:-2px}.cm-logo b{color:#e8341c;font-weight:800}
@@ -356,7 +356,7 @@ body,.cm{background:#fff1f5;color:#1b1210;font-family:'Hind Siliguri','DM Sans',
 @media(prefers-reduced-motion:reduce){.cm-top:before,.cm-top:after{animation:none!important}.cm-card,.cm-card:hover,.cm-btn,.cm-hero-secondary,.cm-about-card,.cm-mobile-dock a,.cm-mobile-dock button{transition:none!important;transform:none!important}}
 
 
-/* Cloud Momos — polished, image-light sticker storefront */
+/* Miss Can Cake — dessert-focused storefront motion */
 .cm-hero{align-items:center;gap:clamp(24px,4vw,58px);padding-top:clamp(42px,5.5vw,74px);padding-bottom:clamp(42px,5.5vw,74px)}
 .cm-hero-copy{max-width:650px}
 .cm-hero h1{font-size:clamp(76px,10.5vw,138px);line-height:.86}
