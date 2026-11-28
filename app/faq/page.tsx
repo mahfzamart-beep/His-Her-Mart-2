@@ -5,11 +5,9 @@ import { ArrowLeft, ArrowRight, HelpCircle } from "lucide-react";
 export const metadata: Metadata = {
   title: "Dessert Ordering Help",
   description: "Answers about Miss Tiramisu, 120ml cups, Sylhet delivery, ordering and customer support.",
-  alternates: { canonical: "https://cloud-momos-two.vercel.app/faq" },
   openGraph: {
     title: "Help & FAQs | Miss Can Cake",
     description: "Helpful answers about ordering desserts in Sylhet.",
-    url: "https://cloud-momos-two.vercel.app/faq",
     siteName: "Miss Can Cake",
     locale: "en_BD",
     type: "website",
