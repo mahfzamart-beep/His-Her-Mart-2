@@ -5,11 +5,9 @@ import { ArrowLeft, ArrowRight, MessageCircle, PackageSearch, HelpCircle, Clock3
 export const metadata: Metadata = {
   title: "Contact customer support",
   description: "Contact Miss Can Cake customer support for product, delivery and order questions in Bangladesh.",
-  alternates: { canonical: "https://cloud-momos-two.vercel.app/contact" },
   openGraph: {
     title: "Contact customer support | Miss Can Cake",
     description: "We're one message away. Contact Miss Can Cake for dessert orders, delivery and food-pack support.",
-    url: "https://cloud-momos-two.vercel.app/contact",
     siteName: "Miss Can Cake",
     locale: "en_BD",
     type: "website",
